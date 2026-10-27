@@ -231,7 +231,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			if effect.overheal_per > 0 and overheal >= effect.overheal_per:
 				# Kindred Flame (phase 8 part 6): the heal past full sets the enemy
 				# nearest the healed unit Burning.
-				var nearest: UnitState = _nearest_enemy_of(sim, victim)
+				var nearest: UnitState = Targeting.straight_nearest(victim, sim.targetable_enemies_of(victim))
 				if nearest != null:
 					@warning_ignore("integer_division")
 					Statuses.apply(sim, nearest, effect.overheal_status, overheal / effect.overheal_per, 0, source)
@@ -812,18 +812,6 @@ static func around_allies(sim: CombatSim, unit: UnitState, effect: EffectDef) ->
 			taken[enemy.id] = true
 			pairs.append([enemy, ally])
 	return pairs
-
-
-## The targetable enemy of `unit` nearest it (fight order on ties), or null.
-static func _nearest_enemy_of(sim: CombatSim, unit: UnitState) -> UnitState:
-	var best: UnitState = null
-	var best_d: int = 0
-	for other: UnitState in sim.targetable_enemies_of(unit):
-		var d: int = ArenaPlane.length_sq(other.pos - unit.pos)
-		if best == null or d < best_d:
-			best = other
-			best_d = d
-	return best
 
 
 ## The standing ally of `unit` (not itself or `besides`) nearest it, by

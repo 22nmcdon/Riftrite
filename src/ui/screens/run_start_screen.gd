@@ -122,9 +122,9 @@ func _fill() -> void:
 			var chosen: bool = vows[hero_id] == path.id
 			var card: VBoxContainer = RunDayScreen._card(row, 0, UiStyle.TEAL_400 if chosen else UiStyle.LINE_500)
 			card.add_child(UiStyle.heading(path.name, 24, UiStyle.TEXT))
-			card.add_child(RunDayScreen._wrapped("Taste: " + path.taste, 15, UiStyle.HIGHLIGHT))
-			card.add_child(RunDayScreen._wrapped("Cost: " + path.vowed_cost, 15, UiStyle.BAD))
-			card.add_child(RunDayScreen._wrapped("Deed: %s (%s)" % [path.deed.text, UnitInfo.deed_amount_text(path.deed, path.deed.threshold)], 14, UiStyle.TEXT_DIM))
+			card.add_child(UiStyle.wrapped("Taste: " + path.taste, 15, UiStyle.HIGHLIGHT))
+			card.add_child(UiStyle.wrapped("Cost: " + path.vowed_cost, 15, UiStyle.BAD))
+			card.add_child(UiStyle.wrapped("Deed: %s (%s)" % [path.deed.text, UnitInfo.deed_amount_text(path.deed, path.deed.threshold)], 14, UiStyle.TEXT_DIM))
 			var button: Button = UiStyle.button("Vowed" if chosen else "Vow", choose.bind(hero_id, path.id))
 			if chosen:
 				UiStyle.primary(button)

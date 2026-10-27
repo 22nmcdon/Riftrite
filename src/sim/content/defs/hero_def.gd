@@ -1,8 +1,8 @@
 class_name HeroDef
 extends RefCounted
-## A hero in data/heroes.json (docs/plans/phases/rebuild-phase2-heroes-enemies.md,
+## A hero in data/heroes/<hero>/hero.json (docs/plans/phases/rebuild-phase2-heroes-enemies.md,
 ## section 2): who they are, their main role, and their base kit. Their
-## paths (phase 4) are in data/paths.json; ContentDb lists them here, in that
+## paths (phase 4) are in data/heroes/<hero>/paths.json; ContentDb lists them here, in that
 ## file's order.
 ##   {"id": "maren", "name": "Maren Thistledown", "title": "the ranger",
 ##    "role": "damage", "kit": {...a UnitDef, without id or name...}}

@@ -2,7 +2,7 @@ class_name Keywords
 extends RefCounted
 ## Keywords (docs/plans/phases/rebuild-phase5c-combos.md, step 3; part 7, section
 ## 1): names for a unit's state that any card can refer to. A status carries
-## its keyword ("keyword" in data/statuses.json); Shielded is the one that
+## its keyword ("keyword" in data/core/statuses.json); Shielded is the one that
 ## isn't a status (a Shield above 0). Keywords are team-wide by nature: they
 ## are the unit's state, whoever put it there.
 ##   marked     a Marked status

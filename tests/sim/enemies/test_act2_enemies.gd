@@ -1,5 +1,5 @@
 extends GutTest
-## Act 2's enemies in data/enemies.json (docs/plans/acts/act2-glassmere.md,
+## Act 2's enemies in data/acts/act<N>/enemies.json (docs/plans/acts/act2-glassmere.md,
 ## sections 3 and 5 to 7; rebuild-phase8-act2.md, 8c-4a): each one's threat
 ## happens, and so does each new face's two specializations. Each test is a
 ## small fight built for one enemy, with water where it needs some.

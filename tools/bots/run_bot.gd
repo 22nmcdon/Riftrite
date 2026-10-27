@@ -13,7 +13,6 @@ extends RefCounted
 ## the hero with the fewest upgrades, and the first relic of a choice.
 
 const Report = preload("res://tools/reports/sim_report.gd")
-const FORMATIONS_FILE: String = "res://tools/teams/sim_formations.json"
 const FORMATION: String = "guarded"
 ## The named formations a looking-ahead bot tries, in this order.
 const FORMATIONS: Array[String] = ["guarded", "exposed", "spread", "clumped"]
@@ -33,7 +32,7 @@ const ROCK: Vector2i = Vector2i(0, 0)
 ## in it (the built three by default; phase 8 part 4).
 static func formation(name: String = FORMATION, team: Array[String] = HeroTeam.DEFAULT, content: ContentDb = null) -> Dictionary[String, Vector2i]:
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string(FORMATIONS_FILE), errors)
+	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string(Report.FORMATIONS_FILE), errors)
 	if content == null:
 		content = _default_content()
 	var hexes: Dictionary[String, Vector2i] = {}
@@ -43,10 +42,7 @@ static func formation(name: String = FORMATION, team: Array[String] = HeroTeam.D
 
 ## A run's team (phase 8 part 4).
 static func team_of(flow: RunFlow) -> Array[String]:
-	var team: Array[String] = []
-	for hero: RunState.Hero in flow.state.heroes:
-		team.append(hero.id)
-	return team
+	return flow.state.hero_ids()
 
 
 static var _content: ContentDb = null
@@ -71,11 +67,11 @@ static func formation_for(flow: RunFlow) -> Dictionary[String, Vector2i]:
 	return formation(FORMATION, team_of(flow), flow.run.content)
 
 
-## Each of `team`'s heroes vowed to its first path (the built three by
-## default; phase 8 part 4).
-static func first_vows(content: ContentDb, team: Array[String] = HeroTeam.DEFAULT) -> Dictionary[String, String]:
+## The default team's heroes (the built three; phase 8 part 4), each vowed
+## to its first path.
+static func first_vows(content: ContentDb) -> Dictionary[String, String]:
 	var vows: Dictionary[String, String] = {}
-	for hero_id: String in team:
+	for hero_id: String in HeroTeam.DEFAULT:
 		vows[hero_id] = content.heroes[hero_id].paths[0].id
 	return vows
 
@@ -90,7 +86,7 @@ static func play(run: RunContent, run_seed: int, errors: Array[String], vows: Di
 	for step: int in MAX_STEPS:
 		if flow.state.phase == RunState.Phase.ENDED:
 			return flow
-		var refused: String = step_once(flow, hexes, errors)
+		var refused: String = step_once(flow, hexes)
 		if not refused.is_empty():
 			errors.append("day %d (%s): %s" % [flow.state.day, RunState.PHASE_NAMES[flow.state.phase], refused])
 			return flow
@@ -99,8 +95,7 @@ static func play(run: RunContent, run_seed: int, errors: Array[String], vows: Di
 
 
 ## One action for wherever the day is. Returns why it was refused ("": done).
-## `look_ahead`: place by formation_for (the run report) instead of `hexes`.
-static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors: Array[String], look_ahead: bool = false) -> String:
+static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i]) -> String:
 	var state: RunState = flow.state
 	if not state.pick.is_empty():
 		return flow.take_pick(pick_choice(flow))
@@ -133,10 +128,7 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 					return flow.choose_event(chosen[0], chosen[1])
 			if not state.hunt.is_empty():
 				var hunt_errors: Array[String] = []
-				var hunt_hexes: Dictionary[String, Vector2i] = hexes
-				if look_ahead:
-					hunt_hexes = formation_for(flow)
-				if flow.fight(hunt_hexes, hunt_errors) == null:
+				if flow.fight(hexes, hunt_errors) == null:
 					return ", ".join(hunt_errors)
 				return ""
 			if state.mapping:
@@ -150,10 +142,7 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 			return flow.choose_fight(0)
 		RunState.Phase.LOADOUT:
 			var fight_errors: Array[String] = []
-			var fight_hexes: Dictionary[String, Vector2i] = hexes
-			if look_ahead:
-				fight_hexes = formation_for(flow)
-			if flow.fight(fight_hexes, fight_errors) == null:
+			if flow.fight(hexes, fight_errors) == null:
 				return ", ".join(fight_errors)
 			return ""
 		RunState.Phase.AFTER:

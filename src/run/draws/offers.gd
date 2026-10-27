@@ -234,9 +234,7 @@ static func oaths(run: RunContent, state: RunState) -> Array[String]:
 	var pool: Array[String] = []
 	for oath: EventDef.Oath in run.events.oaths:
 		pool.append(oath.id)
-	var heroes: Array[String] = []
-	for hero: RunState.Hero in state.heroes:
-		heroes.append(hero.id)
+	var heroes: Array[String] = state.hero_ids()
 	var offer: Array[String] = []
 	for i: int in mini(2, heroes.size()):
 		var oath: String = pool.pop_at(rng.range_int(pool.size()))

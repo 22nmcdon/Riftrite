@@ -37,7 +37,7 @@ var _toast: Toast
 
 
 func _ready() -> void:
-	drop_old_save(old_save_path)
+	RunSave.erase(old_save_path)
 	theme = UiStyle.make_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var background := ColorRect.new()
@@ -108,7 +108,7 @@ func start_run(vows: Dictionary[String, String], run_seed: int, testing: bool = 
 	if run_session != null:
 		run_session.records_path = records_path
 	if run_session == null:
-		toast(errors[0] if not errors.is_empty() else "The run couldn't start", UiStyle.BAD)
+		toast(errors[0] if not errors.is_empty() else "The run couldn't start")
 		return
 	run_session.save()
 	show_day()
@@ -119,7 +119,7 @@ func continue_run() -> void:
 	var state: RunState = RunSave.load_state(run_save_path)
 	if state == null:
 		RunSave.erase(run_save_path)
-		toast("That run was saved by another version, so it can't be loaded.", UiStyle.BAD)
+		toast("That run was saved by another version, so it can't be loaded.")
 		show_title()
 		return
 	run_session = RunSession.over(run_content(), RunFlow.resume(run_content(), state), run_save_path)
@@ -192,11 +192,5 @@ func show_screen(next: UiScreen) -> void:
 
 
 ## A short message over everything.
-func toast(message: String, color: Color = UiStyle.TEXT) -> void:
-	_toast.show_message(message, color)
-
-
-## Deletes a save from before the rebuild, if there is one.
-static func drop_old_save(path: String) -> void:
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
+func toast(message: String) -> void:
+	_toast.show_message(message)

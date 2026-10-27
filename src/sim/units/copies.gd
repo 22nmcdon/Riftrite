@@ -13,7 +13,7 @@ extends RefCounted
 ##     "<name> (copied from <hero>)", on the copier's own trigger (its mana
 ##     bar), cast with the copier's stats; targeting and areas count sides
 ##     from the copier, so the sides turn. Twinned: it's cast twice, each at
-##     twice_bp, the second half a second later (an echo). Its mana is left
+##     copy_twice_bp ("twice_pct" in the data), the second half a second later (an echo). Its mana is left
 ##     as it was.
 ##   - Logged as COPIED (source: the copier's passive; target: the hero).
 ##   - A Queen (share) gives each copy she takes to every other standing

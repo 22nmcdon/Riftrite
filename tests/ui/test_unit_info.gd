@@ -255,7 +255,7 @@ func test_small_words() -> void:
 	assert_eq(UnitInfo.trait_numbers("flying", _kits()["cinder_moth"], _content.tuning), "")
 	assert_eq(UnitInfo._unit_name("maren", _content), "Maren Thistledown")
 	assert_eq(UnitInfo._unit_name("nobody", _content), "nobody")
-	assert_eq(UnitInfo._status_name("nothing", _content), "nothing")
+	assert_eq(UnitInfo.status_name("nothing", _content), "nothing")
 
 
 # --- during a fight ---------------------------------------------------------------

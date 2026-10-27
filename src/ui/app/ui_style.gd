@@ -6,8 +6,8 @@ extends RefCounted
 ## what's current, and cream text. Cinzel for names and headings, Alegreya
 ## for text (both OFL, in art/fonts; the uploaded art's fonts,
 ## docs/plans/phases/rebuild-phase5b-art.md, Decision 2). Panels and
-## buttons are flat rounded boxes. Placeholder until the art rehaul (rebuild
-## phase 7), but it follows the mock. The fight keeps its own colors for
+## buttons are flat rounded boxes. Placeholder until the UI redesign and
+## commissioned art, but it follows the mock. The fight keeps its own colors for
 ## sides and statuses (rift violet for enemies, ember for Rift Collapse).
 
 # --- palette (sampled from the mock) ---
@@ -143,8 +143,8 @@ static func box(fill: Color, border: Color, width: int = 1, radius: int = RADIUS
 
 
 ## A button's box: roomier than a panel's.
-static func button_box(fill: Color, border: Color, width: int = 1) -> StyleBoxFlat:
-	var style: StyleBoxFlat = box(fill, border, width)
+static func button_box(fill: Color, border: Color) -> StyleBoxFlat:
+	var style: StyleBoxFlat = box(fill, border)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 9
@@ -185,8 +185,8 @@ static func plain(button: Button) -> Button:
 
 
 ## A square icon button (the panel's back, forward, and close).
-static func square(button: Button, side: float = 52.0) -> Button:
-	button.custom_minimum_size = Vector2(side, side)
+static func square(button: Button) -> Button:
+	button.custom_minimum_size = Vector2(52, 52)
 	for state: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		var style: StyleBoxFlat = button_box(NAVY_700 if state != "normal" else NAVY_750, LINE_400 if state == "hover" else LINE_500)
 		style.content_margin_left = 0
@@ -324,6 +324,14 @@ static func plate(child: Control) -> PanelContainer:
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(child)
 	return panel
+
+
+## A label that wraps at word boundaries and fills its row's width.
+static func wrapped(text: String, size: int, color: Color) -> Label:
+	var label_node: Label = label(text, size, color)
+	label_node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label_node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return label_node
 
 
 static func label(text: String, size: int = 16, color: Color = TEXT) -> Label:

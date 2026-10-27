@@ -5,7 +5,7 @@ extends RefCounted
 ## elite fight's enemies carry, one or two at a time, as a kit mod on the
 ## enemy's kit, with its word put before the enemy's name and the player's
 ## sentence for it. Any enemy can carry any upgrade, so they live in their
-## own file (data/enemy_upgrades.json, Decision 3), not on the enemies.
+## own file (data/acts/enemy_upgrades.json, Decision 3), not on the enemies.
 ##   {"id": "frenzied", "name": "Frenzied",
 ##    "text": "It attacks faster once it's below half its HP.",
 ##    "mod": {...a KitMod...}}

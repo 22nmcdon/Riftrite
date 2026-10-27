@@ -1,5 +1,5 @@
 extends GutTest
-## data/tactics.json and tactics in a fight's setup (docs/plans/phases/rebuild-phase3b-tactics.md,
+## data/core/tactics.json and tactics in a fight's setup (docs/plans/phases/rebuild-phase3b-tactics.md,
 ## sections 1 and 3): reading each kind, the checks across files, enemies'
 ## archetypes on their kits, and Encounters and FightSetup taking a hero's
 ## tactic. What each kind does in a fight is test_tactics.gd's (step 2).

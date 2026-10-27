@@ -1,6 +1,6 @@
 class_name BondDef
 extends RefCounted
-## A duo bond (data/bonds.json; docs/plans/design/duo-bonds.md; phase 5c step 5d,
+## A duo bond (data/run/bonds.json; docs/plans/design/duo-bonds.md; phase 5c step 5d,
 ## docs/plans/phases/rebuild-phase5c-combos.md, section 13): two paths of two
 ## different heroes. It has no boost of its own: it's the key to a bond
 ## relic. Once both heroes have transformed into its paths it's on, and its

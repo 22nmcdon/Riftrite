@@ -119,7 +119,7 @@ func test_the_fight_order_matters() -> void:
 ## HP spent on a signature (HP_SPENT, phase 8 part 5): tests/heroes/severine/test_severine_pieces.gd.
 ## Engorged max HP given up (MAX_HP_DOWN): tests/heroes/severine/test_severine_apex_pieces.gd.
 ## Shards collected (SHARDS): tests/heroes/edric/test_edric_pieces.gd.
-const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
+const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
 	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID, LogEntry.Kind.COPIED, LogEntry.Kind.RELEASED, LogEntry.Kind.MANA_GIVEN, LogEntry.Kind.HP_SPENT, LogEntry.Kind.MAX_HP_DOWN, LogEntry.Kind.SHARDS]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;

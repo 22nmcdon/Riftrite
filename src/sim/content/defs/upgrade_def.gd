@@ -1,6 +1,6 @@
 class_name UpgradeDef
 extends RefCounted
-## One upgrade from the after-fight pick (data/upgrades.json;
+## One upgrade from the after-fight pick (data/heroes/<hero>/upgrades.json;
 ## docs/plans/design/upgrade-pools.md, built in phase 5c step 7): permanent, and a
 ## kit modifier written against the hero's slots, so it survives a
 ## transformation. Three layers (docs/plans/phases/rebuild-phase5c-combos.md,

@@ -3,7 +3,7 @@ extends GutTest
 ## part 8c-5a): the upgrades' aura stats (Shieldbreaker's damage to Shields,
 ## Watchful's sight, Cinder-Skinned, Mark-Shy, Anchored's cap on Roots) and
 ## Festering's cut to healing, and Engage reaching farther (the Warden Sentinel), each in a small fight, with
-## the real upgrades from data/enemy_upgrades.json.
+## the real upgrades from data/acts/enemy_upgrades.json.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 

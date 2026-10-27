@@ -442,7 +442,7 @@ func is_per_hit() -> bool:
 func describe() -> String:
 	var amount: String
 	if per_shield_bp > 0:
-		amount = "+%s %s per point of Shield" % [ValueBreakdown._percent(per_shield_bp), STAT_LABELS[stat]]
+		amount = "+%s %s per point of Shield" % [ValueBreakdown.percent(per_shield_bp), STAT_LABELS[stat]]
 	elif stat == Stat.RANGE or stat == Stat.ATSP or stat == Stat.DEF or stat == Stat.SPEED or stat == Stat.ATK:
 		amount = "%s%d %s" % ["+" if value >= 0 else "", value, STAT_LABELS[stat]]
 	elif stat == Stat.UNPUSHABLE:
@@ -455,13 +455,13 @@ func describe() -> String:
 		amount = STAT_LABELS[stat]
 	elif stat == Stat.DAMAGE_REDUCED_BP:
 		# Less damage taken reads as a minus (phase 8 part 3, the Heart's Ward).
-		amount = "%s%s %s" % ["-" if value >= 0 else "+", ValueBreakdown._percent(absi(value)), STAT_LABELS[stat]]
+		amount = "%s%s %s" % ["-" if value >= 0 else "+", ValueBreakdown.percent(absi(value)), STAT_LABELS[stat]]
 	elif stat == Stat.ROOT_CAP_MS:
 		amount = "Roots on it last at most %s" % _seconds_ms(value)
 	elif is_additive():
-		amount = "%s%s %s" % ["+" if value >= 0 else "", ValueBreakdown._percent(value), STAT_LABELS[stat]]
+		amount = "%s%s %s" % ["+" if value >= 0 else "", ValueBreakdown.percent(value), STAT_LABELS[stat]]
 	else:
-		amount = "x%s %s" % [ValueBreakdown._ratio(value), STAT_LABELS[stat]]
+		amount = "x%s %s" % [ValueBreakdown.ratio(value), STAT_LABELS[stat]]
 	var condition: String = ""
 	match while_kind:
 		While.TAUNTING:
@@ -471,7 +471,7 @@ func describe() -> String:
 			if step_ticks > 0:
 				condition += ", %s%d more every %s" % ["+" if step_value >= 0 else "", step_value, _seconds(step_ticks)]
 		While.BELOW_HP:
-			condition = " while below %s HP" % ValueBreakdown._percent(below_bp)
+			condition = " while below %s HP" % ValueBreakdown.percent(below_bp)
 		While.ALLY_STANDING:
 			condition = " while a %s stands" % ally_kit.replace("_", " ") if not ally_kit.is_empty() else " while another of its side stands"
 		While.STATE:
@@ -507,7 +507,7 @@ func describe() -> String:
 	if not per_holder_stacks.is_empty():
 		condition += " per stack of %s on it" % per_holder_stacks.replace("_", " ")
 	if per_engorged_bp > 0:
-		condition += " for every %s of max HP Engorge adds" % ValueBreakdown._percent(per_engorged_bp)
+		condition += " for every %s of max HP Engorge adds" % ValueBreakdown.percent(per_engorged_bp)
 	if from_basic:
 		condition += " on its basic attack's hits"
 	if per_hex:

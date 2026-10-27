@@ -103,7 +103,7 @@ func test_the_setup_checks_the_formation() -> void:
 	assert_eq(fight.validate(content), ["warden at (3, 4) is outside its side's zone", "ranger at (2, 4) is outside its side's zone", "pup at (2, 4) shares its hex with ranger"] as Array[String])
 
 
-# --- the Act 1 encounters in data/encounters.json ---------------------------------
+# --- the Act 1 encounters in data/acts/act<N>/encounters.json ---------------------------------
 
 ## Brannoc in front of the other two (the sim runner's "guarded").
 const GUARDED: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}

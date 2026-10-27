@@ -130,19 +130,7 @@ static func rule_note(entry: LogEntry) -> String:
 	var names: Array[String] = ["power", "crit", "healing taken" if entry.kind == LogEntry.Kind.HEAL else "vulnerability", "relic"]
 	for i: int in 4:
 		if bonuses[i] != 0:
-			parts.append("%s %s" % [names[i], _percent(bonuses[i])])
+			parts.append("%s %s" % [names[i], ValueBreakdown.signed_percent(bonuses[i])])
 	if parts.size() == 1:
 		parts.append("no bonuses")
 	return " · ".join(parts)
-
-
-static func _percent(bp: int) -> String:
-	var sign: String = "+" if bp >= 0 else "−"
-	var value: int = absi(bp)
-	@warning_ignore("integer_division")
-	var whole: int = value / 100
-	var part: int = value % 100
-	if part == 0:
-		return "%s%d%%" % [sign, whole]
-	@warning_ignore("integer_division")
-	return "%s%d.%d%%" % [sign, whole, part / 10] if part % 10 == 0 else "%s%d.%02d%%" % [sign, whole, part]

@@ -1,6 +1,6 @@
 extends GutTest
 ## The rift learns (docs/plans/phases/rebuild-phase8-act3.md, part 8c-5d; RiftLearns,
-## data/rift_learns.json): each fight's summary kept on its Fought, the
+## data/acts/rift_learns.json): each fight's summary kept on its Fought, the
 ## habits scored from the last fights, the boss's adds' learned picks on a
 ## boss day of an act with rift_learns, the fight with them, the save
 ## (version 10), and the fight card's line. On stand-in acts

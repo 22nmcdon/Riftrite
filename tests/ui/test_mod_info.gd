@@ -61,7 +61,7 @@ func test_every_stat_change_names_its_amount() -> void:
 			var numbers: String = ModInfo.item_numbers(item, null, _content, rank)
 			for stat: int in mod.stats_bp.size():
 				if mod.stats_bp[stat] != FixedMath.BP_ONE:
-					assert_string_contains(numbers, "%s %s" % [UnitInfo.signed_percent(mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]], id)
+					assert_string_contains(numbers, "%s %s" % [ValueBreakdown.signed_percent(mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]], id)
 				if mod.stats_add[stat] != 0:
 					assert_string_contains(numbers, "%s %s" % [ModInfo.signed(mod.stats_add[stat]), UnitStats.LABELS[stat]], id)
 

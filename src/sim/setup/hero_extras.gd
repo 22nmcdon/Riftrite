@@ -2,7 +2,7 @@ class_name HeroExtras
 extends RefCounted
 ## What a hero brings into a fight beyond its path and tactic (docs/plans/phases/rebuild-phase5-run.md,
 ## sections 6 and 7): kit modifiers (its upgrades, its loadout's charms,
-## sigils, and grafts, the team's relics, a duo bond), applied in this order
+## sigils, and gambits, and the team's relics), applied in this order
 ## after the path's patch, and its wounds.
 
 var mods: Array[KitMod] = []

@@ -365,10 +365,4 @@ static func cancel_cast(sim: CombatSim, unit: UnitState, reason: String) -> void
 
 static func _in_reach(unit: UnitState, target: UnitState) -> bool:
 	var reach: int = unit.reach_of(unit.signature.def)
-	return _distance_squared(unit, target) <= reach * reach
-
-
-static func _distance_squared(unit: UnitState, other: UnitState) -> int:
-	var dx: int = other.pos.x - unit.pos.x
-	var dy: int = other.pos.y - unit.pos.y
-	return dx * dx + dy * dy
+	return ArenaPlane.within(unit.pos, target.pos, reach)

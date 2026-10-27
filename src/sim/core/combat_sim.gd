@@ -190,8 +190,6 @@ var last_overkill: int = 0
 ## Some unit has stored damage (phase 8 part 4, Vengeance): it grows each
 ## second (_grow_stored). False in a fight where nothing stores.
 var any_stored: bool = false
-## Some unit's signature has gripped (phase 8 part 4, Grips).
-var any_grips: bool = false
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []

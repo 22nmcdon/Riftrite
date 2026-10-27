@@ -18,7 +18,6 @@ extends RefCounted
 ## `entries` reads it, so an error names the file the entry came from.
 
 const ROSTER: String = "heroes/roster.json"
-const RELIC_TIERS: Array[String] = ["common", "rare", "epic", "legendary", "boss", "bond"]
 const ITEM_KINDS: Array[String] = ["charms", "tactics", "sigils", "gambits"]
 ## The key a joined entry carries its file in.
 const FROM: String = "_from"
@@ -44,7 +43,7 @@ static func files(dir: String, kind: String) -> Array[String]:
 		"enemy_upgrades.json", "rift_learns.json":
 			found.append("acts/" + kind)
 		"relics.json":
-			for tier: String in RELIC_TIERS:
+			for tier: String in RelicDef.TIER_NAMES:
 				found.append("run/relics/%s.json" % tier)
 		"items.json":
 			for item_kind: String in ITEM_KINDS:

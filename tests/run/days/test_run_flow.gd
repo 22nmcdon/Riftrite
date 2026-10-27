@@ -199,8 +199,8 @@ func test_saving_and_loading_gives_the_same_run() -> void:
 			break
 		# Going on from the loaded state gives the same run as going on from the live one.
 		var twin: RunFlow = RunFlow.resume(_run, loaded)
-		Bot.step_once(flow, hexes, errors)
-		Bot.step_once(twin, hexes, errors)
+		Bot.step_once(flow, hexes)
+		Bot.step_once(twin, hexes)
 		assert_eq(JSON.stringify(twin.state.to_dict()), JSON.stringify(flow.state.to_dict()))
 	assert_eq(errors, [] as Array[String])
 	var bad := FileAccess.open(SAVE_PATH, FileAccess.WRITE)

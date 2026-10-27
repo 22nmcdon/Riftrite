@@ -17,9 +17,6 @@ var stat_parts: Array[Array] = []
 var scaled: int = 0
 var multipliers: Array[Multiplier] = []
 var final: int = 0
-## The exact final value in basis points of one unit (final is this rounded).
-## Used where small numbers must not round away, like a 0.6x spill of 1 stack.
-var final_bp: int = 0
 
 
 static func compute(base_amount: int, scaling: Array[int], stats: UnitStats, boosts: Array[Multiplier]) -> ValueBreakdown:
@@ -39,7 +36,6 @@ static func compute(base_amount: int, scaling: Array[int], stats: UnitStats, boo
 		value.multipliers.append(boost)
 		combined_bp = FixedMath.apply_bp(combined_bp, boost.bp)
 	value.final = FixedMath.apply_bp(value.scaled, combined_bp)
-	value.final_bp = value.scaled * combined_bp
 	return value
 
 
@@ -57,17 +53,17 @@ func to_text() -> String:
 	var parts: Array[String] = []
 	var sum: String = "base %d" % base
 	for part: Array in stat_parts:
-		sum += " + %s %s %d" % [_percent(part[1]), UnitStats.LABELS[part[0]], part[2]]
+		sum += " + %s %s %d" % [percent(part[1]), UnitStats.LABELS[part[0]], part[2]]
 	if not stat_parts.is_empty():
 		sum += " = %d" % scaled
 	parts.append(sum)
 	for boost: Multiplier in multipliers:
-		parts.append("x%s %s" % [_ratio(boost.bp), boost.label])
+		parts.append("x%s %s" % [ratio(boost.bp), boost.label])
 	return "%d (%s)" % [final, ", ".join(parts)]
 
 
 ## 6000 -> "60%", 6250 -> "62.5%" (integer formatting only).
-static func _percent(bp: int) -> String:
+static func percent(bp: int) -> String:
 	@warning_ignore("integer_division")
 	var whole: int = bp / 100
 	var rest: int = bp % 100
@@ -76,8 +72,13 @@ static func _percent(bp: int) -> String:
 	return "%d.%s%%" % [whole, str(rest).pad_zeros(2).trim_suffix("0")]
 
 
+## 1500 -> "+15%", -250 -> "−2.5%".
+static func signed_percent(bp: int) -> String:
+	return ("+" if bp >= 0 else "−") + percent(absi(bp))
+
+
 ## 15000 -> "1.5", 19531 -> "1.9531".
-static func _ratio(bp: int) -> String:
+static func ratio(bp: int) -> String:
 	@warning_ignore("integer_division")
 	var whole: int = bp / FixedMath.BP_ONE
 	var rest: int = bp % FixedMath.BP_ONE

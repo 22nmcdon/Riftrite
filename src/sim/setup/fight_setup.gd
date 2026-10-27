@@ -209,7 +209,7 @@ func validate(content: ContentDb) -> Array[String]:
 				errors.append("%s can't take the tactic %s" % [where, unit.tactic.name])
 			errors.append_array(_path_problems(unit, where))
 			if unit.max_hp_bp < 1000 or unit.max_hp_bp > FixedMath.BP_ONE:
-				errors.append("%s has max HP at %s of its kit's (10%% to 100%%)" % [where, ValueBreakdown._percent(unit.max_hp_bp)])
+				errors.append("%s has max HP at %s of its kit's (10%% to 100%%)" % [where, ValueBreakdown.percent(unit.max_hp_bp)])
 			errors.append_array(_snare_problems(unit, where, grid, rocks))
 		if not grid.has(unit.col, unit.row):
 			errors.append("%s is off the board" % where)

@@ -42,11 +42,11 @@ static func update(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]) 
 		var engager: UnitState = engagement.engager
 		if engager == null or not engager.alive:
 			_end(sim, unit, engagement, "%s fell" % (engager.id if engager != null else "its engager"))
-		elif _distance_sq(unit, engager) > _reach_sq(sim, engager):
+		elif ArenaPlane.length_sq(engager.pos - unit.pos) > _reach_sq(sim, engager):
 			_end(sim, unit, engagement, "out of reach of %s" % engager.id)
 		i -= 1
 	for engager: UnitState in engagers:
-		if not engager.alive or _distance_sq(unit, engager) > _reach_sq(sim, engager) or _find(unit, engager) != null:
+		if not engager.alive or ArenaPlane.length_sq(engager.pos - unit.pos) > _reach_sq(sim, engager) or _find(unit, engager) != null:
 			continue
 		var engagement := Engagement.new()
 		engagement.engager = engager
@@ -84,7 +84,7 @@ static func drop_out_of_reach(sim: CombatSim, unit: UnitState) -> void:
 	while i >= 0:
 		var engagement: Engagement = unit.engagements[i]
 		var engager: UnitState = engagement.engager
-		if engager != null and _distance_sq(unit, engager) > _reach_sq(sim, engager):
+		if engager != null and ArenaPlane.length_sq(engager.pos - unit.pos) > _reach_sq(sim, engager):
 			_end(sim, unit, engagement, "moved out of reach of %s" % engager.id)
 		i -= 1
 
@@ -124,9 +124,3 @@ static func _find(unit: UnitState, engager: UnitState) -> Engagement:
 		if engagement.engager == engager:
 			return engagement
 	return null
-
-
-static func _distance_sq(unit: UnitState, other: UnitState) -> int:
-	var dx: int = other.pos.x - unit.pos.x
-	var dy: int = other.pos.y - unit.pos.y
-	return dx * dx + dy * dy

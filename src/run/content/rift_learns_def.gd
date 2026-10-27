@@ -1,6 +1,6 @@
 class_name RiftLearnsDef
 extends RefCounted
-## The rift learns' data (data/rift_learns.json; phase 8 part 3,
+## The rift learns' data (data/acts/rift_learns.json; phase 8 part 3,
 ## docs/plans/phases/rebuild-phase8-act3.md section 5, enemy-growth.md section 5):
 ## how many fights it reads, and the habits it answers, each with what a
 ## fight counts toward it, how much a fight of it is a habit, and the
@@ -36,7 +36,7 @@ class Habit:
 	var against: String
 	var measure: String
 	var per_fight: int
-	## Enemy upgrade ids (data/enemy_upgrades.json) that answer it.
+	## Enemy upgrade ids (data/acts/enemy_upgrades.json) that answer it.
 	var upgrades: Array[String] = []
 	## Specialization ids (an enemy's "specializations") that answer it.
 	var specializations: Array[String] = []

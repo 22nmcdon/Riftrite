@@ -434,8 +434,7 @@ func event_targets(choice: EventDef.Choice) -> Array[String]:
 	var targets: Array[String] = []
 	match choice.needs():
 		EventDef.Needs.HERO:
-			for hero: RunState.Hero in state.heroes:
-				targets.append(hero.id)
+			targets.append_array(state.hero_ids())
 		EventDef.Needs.ITEM:
 			for id: String in run.item_ids:
 				if state.item_ranks.has(id):
@@ -551,10 +550,7 @@ func _event_result(result: EventDef.Result, target: String, what: int) -> void:
 		"rank_up_chosen":
 			_gain_item(target)
 		"weaken":
-			var ids: Array[String] = []
-			for hero: RunState.Hero in state.heroes:
-				ids.append(hero.id)
-			for id: String in Offers.event_picks(state, ids, 1, what):
+			for id: String in Offers.event_picks(state, state.hero_ids(), 1, what):
 				state.hero(id).weakened += 1
 		"hunt":
 			state.hunt = Offers.hunt(run, state)

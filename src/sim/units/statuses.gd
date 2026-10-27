@@ -1,7 +1,7 @@
 class_name Statuses
 extends RefCounted
 ## Applies, ticks, and reads statuses (docs/plans/phases/rebuild-phase1-arena-sim.md,
-## section 8; the numbers are in data/statuses.json):
+## section 8; the numbers are in data/core/statuses.json):
 ##   damage_over_time: every interval, each stack group deals
 ##       stacks x damage_per_stack (credited to whoever applied those stacks;
 ##       vs_shield_bp sets how hard it hits shields, and 0 skips them), then
@@ -64,7 +64,7 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 			if held.def.turns():
 				turned.append(held)
 		for held: StatusState in turned:
-			_end(sim, target, held, "taunted")
+			end_now(sim, target, held, "taunted")
 	# The heroes' rules (phase 5c step 5c): The Unbending blocks what enemies
 	# put on heroes; Crown of the Hollow King doubles the keywords heroes
 	# apply; Everflame makes those on enemies last.
@@ -195,7 +195,7 @@ static func end_on_attack(sim: CombatSim, unit: UnitState, basic: bool = true) -
 			if state.spared < state.def.spares_attacks:
 				state.spared += 1
 				continue
-		_end(sim, unit, state, "it attacked")
+		end_now(sim, unit, state, "it attacked")
 
 
 ## The power its boosts give its next signature (phase 8 part 4, Grand
@@ -211,7 +211,7 @@ static func signature_power(unit: UnitState) -> int:
 static func spend_signature_boosts(sim: CombatSim, unit: UnitState) -> void:
 	for state: StatusState in unit.statuses.duplicate():
 		if state.def.signature_power_bp > 0:
-			_end(sim, unit, state, "spent by its signature")
+			end_now(sim, unit, state, "spent by its signature")
 
 
 ## The Unbending: `def` from `source` doesn't land on the hero; it's logged
@@ -275,9 +275,9 @@ static func tick_all(sim: CombatSim) -> void:
 				continue
 			if state.def.is_timed():
 				if sim.tick >= state.ends_at:
-					_end(sim, unit, state)
+					end_now(sim, unit, state)
 				elif state.until_near > 0 and _enemy_within(sim, unit, state.until_near):
-					_end(sim, unit, state, "an enemy came near")
+					end_now(sim, unit, state, "an enemy came near")
 				continue
 			state.interval_left -= 1
 			if state.interval_left <= 0:
@@ -304,7 +304,7 @@ static func _drop_stacks(sim: CombatSim, unit: UnitState, state: StatusState) ->
 		return
 	state.stack_ends.assign(state.stack_ends.filter(func(end: int) -> bool: return sim.tick < end))
 	if state.stack_ends.is_empty():
-		_end(sim, unit, state)
+		end_now(sim, unit, state)
 	elif state.stack_ends.size() != before:
 		sim.refold_auras()
 
@@ -318,7 +318,7 @@ static func spend_stack(sim: CombatSim, unit: UnitState, status_id: String) -> b
 		return false
 	state.stack_ends.remove_at(0)
 	if state.stack_ends.is_empty():
-		_end(sim, unit, state, "spent")
+		end_now(sim, unit, state, "spent")
 	elif not state.def.boost_stats.is_empty():
 		sim.refold_auras()
 	return true
@@ -347,7 +347,7 @@ static func hold(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
 static func release(sim: CombatSim, unit: UnitState, why: String) -> void:
 	var state: StatusState = find(unit, sim.content.engaged_status.id)
 	if state != null:
-		_end(sim, unit, state, why)
+		end_now(sim, unit, state, why)
 
 
 static func find(unit: UnitState, status_id: String) -> StatusState:
@@ -493,7 +493,7 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		lost += share_lost
 	state.remove_oldest(lost)
 	if state.total_stacks() == 0:
-		_end(sim, unit, state)
+		end_now(sim, unit, state)
 
 
 ## Each damage-over-time status on `unit` loses `share_bp` of its stacks
@@ -522,7 +522,7 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, so
 		entry.note = ("healed by %s" if by_heal else "cleansed by %s") % source.describe()
 		sim.combat_log.add(entry)
 		if state.total_stacks() == 0:
-			_end(sim, unit, state)
+			end_now(sim, unit, state)
 
 
 ## The status kinds a cleanse's "count" may take (phase 5c step 7c):
@@ -550,12 +550,8 @@ static func cleanse_newest(sim: CombatSim, unit: UnitState, count: int, source: 
 		end_now(sim, unit, newest, "cleansed by %s" % source.describe())
 
 
-## Ends `state` on `unit` now (Wait to heal's cleanse; phase 5c step 6c).
-static func end_now(sim: CombatSim, unit: UnitState, state: StatusState, why: String) -> void:
-	_end(sim, unit, state, why)
-
-
-static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: String = "") -> void:
+## Ends `state` on `unit` now, logged with `why`.
+static func end_now(sim: CombatSim, unit: UnitState, state: StatusState, why: String = "") -> void:
 	unit.statuses.erase(state)
 	var entry := LogEntry.new()
 	entry.tick = sim.tick

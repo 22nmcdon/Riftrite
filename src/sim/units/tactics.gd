@@ -95,7 +95,7 @@ static func damage_bonus_bp(sim: CombatSim, source: EffectSource, target: UnitSt
 	var tactic: TacticDef = attacker.tactic
 	if not (tactic.payoff_vs.holds(target) if tactic.payoff_vs != null else tactic.prefers_unit(target)):
 		return 0
-	return tactic.damage_vs_bp if _own(attacker, source) else 0
+	return tactic.damage_vs_bp if own_hit(attacker, source) else 0
 
 
 ## Marked first's payoff: more crit chance on an enemy it prefers.
@@ -110,10 +110,6 @@ static func def_ignore_bp(attacker: UnitState, target: UnitState) -> int:
 
 ## True if `source` is `attacker`'s own basic attack or signature.
 static func own_hit(attacker: UnitState, source: EffectSource) -> bool:
-	return _own(attacker, source)
-
-
-static func _own(attacker: UnitState, source: EffectSource) -> bool:
 	return source.ability_id == attacker.attack.def.id or (attacker.signature != null and source.ability_id == attacker.signature.def.id)
 
 

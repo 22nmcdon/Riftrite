@@ -90,11 +90,11 @@ const FLASH_SECONDS: float = 0.5
 const SNARE_COLOR := Color("8fbf5a")
 ## A placed lantern's marker (phase 5c step 7d).
 const LANTERN_COLOR := Color("f2c14e")
-## Shallow water's hexes (placeholder until phase 7's art).
+## Shallow water's hexes (drawn in code until commissioned art replaces it).
 const WATER_FILL := Color(0.24, 0.47, 0.62, 0.62)
 const WATER_EDGE := Color(0.72, 0.88, 0.98, 0.55)
-## The void's hexes: the rift's sky showing through (placeholder until phase
-## 7's art), and the island's lip round them.
+## The void's hexes: the rift's sky showing through (drawn in code until
+## commissioned art replaces it), and the island's lip round them.
 const VOID_FILL := Color("0a0d1c")
 const VOID_EDGE := Color(0.62, 0.52, 0.86, 0.5)
 ## A bridge warned before it breaks (8c-5c).

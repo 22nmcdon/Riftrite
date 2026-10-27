@@ -1,6 +1,6 @@
 class_name EncounterDef
 extends RefCounted
-## A hand-placed fight in data/encounters.json
+## A hand-placed fight in data/acts/act<N>/encounters.json
 ## (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 2): the enemies on
 ## their hexes, the rocks, and when it can come.
 ##   {"id": "the_pack", "name": "The Pack", "tests": "protecting the back line",

@@ -304,6 +304,14 @@ var endless_mods: Array[String] = []
 var testing: bool = false
 
 
+## The team's hero ids, in the order they act.
+func hero_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for found: Hero in heroes:
+		ids.append(found.id)
+	return ids
+
+
 func hero(hero_id: String) -> Hero:
 	for found: Hero in heroes:
 		if found.id == hero_id:

@@ -18,9 +18,7 @@ func test_sources_name_the_unit_and_ability() -> void:
 	assert_eq(source.describe(), "brannoc · Hold the Line")
 	assert_eq(EffectSource.relic("warding_knot", "Warding Knot", EffectSource.Team.HEROES).describe(), "relic · Warding Knot")
 	assert_eq(EffectSource.relic("gloam_totem", "Gloam Totem", EffectSource.Team.ENEMIES).describe(), "enemy relic · Gloam Totem")
-	var bond: EffectSource = EffectSource.relic("light_and_iron", "Light and Iron", EffectSource.Team.HEROES)
-	bond.synergy = true
-	assert_eq(bond.describe(), "bond · Light and Iron")
+	assert_eq(EffectSource.rift_effect("reinforcements", "Reinforcements").describe(), "rift · Reinforcements")
 	assert_true(source.same_as(EffectSource.make("brannoc", "hold_the_line", "Hold the Line")))
 	assert_false(source.same_as(EffectSource.make("maren", "hold_the_line", "Hold the Line")))
 

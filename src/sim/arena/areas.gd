@@ -35,7 +35,7 @@ extends RefCounted
 ##     hex wider for every grow_ms since it was cast, up to its max_radius;
 ##     the pulse it first lands wider is noted "spread to N".
 ##   - A placed lantern (phase 5c step 7d, First Lantern) is a zone cast at
-##     a point the player chose (cast_at), at the fight's start.
+##     a point the player chose (cast's `at`), at the fight's start.
 ## Heroes never step out of a warned area (decided): placement is the answer.
 
 

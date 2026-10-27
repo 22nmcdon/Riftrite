@@ -20,6 +20,8 @@ extends RefCounted
 ##     hurts. Not a gate: it answers whether a tactic ever changes an outcome,
 ##     and whether one is right everywhere (tactics_summary).
 
+## The named formations by role (tank, far, mid) the runner and the bots place from.
+const FORMATIONS_FILE: String = "res://tools/teams/sim_formations.json"
 ## The gate, in percentage points (Decisions: 30 for now).
 const GATE_POINTS: int = 30
 ## From Act 2 on (phase 8 part 3, rebuild-phase8-act2.md section 6), base

@@ -1,6 +1,6 @@
 class_name RelicDef
 extends RefCounted
-## A relic (data/relics.json; docs/plans/design/relics/README.md; phase 5c step 5a,
+## A relic (data/run/relics/; docs/plans/design/relics/README.md; phase 5c step 5a,
 ## docs/plans/phases/rebuild-phase5c-combos.md, section 10): team-wide, kept for the
 ## run, with no downsides. "text" is the player's line; "flavor" its line of
 ## flavor; "tier" one of common, rare, epic, legendary, boss, bond. What it does:

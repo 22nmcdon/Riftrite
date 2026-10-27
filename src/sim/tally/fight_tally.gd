@@ -14,8 +14,8 @@ extends RefCounted
 ##   - Damage taken: all of it, from enemies, statuses, and Rift Collapse,
 ##     and what a guard took in an ally's place (Guard, phase 4), split into
 ##     what reached HP and what a Shield absorbed.
-## (The old game's tally, from git history, adapted: no items, and no relics
-## until phase 5.)
+## (The old game's tally, from git history, adapted: no items; a relic's own
+## effects have no unit, so they aren't charted.)
 
 enum Tab { DAMAGE, SUPPORT, TAKEN }
 
@@ -87,8 +87,8 @@ static func make(setup: FightSetup, names: Dictionary[String, String] = {}) -> F
 
 
 ## A tally of a whole fight's log.
-static func of_fight(setup: FightSetup, combat_log: CombatLog, names: Dictionary[String, String] = {}) -> FightTally:
-	var tally: FightTally = make(setup, names)
+static func of_fight(setup: FightSetup, combat_log: CombatLog) -> FightTally:
+	var tally: FightTally = make(setup)
 	for entry: LogEntry in combat_log.entries:
 		tally.add(entry)
 	return tally

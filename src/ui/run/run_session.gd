@@ -39,9 +39,7 @@ static func over(run_content: RunContent, run_flow: RunFlow, path: String = RunS
 	session.flow = run_flow
 	session.content = run_content.content
 	session.save_path = path
-	session.team.clear()
-	for hero: RunState.Hero in run_flow.state.heroes:
-		session.team.append(hero.id)
+	session.team = run_flow.state.hero_ids()
 	session.formation = run_flow.state.formation.duplicate() if not run_flow.state.formation.is_empty() \
 		else HeroTeam.place(session.content, session.team, HeroTeam.GUARDED)
 	session.sync()

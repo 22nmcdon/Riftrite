@@ -78,7 +78,7 @@ static func lines(kit: UnitDef, who: String, content: ContentDb) -> Array[Line]:
 
 ## "Below 80% HP · new signature: Call the Brood".
 static func phase_numbers(phase: PhaseDef) -> String:
-	var parts: Array[String] = ["Below %s HP" % ValueBreakdown._percent(phase.below_hp_bp)]
+	var parts: Array[String] = ["Below %s HP" % ValueBreakdown.percent(phase.below_hp_bp)]
 	if phase.signature != null:
 		parts.append("new signature: %s" % phase.signature.name)
 	if phase.basic_attack != null:
@@ -123,7 +123,7 @@ static func trait_numbers(trait_id: String, kit: UnitDef, tuning: TuningDef) -> 
 			if kit.engage_reach_add > 0:
 				# A farther Engage (phase 8 part 3, the Warden Sentinel).
 				@warning_ignore("integer_division")
-				held += " · holds foes within %d hexes" % ((tuning.engage_reach + kit.engage_reach_add) / HexGrid.HEX)
+				held += " · holds foes within %s" % hexes((tuning.engage_reach + kit.engage_reach_add) / HexGrid.HEX)
 			return held
 		"hop_away":
 			return "At most once every %s" % seconds(kit.hop_cooldown_ticks)
@@ -166,7 +166,7 @@ static func signature_numbers(kit: UnitDef, content: ContentDb) -> String:
 	var signature: AbilityDef = kit.signature
 	var parts: Array[String] = [trigger_text(signature.trigger, kit)]
 	if signature.hp_cost_bp > 0:
-		parts.append("costs %s of max HP" % ValueBreakdown._percent(signature.hp_cost_bp))
+		parts.append("costs %s of max HP" % ValueBreakdown.percent(signature.hp_cost_bp))
 	if signature.cast_ticks > 0:
 		parts.append("%s cast" % seconds(signature.cast_ticks))
 	if signature.targeting != "self":
@@ -174,15 +174,15 @@ static func signature_numbers(kit: UnitDef, content: ContentDb) -> String:
 	parts.append_array(effect_numbers(signature.effects, kit, content))
 	# Growing with each cast (phase 8 part 2).
 	if signature.grows_bp > 0:
-		parts.append("%s stronger each cast" % signed_percent(signature.grows_bp))
+		parts.append("%s stronger each cast" % ValueBreakdown.signed_percent(signature.grows_bp))
 	if signature.grows_boosts_bp > 0:
-		parts.append("its boosts %s stronger each cast" % signed_percent(signature.grows_boosts_bp))
+		parts.append("its boosts %s stronger each cast" % ValueBreakdown.signed_percent(signature.grows_boosts_bp))
 	# Phase 8 part 4 (Tamsin): a grip, and a fire that kills fires again.
 	if not signature.grip_status.is_empty():
-		var grip: String = "grips its target while it's %s: every %s, %s" % [_status_name(signature.grip_status, content), seconds(signature.grip_every_ticks),
+		var grip: String = "grips its target while it's %s: every %s, %s" % [status_name(signature.grip_status, content), seconds(signature.grip_every_ticks),
 			", ".join(effect_numbers(signature.grip_effects, kit, content))]
 		if not signature.grip_veil.is_empty():
-			grip += ", %s meanwhile" % _status_name(signature.grip_veil, content)
+			grip += ", %s meanwhile" % status_name(signature.grip_veil, content)
 		parts.append(grip)
 	if signature.again_on_kill:
 		parts.append("if it kills, it fires again (once)")
@@ -194,28 +194,28 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 		PartDef.Kind.AURA:
 			return aura_text(part.aura)
 		PartDef.Kind.REPLACE_STATUS:
-			return "%s becomes %s" % [_status_name(part.from_status, content), _status_name(part.to_status, content)]
+			return "%s becomes %s" % [status_name(part.from_status, content), status_name(part.to_status, content)]
 		PartDef.Kind.GUARD:
 			@warning_ignore("integer_division")
-			return "Takes %s of each enemy hit on an ally %swithin %s" % [ValueBreakdown._percent(part.share_bp),
+			return "Takes %s of each enemy hit on an ally %swithin %s" % [ValueBreakdown.percent(part.share_bp),
 				"behind it " if part.behind_only else "", hexes(part.guard_range / HexGrid.HEX)]
 		PartDef.Kind.RISE:
-			var rises: String = "Rises %s after falling, at %s of max HP, %s a fight" % [seconds(part.rise_ticks), ValueBreakdown._percent(part.rise_hp_bp),
+			var rises: String = "Rises %s after falling, at %s of max HP, %s a fight" % [seconds(part.rise_ticks), ValueBreakdown.percent(part.rise_hp_bp),
 				"once" if part.rise_times == 1 else "up to %d times" % part.rise_times]
 			if not part.rise_status.is_empty():
-				rises += "; each rise: %s" % _status_name(part.rise_status, content)
+				rises += "; each rise: %s" % status_name(part.rise_status, content)
 			return rises
 		PartDef.Kind.COPY:
 			var copies: String = "Copies %s hero signature it sees" % ("each new" if part.copy_replace else "the first")
 			if part.copy_twice_bp > 0:
-				copies += "; casts it twice, each at %s" % ValueBreakdown._percent(part.copy_twice_bp)
+				copies += "; casts it twice, each at %s" % ValueBreakdown.percent(part.copy_twice_bp)
 			if part.copy_share:
 				copies += "; its court gets each copy too"
 			return copies
 		PartDef.Kind.LINK:
-			var linked: String = "Allies with its Shields share %s of each hit on one, evenly" % ValueBreakdown._percent(part.share_bp)
+			var linked: String = "Allies with its Shields share %s of each hit on one, evenly" % ValueBreakdown.percent(part.share_bp)
 			if part.per_shared > 0:
-				linked += "; every %d shared: %s on each" % [part.per_shared, _status_name(part.link_status, content)]
+				linked += "; every %d shared: %s on each" % [part.per_shared, status_name(part.link_status, content)]
 			return linked
 	# Each effect's trigger, where it differs from the one before (a passive
 	# may answer more than one event).
@@ -234,7 +234,7 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 ## or goes after, then its payoff.
 static func tactic_numbers(tactic: TacticDef) -> String:
 	var parts: Array[String] = []
-	var pct: Callable = func(bp: int) -> String: return ValueBreakdown._percent(bp)
+	var pct: Callable = func(bp: int) -> String: return ValueBreakdown.percent(bp)
 	match tactic.kind:
 		TacticDef.Kind.PREFER_TARGET:
 			if not tactic.archetypes.is_empty():
@@ -323,7 +323,7 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 				return "At %d mana, at most every %s" % [kit.mana.max, seconds(trigger.recover_ticks)]
 			return "At %d mana" % kit.mana.max
 		TriggerDef.Kind.HP_BELOW:
-			return "Once, below %s HP" % ValueBreakdown._percent(trigger.threshold_bp)
+			return "Once, below %s HP" % ValueBreakdown.percent(trigger.threshold_bp)
 		TriggerDef.Kind.FIGHT_START:
 			return "Once, as the fight starts"
 		TriggerDef.Kind.AT_TIME:
@@ -337,7 +337,7 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 		TriggerDef.Kind.EVERY:
 			return "Every %s" % seconds(trigger.at_ticks)
 		TriggerDef.Kind.HP_ABOVE:
-			return "Whenever above %s HP" % ValueBreakdown._percent(trigger.threshold_bp)
+			return "Whenever above %s HP" % ValueBreakdown.percent(trigger.threshold_bp)
 	return "Once, when it would fall"
 
 
@@ -362,9 +362,9 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 				how = "once a fight" if effect.times == 1 else "for the first %d allies" % effect.times
 			if effect.below_hp_enemies:
 				how = how.replace("ally", "enemy").replace("allies", "enemies")
-			return "When %s drops below %s HP (%s)" % ["an enemy" if effect.below_hp_enemies else "an ally", ValueBreakdown._percent(effect.threshold_bp), how]
+			return "When %s drops below %s HP (%s)" % ["an enemy" if effect.below_hp_enemies else "an ally", ValueBreakdown.percent(effect.threshold_bp), how]
 		EffectDef.Trigger.ON_BELOW_HP:
-			return "When it drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.times == 1 else "up to %d times a fight" % effect.times]
+			return "When it drops below %s HP (%s)" % [ValueBreakdown.percent(effect.threshold_bp), "once a fight" if effect.times == 1 else "up to %d times a fight" % effect.times]
 	var word: String = EVENT_WORDS.get(effect.trigger, EffectDef.TRIGGER_NAMES[effect.trigger])
 	if effect.trigger == EffectDef.Trigger.ON_STATUS_ENDED and not effect.statuses.is_empty():
 		var ended: Array[String] = []
@@ -379,9 +379,9 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 	var text: String = ("Once, on its %s" if effect.once else "Every %s") % (_nth(effect.every, word) if effect.every > 1 or not effect.once else "first " + word)
 	if effect.fell_range > 0:
 		@warning_ignore("integer_division")
-		text += " within %d hexes" % (effect.fell_range / HexGrid.HEX)
+		text += " within %s" % hexes(effect.fell_range / HexGrid.HEX)
 	if effect.min_hit_bp > 0:
-		text += " of at least %s of its max HP" % ValueBreakdown._percent(effect.min_hit_bp)
+		text += " of at least %s of its max HP" % ValueBreakdown.percent(effect.min_hit_bp)
 	if effect.executed:
 		text = text.replace("kill", "execution")
 	if effect.at_stacks > 0:
@@ -391,7 +391,7 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 	if not effect.from_abilities.is_empty():
 		text += " from %s" % " or ".join(effect.from_abilities.map(func(ability_id: String) -> String: return ability_id.replace("_", " ").capitalize()))
 	if effect.was_below_bp > 0:
-		text += " on an ally below %s HP" % ValueBreakdown._percent(effect.was_below_bp)
+		text += " on an ally below %s HP" % ValueBreakdown.percent(effect.was_below_bp)
 	if effect.beyond_range > 0:
 		@warning_ignore("integer_division")
 		text += " from more than %s away" % hexes(effect.beyond_range / HexGrid.HEX)
@@ -413,7 +413,7 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 static func aura_text(aura: AuraDef) -> String:
 	var text: String
 	if aura.per_shield_bp > 0:
-		text = "+%s %s per point of Shield" % [ValueBreakdown._percent(aura.per_shield_bp), AuraDef.STAT_LABELS[aura.stat]]
+		text = "+%s %s per point of Shield" % [ValueBreakdown.percent(aura.per_shield_bp), AuraDef.STAT_LABELS[aura.stat]]
 	elif aura.stat == AuraDef.Stat.RANGE:
 		text = "%+d range" % aura.value
 	elif aura.stat == AuraDef.Stat.ATSP:
@@ -425,7 +425,7 @@ static func aura_text(aura: AuraDef) -> String:
 	elif aura.stat == AuraDef.Stat.LIFESTEAL_HEALS:
 		text = "lifesteal counts as healing"
 	elif aura.stat == AuraDef.Stat.DAMAGE_REDUCED_BP:
-		text = "%s damage taken" % signed_percent(-aura.value)
+		text = "%s damage taken" % ValueBreakdown.signed_percent(-aura.value)
 	elif aura.stat == AuraDef.Stat.UNPUSHABLE:
 		text = "can't be knocked back or pulled"
 	elif aura.stat == AuraDef.Stat.DODGE_EVERY_MS:
@@ -437,12 +437,12 @@ static func aura_text(aura: AuraDef) -> String:
 	elif aura.stat == AuraDef.Stat.ROOT_CAP_MS:
 		text = "Roots on it last at most %s" % seconds(FixedMath.ms_to_ticks(aura.value))
 	elif aura.stat == AuraDef.Stat.DEF_IGNORE_BP:
-		text = "its hits ignore %s of the target's DEF" % ValueBreakdown._percent(aura.value)
+		text = "its hits ignore %s of the target's DEF" % ValueBreakdown.percent(aura.value)
 	elif aura.is_additive():
-		text = "%s %s" % [signed_percent(aura.value), AuraDef.STAT_LABELS[aura.stat]]
+		text = "%s %s" % [ValueBreakdown.signed_percent(aura.value), AuraDef.STAT_LABELS[aura.stat]]
 	else:
 		# A factor's change, as the damage rule adds it (phase 5c): x1.5 is +50%.
-		text = "%s %s" % [signed_percent(aura.value - FixedMath.BP_ONE), AuraDef.STAT_LABELS[aura.stat]]
+		text = "%s %s" % [ValueBreakdown.signed_percent(aura.value - FixedMath.BP_ONE), AuraDef.STAT_LABELS[aura.stat]]
 	if aura.target == AuraDef.Target.ALL_ALLIES:
 		text += " for all allies"
 	if aura.only != null:
@@ -454,10 +454,10 @@ static func aura_text(aura: AuraDef) -> String:
 		AuraDef.While.PLANTED:
 			text += " after %s still" % seconds(aura.after_ticks)
 			if aura.step_ticks > 0:
-				var step: String = "%+d" % aura.step_value if aura.is_additive() else signed_percent(aura.step_value)
+				var step: String = "%+d" % aura.step_value if aura.is_additive() else ValueBreakdown.signed_percent(aura.step_value)
 				text += ", %s more every %s after" % [step, seconds(aura.step_ticks)]
 		AuraDef.While.BELOW_HP:
-			text += " below %s HP" % ValueBreakdown._percent(aura.below_bp)
+			text += " below %s HP" % ValueBreakdown.percent(aura.below_bp)
 		AuraDef.While.STATE:
 			text += " while %s" % aura.state.describe()
 		AuraDef.While.ALLY_NEAR:
@@ -499,7 +499,7 @@ static func aura_text(aura: AuraDef) -> String:
 	if not aura.per_holder_stacks.is_empty():
 		text += " per %s stack on it" % aura.per_holder_stacks.replace("_", " ").capitalize()
 	if aura.per_engorged_bp > 0:
-		text += " for every %s of max HP Engorge adds" % ValueBreakdown._percent(aura.per_engorged_bp)
+		text += " for every %s of max HP Engorge adds" % ValueBreakdown.percent(aura.per_engorged_bp)
 	if aura.window_until_ticks >= 0:
 		text += " until %s" % seconds(aura.window_until_ticks)
 	return text
@@ -522,18 +522,12 @@ static func boost_text(status: StatusDef) -> String:
 	return text
 
 
-## A share with its sign: "+15%", "−2%" (phase 5c, step 2: every stat change
-## says its amount).
 ## A share of one per shard as words: "2", "1 per 3 shards" reads "0.33".
 static func _per_shard(bp: int) -> String:
 	if bp % FixedMath.BP_ONE == 0:
 		@warning_ignore("integer_division")
 		return str(bp / FixedMath.BP_ONE)
 	return "%d.%02d" % [bp / FixedMath.BP_ONE, (bp % FixedMath.BP_ONE) / 100]
-
-
-static func signed_percent(bp: int) -> String:
-	return ("+" if bp >= 0 else "−") + ValueBreakdown._percent(absi(bp))
 
 
 ## What the effects do, in order, areas' own effects after the area.
@@ -552,19 +546,19 @@ static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 	if not effect.grows_status.is_empty():
 		# The apexes' snowballs (phase 8 part 4).
 		var status: String = content.statuses[effect.grows_status].name if content != null and content.statuses.has(effect.grows_status) else effect.grows_status
-		return _effect_text_plain(effect, kit, content) + " (%s for each %s)" % [signed_percent(effect.grows_stack_bp), status]
+		return _effect_text_plain(effect, kit, content) + " (%s for each %s)" % [ValueBreakdown.signed_percent(effect.grows_stack_bp), status]
 	if effect.amount_per_stack > 0:
 		# Immolate (phase 8 part 6): more for each stack on the unit hit.
 		var names: Array[String] = []
 		for status_id: String in ([effect.per_stack_status] as Array[String]) + effect.per_stack_more:
-			names.append(content.statuses[status_id].name if content != null and content.statuses.has(status_id) else status_id)
+			names.append(status_name(status_id, content))
 		var stacked: String = " and ".join(names)
 		return _effect_text_plain(effect, kit, content) + " (+%d for each stack of %s on it)" % [effect.amount_per_stack, stacked]
 	if effect.per_damage > 0:
 		return _effect_text_plain(effect, kit, content) + " for every %d damage" % effect.per_damage
 	if effect.power_per_taken_bp > 0:
 		# Growing with the damage taken (phase 8 part 2, Martyr's Pyre).
-		return _effect_text_plain(effect, kit, content) + " (%s for every %d damage it has taken)" % [signed_percent(effect.power_per_taken_bp), effect.taken_per]
+		return _effect_text_plain(effect, kit, content) + " (%s for every %d damage it has taken)" % [ValueBreakdown.signed_percent(effect.power_per_taken_bp), effect.taken_per]
 	return _effect_text_plain(effect, kit, content)
 
 
@@ -622,69 +616,69 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			if effect.amount_bp_of_damage > 0:
-				return "%s of the %s as damage" % [ValueBreakdown._percent(effect.amount_bp_of_damage),
+				return "%s of the %s as damage" % [ValueBreakdown.percent(effect.amount_bp_of_damage),
 					"Shield it broke" if effect.trigger == EffectDef.Trigger.ON_SHIELD_BROKEN else "hit"]
 			if effect.amount_bp_of_shield > 0:
 				# Bulwark Burst (phase 8 part 4).
-				return "%s of its Shield as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_shield), _to_all(effect)]
+				return "%s of its Shield as damage%s" % [ValueBreakdown.percent(effect.amount_bp_of_shield), _to_all(effect)]
 			if effect.amount_bp_of_stored > 0:
 				# Vengeance (phase 8 part 4).
-				return "%s of the damage it stored as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_stored), _to_all(effect)]
+				return "%s of the damage it stored as damage%s" % [ValueBreakdown.percent(effect.amount_bp_of_stored), _to_all(effect)]
 			if effect.amount_bp_of_engorged > 0:
 				# Sanguine Nova (phase 8 part 5).
-				return "%s of the max HP Engorge added as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_engorged), _to_all(effect)]
+				return "%s of the max HP Engorge added as damage%s" % [ValueBreakdown.percent(effect.amount_bp_of_engorged), _to_all(effect)]
 			var text: String = _amount(effect, kit, "damage")
 			if effect.bonus_bp_per_ally > 0:
 				var kin: String = _unit_name(effect.bonus_kit, content) if not effect.bonus_kit.is_empty() else "ally"
-				text += ", +%s per other %s within %s" % [ValueBreakdown._percent(effect.bonus_bp_per_ally), kin, hexes(bonus_hexes(effect))]
+				text += ", +%s per other %s within %s" % [ValueBreakdown.percent(effect.bonus_bp_per_ally), kin, hexes(bonus_hexes(effect))]
 			if effect.execute_below_bp > 0:
-				text += ", finishing it below %s HP" % ValueBreakdown._percent(effect.execute_below_bp)
+				text += ", finishing it below %s HP" % ValueBreakdown.percent(effect.execute_below_bp)
 				if effect.execute_vs != null:
 					text += " if it's %s" % effect.execute_vs.describe()
 			if effect.ignores_def:
 				text += ", ignoring DEF"
 			if effect.plus_bp_of_max_hp > 0:
-				text += " + %s of max HP" % ValueBreakdown._percent(effect.plus_bp_of_max_hp)
+				text += " + %s of max HP" % ValueBreakdown.percent(effect.plus_bp_of_max_hp)
 			if effect.plus_bp_of_spent > 0:
-				text += " + %s of the HP it spent" % ValueBreakdown._percent(effect.plus_bp_of_spent)
+				text += " + %s of the HP it spent" % ValueBreakdown.percent(effect.plus_bp_of_spent)
 			if effect.lifesteal_bp > 0:
-				text += ", %s lifesteal" % ValueBreakdown._percent(effect.lifesteal_bp)
+				text += ", %s lifesteal" % ValueBreakdown.percent(effect.lifesteal_bp)
 			return text + _to_all(effect)
 		EffectDef.Type.HEAL:
 			if effect.as_lifesteal:
 				# The Iron Maw (phase 8 part 5).
-				var drunk: String = ValueBreakdown._percent(effect.amount_bp_of_damage) + " of the damage" if effect.amount_bp_of_damage > 0 else _amount(effect, kit, "")
+				var drunk: String = ValueBreakdown.percent(effect.amount_bp_of_damage) + " of the damage" if effect.amount_bp_of_damage > 0 else _amount(effect, kit, "")
 				return "%s as lifesteal" % drunk
 			if effect.amount_bp_of_max_hp > 0:
-				return "heals %s of max HP" % ValueBreakdown._percent(effect.amount_bp_of_max_hp)
+				return "heals %s of max HP" % ValueBreakdown.percent(effect.amount_bp_of_max_hp)
 			if effect.amount_bp_of_damage > 0:
-				var of_damage: String = "heals %s of the damage" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+				var of_damage: String = "heals %s of the damage" % ValueBreakdown.percent(effect.amount_bp_of_damage)
 				if effect.overheal_max_hp_per > 0:
 					of_damage += ", and every %d past full HP gives it +1 max HP" % effect.overheal_max_hp_per
 				return of_damage
 			var healed: String = "heals " + _amount(effect, kit, "") + _to_all(effect)
 			if effect.overheal_shield_bp > 0:
-				healed += ", past full HP %s as Shield" % ValueBreakdown._percent(effect.overheal_shield_bp)
+				healed += ", past full HP %s as Shield" % ValueBreakdown.percent(effect.overheal_shield_bp)
 			return healed
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_damage > 0:
-				return "Shield of %s of the hit" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+				return "Shield of %s of the hit" % ValueBreakdown.percent(effect.amount_bp_of_damage)
 			if effect.amount_bp_of_shield > 0:
 				# Shared Ward (phase 8 part 4): a share of its own Shield.
-				return "Shield of %s of its own Shield%s" % [ValueBreakdown._percent(effect.amount_bp_of_shield), _to_all(effect)]
-			var cap: String = ", up to %s of max HP" % ValueBreakdown._percent(effect.cap_bp_of_max_hp) if effect.cap_bp_of_max_hp > 0 else ""
+				return "Shield of %s of its own Shield%s" % [ValueBreakdown.percent(effect.amount_bp_of_shield), _to_all(effect)]
+			var cap: String = ", up to %s of max HP" % ValueBreakdown.percent(effect.cap_bp_of_max_hp) if effect.cap_bp_of_max_hp > 0 else ""
 			if effect.plus_per_shard_bp > 0:
 				# Golden Aegis (phase 8 part 5).
 				cap += ", +%s for each shard held" % _per_shard(effect.plus_per_shard_bp)
 			if effect.amount_bp_of_max_hp > 0:
-				return "Shield of %s of max HP%s%s" % [ValueBreakdown._percent(effect.amount_bp_of_max_hp), cap, _to_all(effect)]
+				return "Shield of %s of max HP%s%s" % [ValueBreakdown.percent(effect.amount_bp_of_max_hp), cap, _to_all(effect)]
 			return _amount(effect, kit, "Shield") + cap + _to_all(effect)
 		EffectDef.Type.APPLY_STATUS:
 			var status: StatusDef = content.statuses[effect.status_id]
 			if not effect.stacks_of.is_empty() and effect.stacks_share_bp > 0:
-				return "%s of that unit's %s (at least 1)" % [ValueBreakdown._percent(effect.stacks_share_bp), _status_name(effect.stacks_of, content)]
+				return "%s of that unit's %s (at least 1)" % [ValueBreakdown.percent(effect.stacks_share_bp), status_name(effect.stacks_of, content)]
 			if not effect.stacks_of.is_empty():
-				return "as much %s as that unit had" % _status_name(effect.stacks_of, content)
+				return "as much %s as that unit had" % status_name(effect.stacks_of, content)
 			if effect.fresh_only:
 				var lasts: int = effect.duration_ticks if effect.duration_ticks > 0 else status.duration_ticks
 				return "%s %s, if it isn't %s already" % [status.name, seconds(lasts), Keywords.label(status.keyword) if not status.keyword.is_empty() else "under it"]
@@ -703,29 +697,29 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.EXTEND_STATUS:
 			if not effect.extend_statuses.is_empty():
 				# Any of several (phase 8 part 4, Choke).
-				var named: Array = effect.extend_statuses.map(func(status_id: String) -> String: return _status_name(status_id, content))
+				var named: Array = effect.extend_statuses.map(func(status_id: String) -> String: return status_name(status_id, content))
 				return "its %s last %s longer" % [" and ".join(named), seconds(effect.duration_ticks)]
-			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
+			return "its %s lasts %s longer" % [status_name(effect.status_id, content), seconds(effect.duration_ticks)]
 		EffectDef.Type.CLEANSE:
 			if effect.cleanse_count > 0 and not effect.cleanse_statuses.is_empty():
 				# Only those named (phase 8 part 3, the Unbinder).
 				var ended: Array[String] = []
 				for status_id: String in effect.cleanse_statuses:
-					ended.append(_status_name(status_id, content))
+					ended.append(status_name(status_id, content))
 				return "ends %s%s" % [", ".join(ended.slice(0, -1)) + ", and " if ended.size() > 1 else "", ended[-1]] + _to_all(effect)
 			if effect.cleanse_count > 0:
 				return "removes its %s newest harmful status%s" % ["" if effect.cleanse_count == 1 else str(effect.cleanse_count), "" if effect.cleanse_count == 1 else "es"]
 			if not effect.cleanse_statuses.is_empty():
 				var names: Array[String] = []
 				for status_id: String in effect.cleanse_statuses:
-					names.append(_status_name(status_id, content))
-				return "cleanses %s of %s" % [ValueBreakdown._percent(effect.amount), " and ".join(names)]
-			return "cleanses %s of damage over time" % ValueBreakdown._percent(effect.amount)
+					names.append(status_name(status_id, content))
+				return "cleanses %s of %s" % [ValueBreakdown.percent(effect.amount), " and ".join(names)]
+			return "cleanses %s of damage over time" % ValueBreakdown.percent(effect.amount)
 		EffectDef.Type.MANA_DRAIN:
 			return "drains %d mana" % effect.amount
 		EffectDef.Type.GAIN_MANA:
 			if effect.mana_bp > 0:
-				return "+%s of its mana" % ValueBreakdown._percent(effect.mana_bp)
+				return "+%s of its mana" % ValueBreakdown.percent(effect.mana_bp)
 			return "+%d mana" % effect.amount
 		EffectDef.Type.SNARE:
 			if effect.under_front:
@@ -739,12 +733,12 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.blocks_movement:
 				wall += " and enemies' way"
 			if effect.wall_hp_bp > 0:
-				wall += " (HP %s of max HP)" % ValueBreakdown._percent(effect.wall_hp_bp)
+				wall += " (HP %s of max HP)" % ValueBreakdown.percent(effect.wall_hp_bp)
 			if effect.max_standing > 0:
 				wall += ", up to %d at once" % effect.max_standing
 			return wall
 		EffectDef.Type.KNOCKBACK:
-			var far: String = hexes(effect.hexes) if effect.distance_bp == FixedMath.BP_ONE else "%s of %s" % [ValueBreakdown._percent(effect.distance_bp), hexes(effect.hexes)]
+			var far: String = hexes(effect.hexes) if effect.distance_bp == FixedMath.BP_ONE else "%s of %s" % [ValueBreakdown.percent(effect.distance_bp), hexes(effect.hexes)]
 			if effect.toward == EffectDef.Toward.EDGE:
 				return "shoves %s toward the nearest edge" % far
 			return "knocks back %s" % far
@@ -782,29 +776,29 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.zone_ticks > 0:
 				text += " for %s, every %s" % [seconds(effect.zone_ticks), seconds(effect.pulse_ticks)]
 			if effect.per_enemy_bp > 0:
-				text += ", +%s for each enemy it passes" % ValueBreakdown._percent(effect.per_enemy_bp)
+				text += ", +%s for each enemy it passes" % ValueBreakdown.percent(effect.per_enemy_bp)
 			return text
 		EffectDef.Type.START_COLLAPSE:
 			return "starts Rift Collapse"
 		EffectDef.Type.SPEND_SHIELD:
-			return "spends its whole Shield" if effect.keep_bp == 0 else "spends its Shield, keeping %s" % ValueBreakdown._percent(effect.keep_bp)
+			return "spends its whole Shield" if effect.keep_bp == 0 else "spends its Shield, keeping %s" % ValueBreakdown.percent(effect.keep_bp)
 		EffectDef.Type.RELEASE_STORED:
 			return "lets go of the damage it stored"
 		EffectDef.Type.SHARDS:
 			return "+%d shard%s for the run%s" % [effect.amount, "" if effect.amount == 1 else "s", " while %s lasts" % effect.spends.replace("_", " ").capitalize() if not effect.spends.is_empty() else ""]
 		EffectDef.Type.GAIN_MAX_HP:
 			if effect.amount_bp_of_damage > 0:
-				return "+%s of what it gained as max HP" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+				return "+%s of what it gained as max HP" % ValueBreakdown.percent(effect.amount_bp_of_damage)
 			return "+%d max HP" % effect.amount
 		EffectDef.Type.SPEND_ENGORGED:
 			return "gives up the max HP Engorge added"
 		EffectDef.Type.RAISE:
 			# Gravecaller (phase 8 part 5).
-			var raise: String = "the fallen enemy rises as a thrall at %s of its HP for %s" % [ValueBreakdown._percent(effect.raise_hp_bp), seconds(effect.raise_ticks)]
+			var raise: String = "the fallen enemy rises as a thrall at %s of its HP for %s" % [ValueBreakdown.percent(effect.raise_hp_bp), seconds(effect.raise_ticks)]
 			if effect.max_standing > 0:
 				raise += ", up to %d at once" % effect.max_standing
 			if effect.raise_grow_hp_bp > 0 or effect.raise_grow_ticks > 0:
-				raise += "; each raised makes later ones rise with +%s HP and last %s longer" % [ValueBreakdown._percent(effect.raise_grow_hp_bp), seconds(effect.raise_grow_ticks)]
+				raise += "; each raised makes later ones rise with +%s HP and last %s longer" % [ValueBreakdown.percent(effect.raise_grow_hp_bp), seconds(effect.raise_grow_ticks)]
 			return raise
 		EffectDef.Type.SEVER:
 			return "the next bridge breaks after %s, for %s" % [seconds(effect.warning_ticks), seconds(effect.zone_ticks)]
@@ -812,9 +806,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.copy_of != EffectDef.CopyOf.NONE:
 				# Copies (phase 8 part 6, Lucan).
 				var copy: String = "%s at %s of %s stats for %s" % ["a copy of itself" if effect.copy_of == EffectDef.CopyOf.SELF else "a copy of each hero",
-					ValueBreakdown._percent(effect.copy_share_bp), "its" if effect.copy_of == EffectDef.CopyOf.SELF else "their", seconds(effect.lasts_ticks)]
+					ValueBreakdown.percent(effect.copy_share_bp), "its" if effect.copy_of == EffectDef.CopyOf.SELF else "their", seconds(effect.lasts_ticks)]
 				if effect.copy_grows_bp > 0:
-					copy += ", %s more for each copy made (up to %s)" % [ValueBreakdown._percent(effect.copy_grows_bp), ValueBreakdown._percent(effect.copy_share_max_bp)]
+					copy += ", %s more for each copy made (up to %s)" % [ValueBreakdown.percent(effect.copy_grows_bp), ValueBreakdown.percent(effect.copy_share_max_bp)]
 				if effect.copy_casts:
 					copy += ", each casting its signature once"
 				return copy + (", up to %d at once" % effect.max_standing if effect.max_standing > 0 else "")
@@ -828,14 +822,14 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 static func _amount(effect: EffectDef, kit: UnitDef, word: String) -> String:
 	var value: ValueBreakdown = ValueBreakdown.compute(effect.amount, effect.scaling, kit.stats, [])
 	var amount: String = str(value.final) if word.is_empty() else "%d %s" % [value.final, word]
-	var power: String = "" if effect.power_bp == 0 else ", %s" % signed_percent(effect.power_bp)
+	var power: String = "" if effect.power_bp == 0 else ", %s" % ValueBreakdown.signed_percent(effect.power_bp)
 	if value.stat_parts.is_empty():
 		return amount + power
 	var sum: Array[String] = []
 	if effect.amount != 0:
 		sum.append(str(effect.amount))
 	for part: Array in value.stat_parts:
-		sum.append("%s %s" % [ValueBreakdown._percent(part[1]), UnitStats.LABELS[part[0]]])
+		sum.append("%s %s" % [ValueBreakdown.percent(part[1]), UnitStats.LABELS[part[0]]])
 	return "%s (%s)%s" % [amount, " + ".join(sum), power]
 
 
@@ -864,8 +858,8 @@ static func _unit_name(kit_id: String, content: ContentDb) -> String:
 	return kit_id
 
 
-static func _status_name(status_id: String, content: ContentDb) -> String:
-	return content.statuses[status_id].name if content.statuses.has(status_id) else status_id
+static func status_name(status_id: String, content: ContentDb) -> String:
+	return content.statuses[status_id].name if content != null and content.statuses.has(status_id) else status_id
 
 
 ## "every 3rd basic attack", "every basic attack".

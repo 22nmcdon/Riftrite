@@ -340,9 +340,9 @@ func _fill_path() -> void:
 			for apex: ApexDef in path.apexes:
 				apexes.add_child(_apex_card(apex, stage))
 	elif session.content.heroes[showing].paths.is_empty():
-		page.add_child(_wrapped("%s's paths aren't built yet: they fight with the base kit." % ArenaView.label_for(session.content.heroes[showing].kit, session.content), 17, UiStyle.TEXT_DIM))
+		page.add_child(UiStyle.wrapped("%s's paths aren't built yet: they fight with the base kit." % ArenaView.label_for(session.content.heroes[showing].kit, session.content), 17, UiStyle.TEXT_DIM))
 	else:
-		page.add_child(_wrapped("No vow yet: %s fights with the base kit. Vow a path below, or transform straight into one to try it." % ArenaView.label_for(session.content.heroes[showing].kit, session.content), 17, UiStyle.TEXT_DIM))
+		page.add_child(UiStyle.wrapped("No vow yet: %s fights with the base kit. Vow a path below, or transform straight into one to try it." % ArenaView.label_for(session.content.heroes[showing].kit, session.content), 17, UiStyle.TEXT_DIM))
 	var others := HBoxContainer.new()
 	others.add_theme_constant_override("separation", 18)
 	page.add_child(others)
@@ -415,7 +415,7 @@ func _extra(title: String, body: String, kind: String) -> VBoxContainer:
 	caps.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(caps)
 	column.add_child(head)
-	column.add_child(_wrapped(body, 16, UiStyle.TEXT_DIM))
+	column.add_child(UiStyle.wrapped(body, 16, UiStyle.TEXT_DIM))
 	return column
 
 
@@ -509,7 +509,7 @@ func _vowed_card(path: PathDef, stage: PathDef.Stage) -> PanelContainer:
 	else:
 		column.add_child(_rule("Taste:", path.taste, UiStyle.HIGHLIGHT))
 		column.add_child(_rule("Cost:", path.vowed_cost, UiStyle.BAD))
-	column.add_child(_wrapped("Where: " + path.placement, 16, UiStyle.TEXT_DIM))
+	column.add_child(UiStyle.wrapped("Where: " + path.placement, 16, UiStyle.TEXT_DIM))
 	column.add_child(_deed_row(path, 17))
 	var buttons := VBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
@@ -553,7 +553,7 @@ func _deed_row(path: PathDef, font_size: int) -> HBoxContainer:
 func _deed_line(deed: DeedDef, key: String, font_size: int) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	row.add_child(_wrapped("Deed: " + deed.text, font_size - 1, UiStyle.TEXT_DIM))
+	row.add_child(UiStyle.wrapped("Deed: " + deed.text, font_size - 1, UiStyle.TEXT_DIM))
 	var amount: int = session.last_deed(showing, key)
 	var said: String = "no fight yet" if amount < 0 else "last fight: %s" % UnitInfo.deed_amount_text(deed, amount)
 	if deed.by_the_run():
@@ -639,7 +639,7 @@ func _path_card(path: PathDef) -> PanelContainer:
 	column.add_theme_constant_override("separation", 4)
 	row.add_child(column)
 	column.add_child(UiStyle.heading(path.name, 26, UiStyle.TEXT))
-	column.add_child(_wrapped(path.fantasy, 16, UiStyle.TEXT))
+	column.add_child(UiStyle.wrapped(path.fantasy, 16, UiStyle.TEXT))
 	column.add_child(_deed_row(path, 15))
 	var buttons := VBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 6)
@@ -660,13 +660,6 @@ func _path_card(path: PathDef) -> PanelContainer:
 		buttons.add_child(button)
 	row.add_child(buttons)
 	return card
-
-
-static func _wrapped(text: String, font_size: int, color: Color) -> Label:
-	var label: Label = UiStyle.label(text, font_size, color)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return label
 
 
 # --- the Kit and Loadout tabs ----------------------------------------------------
@@ -692,8 +685,7 @@ func _fill_loadout() -> void:
 	tactic_picker.chosen.connect(func(picked: String) -> void: tactic_chosen.emit(showing, picked), CONNECT_DEFERRED)
 	page.add_child(tactic_picker)
 	tactic_picker.show_tactics(session.tactics_for(showing), tactic_id, editable)
-	page.add_child(_wrapped("Charm and sigil slots come with the run.", 16, UiStyle.TEXT_DIM))
-
+	page.add_child(UiStyle.wrapped("Charm and sigil slots come with the run.", 16, UiStyle.TEXT_DIM))
 
 
 ## A run's loadout: each slot's item (its kind, name, and rule), and a line
@@ -711,6 +703,6 @@ func _fill_run_loadout(run_session: RunSession) -> void:
 		var rank: int = run_session.state().item_ranks.get(id, 1)
 		row.add_child(UiStyle.chip("%s · %s %s" % [ItemDef.KIND_NAMES[item.kind].capitalize(), item.name, ItemDef.RANK_NAMES[rank - 1]], colors[item.kind], true, 16))
 		var numbers: String = ModInfo.item_numbers(item, run_session.run.hero_kit(hero), run_session.content, rank)
-		row.add_child(_wrapped(item.text + ("" if numbers.is_empty() else " (%s)" % numbers), 16, UiStyle.TEXT))
+		row.add_child(UiStyle.wrapped(item.text + ("" if numbers.is_empty() else " (%s)" % numbers), 16, UiStyle.TEXT))
 		page.add_child(row)
-	page.add_child(_wrapped("Change the loadout before each fight, from the stash.", 16, UiStyle.TEXT_DIM))
+	page.add_child(UiStyle.wrapped("Change the loadout before each fight, from the stash.", 16, UiStyle.TEXT_DIM))

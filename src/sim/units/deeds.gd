@@ -16,7 +16,7 @@ extends RefCounted
 ## with or without it (the bench's fingerprints).
 ## Tallies (phase 5c step 4, docs/plans/phases/rebuild-phase5c-combos.md, section
 ## 9.4): a hero's growing cards count the same way, each under its key
-## (UnitSetup.tallies), after its deeds in the same arrays.
+## (UnitSetup.tally_keys), after its deeds in the same arrays.
 
 
 ## The deeds `unit` counts, and what each has added up to (same order).

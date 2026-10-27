@@ -102,7 +102,6 @@ var tally: FightTally
 var _placement_box: VBoxContainer
 var _fight_box: VBoxContainer
 var _back_button: Button
-var _again_row: HBoxContainer
 var _place_again: Button
 
 
@@ -530,7 +529,6 @@ func _build_fight_box() -> VBoxContainer:
 	else:
 		again.add_child(UiStyle.primary(UiStyle.button("Rematch", rematch)))
 	again.add_child(UiStyle.button("Watch again", restart))
-	_again_row = again
 	var more := HBoxContainer.new()
 	more.add_theme_constant_override("separation", 6)
 	box.add_child(more)

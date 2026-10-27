@@ -430,12 +430,16 @@ static func _count_engines(line: RunLine, setup: FightSetup, result: FightResult
 		line.engines[row.name] = stats
 
 
+## The engines the engine report lists, at most.
+const ENGINES_SHOWN: int = 40
+
+
 ## The engine report (phase 5c step 9b, `--engines`): every hero engine
 ## over the runs' day fights, most of its team's output first (fights, fires
 ## a fight, the share from chains, the deepest chain, its share of what its
 ## team dealt, healed, and Shielded in those fights), then the event
 ## passives held that never fired.
-static func engines_summary(lines: Array[RunLine], shown: int = 40) -> String:
+static func engines_summary(lines: Array[RunLine]) -> String:
 	var merged: Dictionary[String, Array] = {}
 	var held: Dictionary[String, int] = {}
 	for line: RunLine in lines:
@@ -455,7 +459,7 @@ static func engines_summary(lines: Array[RunLine], shown: int = 40) -> String:
 		return share_a > share_b if share_a != share_b else a < b)
 	var out: PackedStringArray = PackedStringArray()
 	out.append("Engines (the heroes' sources over the bot's day fights: fights, fires a fight, from chains, deepest chain, share of the team's output in them):")
-	for i: int in mini(shown, names.size()):
+	for i: int in mini(ENGINES_SHOWN, names.size()):
 		var stats: Array = merged[names[i]]
 		out.append("  %-40s %4d fights, %5.1f fires, %3d%% chained, deepest %d, %3d%% of output" % [names[i], stats[0], float(stats[1]) / maxi(stats[0], 1),
 			_pct(stats[2], stats[1]), stats[3], _pct(stats[4], stats[5])])

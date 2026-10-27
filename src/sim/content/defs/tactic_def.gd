@@ -1,6 +1,6 @@
 class_name TacticDef
 extends RefCounted
-## A tactic in data/tactics.json (docs/plans/phases/rebuild-phase3b-tactics.md,
+## A tactic in data/core/tactics.json (docs/plans/phases/rebuild-phase3b-tactics.md,
 ## sections 1 and 2; the loadout pool, docs/plans/phases/rebuild-phase5c-combos.md,
 ## section 14.6): a change to how a hero behaves in a fight, never to what
 ## they can do. A hero takes at most one (UnitSetup.tactic). Each has a

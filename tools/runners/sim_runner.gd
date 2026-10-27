@@ -47,7 +47,6 @@ const PathReport = preload("res://tools/reports/path_report.gd")
 const ApexReport = preload("res://tools/reports/apex_report.gd")
 const BuildReport = preload("res://tools/reports/build_report.gd")
 const Progress = preload("res://tools/progress.gd")
-const FORMATIONS_FILE: String = "res://tools/teams/sim_formations.json"
 
 
 func _init() -> void:
@@ -101,7 +100,7 @@ func _init() -> void:
 		_fail("data/ has errors:\n" + "\n".join(content.errors))
 		return
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string(FORMATIONS_FILE), errors)
+	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string(Report.FORMATIONS_FILE), errors)
 	if not errors.is_empty():
 		_fail("\n".join(errors))
 		return

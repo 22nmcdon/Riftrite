@@ -1,6 +1,6 @@
 class_name EnemyDef
 extends RefCounted
-## An enemy in data/enemies.json (docs/plans/phases/rebuild-phase2-heroes-enemies.md,
+## An enemy in data/acts/act<N>/enemies.json (docs/plans/phases/rebuild-phase2-heroes-enemies.md,
 ## section 2): its archetype and the one-line threat the fight card shows,
 ## and its kit (phases included; the kit carries the archetype too, for
 ## tactics). Summons name enemies.

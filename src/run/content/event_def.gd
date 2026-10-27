@@ -1,6 +1,6 @@
 class_name EventDef
 extends RefCounted
-## The Event node's data (data/events.json; phase 5c step 8c,
+## The Event node's data (data/run/events.json; phase 5c step 8c,
 ## docs/plans/design/events.md, rebuild-phase5c-combos.md section 16.7): the
 ## scenes, each with its choices and their results, and the Bloodied Oath's
 ## oaths. What each result does is RunFlow's (one job each, like camp's

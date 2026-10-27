@@ -2,7 +2,7 @@ class_name SideRules
 extends RefCounted
 ## Rules of the fight one side plays by (phase 5c step 5c,
 ## docs/plans/phases/rebuild-phase5c-combos.md, section 12.2): the heroes' relics
-## rewrite them ("rules" in data/relics.json; RunContent merges the run's
+## rewrite them ("rules" in data/run/relics/; RunContent merges the run's
 ## into FightSetup.hero_rules). Each rule is code (CLAUDE.md rule 3: said in
 ## the plan), with its numbers in the data. A fight with none never reaches
 ## a rule's code, so it's the fight it was.

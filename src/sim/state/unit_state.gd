@@ -220,7 +220,7 @@ var nearest_failed: bool = false
 ## The corners still to walk to, in order.
 var route: Array[Vector2i] = []
 ## The target the route leads to (null: it leads back to safe ground, see
-## Movement.escape), and when to plan it again.
+## Movement.step_off and _plan_escape), and when to plan it again.
 var route_for: UnitState:
 	get:
 		return _route_for.get_ref() as UnitState if _route_for != null else null
@@ -283,7 +283,7 @@ var airborne: bool = false
 ## next; and Iron Skin (halved_hits): how many hits it has taken at half.
 var dodge_ready_at: int = 0
 var hits_halved: int = 0
-## Where a flier over someone is heading to land (valid while has_spot).
+## Where a flier over someone is heading to land (valid while has_settle_spot).
 var settle_spot: Vector2i
 var has_settle_spot: bool = false
 ## hop_away: the first tick it can hop again.

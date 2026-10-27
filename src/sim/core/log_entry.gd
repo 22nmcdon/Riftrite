@@ -19,9 +19,7 @@ enum Kind {
 	STATUS_ENDED,
 	STATUS_REDUCED,
 	AURA,
-	SYNERGY,
 	PHASE,
-	DEED_LEVEL,
 	MOVE,
 	STOP,
 	TARGET,
@@ -112,8 +110,6 @@ var source_ability_name: String = ""
 ## Relic effects: the side holding the relic (source_ability is the relic);
 ## -1 when the source is a unit.
 var source_relic_side: int = -1
-## The source is a duo bond's own effect (see EffectSource.synergy).
-var source_synergy: bool = false
 ## The source is a Rift Tear's own effect (see EffectSource.rift).
 var source_rift: bool = false
 ## DAMAGE, HEAL: what made the number bigger ("+20% from Casters first": a
@@ -146,7 +142,7 @@ var broke_shield: bool = false
 ## DAMAGE: what went past the target's last HP (phase 5c step 5b).
 var overkill: int = 0
 ## DAMAGE (phase 8 part 6): what the per-hit auras of its unit's
-## UnitState.bonus_part added (only for a unit whose deed counts it).
+## UnitState.bonus_parts added (only for a unit whose deed counts it).
 var part_bonus: int = 0
 ## SHARDS (phase 8 part 6): past its unit's cap for the fight, so not paid.
 var capped: bool = false
@@ -222,7 +218,6 @@ func set_source(source: EffectSource) -> void:
 	source_ability = source.ability_id
 	source_ability_name = source.ability_name
 	source_relic_side = source.relic_side
-	source_synergy = source.synergy
 	source_rift = source.rift
 	bonus = source.bonus
 
@@ -230,7 +225,6 @@ func set_source(source: EffectSource) -> void:
 func source() -> EffectSource:
 	var result: EffectSource = EffectSource.make(source_unit, source_ability, source_ability_name)
 	result.relic_side = source_relic_side
-	result.synergy = source_synergy
 	result.rift = source_rift
 	return result
 
@@ -279,12 +273,8 @@ func to_text() -> String:
 			return line + "%s on %s%s ends" % [status_name, target, "" if note.is_empty() else " (%s)" % note]
 		Kind.AURA:
 			return line + "%s aura %s" % [source_text(), note]
-		Kind.SYNERGY:
-			return line + note
 		Kind.PHASE:
 			return line + "%s enters %s" % [target, note]
-		Kind.DEED_LEVEL:
-			return line + "%s reaches %s" % [target, note]
 		Kind.WATER:
 			return line + "%s %s (%d water hexes)" % [source_text(), note, amount]
 		Kind.VOID:

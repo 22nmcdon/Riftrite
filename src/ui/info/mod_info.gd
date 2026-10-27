@@ -30,7 +30,7 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 	var shown: UnitDef = kit if kit != null else _any_hero()
 	for stat: int in mod.stats_bp.size():
 		if mod.stats_bp[stat] != FixedMath.BP_ONE:
-			parts.append("%s %s" % [UnitInfo.signed_percent(mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]])
+			parts.append("%s %s" % [ValueBreakdown.signed_percent(mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]])
 	for stat: int in mod.stats_add.size():
 		if mod.stats_add[stat] != 0:
 			parts.append("%s %s" % [signed(mod.stats_add[stat]), UnitStats.LABELS[stat]])
@@ -41,7 +41,7 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 	for part: PartDef in mod.passives:
 		parts.append("%s: %s" % [part.name, UnitInfo.passive_numbers(part, shown, content)])
 	if mod.mana_max_bp != FixedMath.BP_ONE:
-		parts.append("%s max mana" % UnitInfo.signed_percent(mod.mana_max_bp - FixedMath.BP_ONE))
+		parts.append("%s max mana" % ValueBreakdown.signed_percent(mod.mana_max_bp - FixedMath.BP_ONE))
 	if mod.mana_max_add != 0:
 		parts.append("%s max mana" % signed(mod.mana_max_add))
 	if mod.mana_regen_add != 0:
@@ -49,7 +49,7 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 	if mod.mana_start_add != 0:
 		parts.append("%s starting mana" % signed(mod.mana_start_add))
 	if mod.mana_start_bp > 0:
-		parts.append("starts with %s mana" % ValueBreakdown._percent(mod.mana_start_bp))
+		parts.append("starts with %s mana" % ValueBreakdown.percent(mod.mana_start_bp))
 	if not mod.gambit_label.is_empty():
 		match mod.place_rule:
 			"neutral":
@@ -65,7 +65,7 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		if mod.swap_ticks > 0:
 			parts.append("swaps with its farthest ally at %s%s" % [UnitInfo.seconds(mod.swap_ticks), " (or 5s or 15s, as you choose)" if mod.swap_choice else ""])
 		if mod.swap_shield_bp > 0:
-			parts.append("both Shielded %s of max HP" % ValueBreakdown._percent(mod.swap_shield_bp))
+			parts.append("both Shielded %s of max HP" % ValueBreakdown.percent(mod.swap_shield_bp))
 	if mod.prefer != null:
 		parts.append("its attacks go for enemies that are %s first" % mod.prefer.describe())
 	if mod.hop_within_add != 0:
@@ -75,7 +75,7 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 	if mod.mana_per_attack_add != 0:
 		parts.append("%s mana per attack" % signed(mod.mana_per_attack_add))
 	if mod.mana_taken_bp != FixedMath.BP_ONE:
-		parts.append("%s mana from damage taken" % UnitInfo.signed_percent(mod.mana_taken_bp - FixedMath.BP_ONE))
+		parts.append("%s mana from damage taken" % ValueBreakdown.signed_percent(mod.mana_taken_bp - FixedMath.BP_ONE))
 	if mod.shard_cap_add != 0:
 		parts.append("%s to the shard cap a fight" % signed(mod.shard_cap_add))
 	if mod.plant_add_ticks != 0:
@@ -96,7 +96,7 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		var when: String = UnitInfo.trigger_text(trigger, shown)
 		parts.append("Signature also fires: %s%s" % [when.left(1).to_lower(), when.substr(1)])
 	if mod.echo_ticks > 0:
-		parts.append("Signature fires again %s later at %s" % [UnitInfo.seconds(mod.echo_ticks), ValueBreakdown._percent(mod.echo_bp)])
+		parts.append("Signature fires again %s later at %s" % [UnitInfo.seconds(mod.echo_ticks), ValueBreakdown.percent(mod.echo_bp)])
 	for companion_change: KitMod.CompanionChange in mod.companion_changes:
 		parts.append_array(_companion_parts(companion_change, shown, content))
 	return parts
@@ -119,9 +119,9 @@ static func _companion_parts(change: KitMod.CompanionChange, kit: UnitDef, conte
 	if companion_kit == null and not change.kit_id.is_empty():
 		name = change.kit_id.capitalize()
 	if change.hp_add_bp != 0:
-		parts.append("%s: %s of her max HP" % [name, UnitInfo.signed_percent(change.hp_add_bp)])
+		parts.append("%s: %s of her max HP" % [name, ValueBreakdown.signed_percent(change.hp_add_bp)])
 	if change.atk_add_bp != 0:
-		parts.append("%s: %s of her ATK" % [name, UnitInfo.signed_percent(change.atk_add_bp)])
+		parts.append("%s: %s of her ATK" % [name, ValueBreakdown.signed_percent(change.atk_add_bp)])
 	if change.return_add_ticks != 0:
 		parts.append("%s: returns %s %s" % [name, UnitInfo.seconds(absi(change.return_add_ticks)), "sooner" if change.return_add_ticks < 0 else "later"])
 	if change.mod != null:
@@ -134,19 +134,19 @@ static func _companion_parts(change: KitMod.CompanionChange, kit: UnitDef, conte
 static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef, content: ContentDb) -> String:
 	var bits: Array[String] = []
 	if change.amount_bp != FixedMath.BP_ONE:
-		bits.append("%s %s" % [UnitInfo.signed_percent(change.amount_bp - FixedMath.BP_ONE), _power_word(change)])
+		bits.append("%s %s" % [ValueBreakdown.signed_percent(change.amount_bp - FixedMath.BP_ONE), _power_word(change)])
 	if change.duration_bp != FixedMath.BP_ONE:
-		bits.append("%s%s duration" % [UnitInfo.signed_percent(change.duration_bp - FixedMath.BP_ONE), _statuses_word(change, content)])
+		bits.append("%s%s duration" % [ValueBreakdown.signed_percent(change.duration_bp - FixedMath.BP_ONE), _statuses_word(change, content)])
 	if change.duration_add_ticks != 0:
 		bits.append("%s%s%s duration" % ["+" if change.duration_add_ticks > 0 else "−", UnitInfo.seconds(absi(change.duration_add_ticks)), _statuses_word(change, content)])
 	if change.radius_add != 0:
 		bits.append("%s hex area" % signed(change.radius_add))
 	if change.cooldown_bp != FixedMath.BP_ONE:
-		bits.append("%s cooldown" % UnitInfo.signed_percent(change.cooldown_bp - FixedMath.BP_ONE))
+		bits.append("%s cooldown" % ValueBreakdown.signed_percent(change.cooldown_bp - FixedMath.BP_ONE))
 	if change.after_add_ticks != 0:
 		bits.append("%s %s" % [UnitInfo.seconds(absi(change.after_add_ticks)), "sooner" if change.after_add_ticks < 0 else "later"])
 	if change.cast_bp != FixedMath.BP_ONE:
-		bits.append("instant cast" if change.cast_bp == 0 else "%s cast time" % UnitInfo.signed_percent(change.cast_bp - FixedMath.BP_ONE))
+		bits.append("instant cast" if change.cast_bp == 0 else "%s cast time" % ValueBreakdown.signed_percent(change.cast_bp - FixedMath.BP_ONE))
 	if change.targets_add > 0:
 		bits.append("+%d target%s%s" % [change.targets_add, "" if change.targets_add == 1 else "s", " (without an area)" if change.one_of else ""])
 	# Phase 5c step 7b's knobs.
@@ -157,7 +157,7 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if change.max_standing_add != 0:
 		bits.append("+%d standing at once" % change.max_standing_add)
 	if change.overheal_add_bp != 0:
-		bits.append("+%s of overheal as Shield" % ValueBreakdown._percent(change.overheal_add_bp))
+		bits.append("+%s of overheal as Shield" % ValueBreakdown.percent(change.overheal_add_bp))
 	if change.width_add != 0:
 		bits.append("+%d hex wider" % change.width_add)
 	if change.value_add != 0:
@@ -166,7 +166,7 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 			# Points, not a share (phase 8 part 6, Strong Bond's attack speed).
 			bits.append("%s %s" % [signed(change.value_add), AuraDef.STAT_LABELS[aura.stat]])
 		else:
-			bits.append("%s %s" % [UnitInfo.signed_percent(change.value_add), AuraDef.STAT_LABELS[aura.stat]] if aura != null else signed(change.value_add))
+			bits.append("%s %s" % [ValueBreakdown.signed_percent(change.value_add), AuraDef.STAT_LABELS[aura.stat]] if aura != null else signed(change.value_add))
 	if change.guard_share_add != 0:
 		bits.append("%s%% of each hit" % signed(change.guard_share_add / 100))
 	if change.guard_within_add != 0:
@@ -176,33 +176,33 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if change.prefer != null:
 		bits.append("goes for enemies that are %s first" % change.prefer.describe())
 	if change.strength_add_bp != 0:
-		bits.append("+%s stronger" % ValueBreakdown._percent(change.strength_add_bp))
+		bits.append("+%s stronger" % ValueBreakdown.percent(change.strength_add_bp))
 	# Phase 5c step 7d.
 	if change.follows:
 		bits.append("its area follows the biggest group, 1 hex a pulse")
 	if change.ricochet_add != 0:
 		bits.append("hits ricochet %d more time%s" % [change.ricochet_add, "" if change.ricochet_add == 1 else "s"])
 	if change.reflect_bp != 0:
-		bits.append("sends stopped shots back at %s" % ValueBreakdown._percent(change.reflect_bp))
+		bits.append("sends stopped shots back at %s" % ValueBreakdown.percent(change.reflect_bp))
 	if change.snags:
 		bits.append("its snares catch leaps and charges")
 	# Phase 8 part 2 (the apex cards' knobs).
 	if change.per_enemy_add_bp != 0:
-		bits.append("%s for each enemy passed" % UnitInfo.signed_percent(change.per_enemy_add_bp))
+		bits.append("%s for each enemy passed" % ValueBreakdown.signed_percent(change.per_enemy_add_bp))
 	if change.overheal_max_hp_add != 0:
 		bits.append("+1 max HP every %s overheal" % ("%d less" % -change.overheal_max_hp_add if change.overheal_max_hp_add < 0 else "%d more" % change.overheal_max_hp_add))
 	if change.at_stacks_add != 0:
 		bits.append("%s stacks to go off" % signed(change.at_stacks_add))
 	if change.per_taken_add_bp != 0:
-		bits.append("%s for every 1,000 damage taken" % UnitInfo.signed_percent(change.per_taken_add_bp))
+		bits.append("%s for every 1,000 damage taken" % ValueBreakdown.signed_percent(change.per_taken_add_bp))
 	if change.grows_add_bp != 0:
-		bits.append("%s stronger each cast" % UnitInfo.signed_percent(change.grows_add_bp))
+		bits.append("%s stronger each cast" % ValueBreakdown.signed_percent(change.grows_add_bp))
 	if change.grows_boosts_add_bp != 0:
-		bits.append("its boosts %s stronger each cast" % UnitInfo.signed_percent(change.grows_boosts_add_bp))
+		bits.append("its boosts %s stronger each cast" % ValueBreakdown.signed_percent(change.grows_boosts_add_bp))
 	if change.rise_add_bp != 0:
-		bits.append("rises with %s more of max HP" % ValueBreakdown._percent(change.rise_add_bp))
+		bits.append("rises with %s more of max HP" % ValueBreakdown.percent(change.rise_add_bp))
 	if change.per_shared_bp != FixedMath.BP_ONE:
-		bits.append("its link's stacks every %s as much shared" % ValueBreakdown._percent(change.per_shared_bp))
+		bits.append("its link's stacks every %s as much shared" % ValueBreakdown.percent(change.per_shared_bp))
 	if change.holder != null:
 		bits.append("only while it's %s" % change.holder.describe())
 	if change.carries:
@@ -213,7 +213,7 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if change.ignores_def:
 		bits.append("ignores DEF")
 	if change.per_stack_add_bp != 0:
-		bits.append("%s for each stack" % UnitInfo.signed_percent(change.per_stack_add_bp))
+		bits.append("%s for each stack" % ValueBreakdown.signed_percent(change.per_stack_add_bp))
 	if change.per_twice != null:
 		bits.append("enemies that are %s count twice" % change.per_twice.describe())
 	# Aldous's cards.
@@ -231,34 +231,34 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("%s steps at most" % signed(change.per_shards_max_add))
 	# Severine's cards (phase 8 part 5).
 	if change.lifesteal_add_bp != 0:
-		bits.append("%s lifesteal" % UnitInfo.signed_percent(change.lifesteal_add_bp))
+		bits.append("%s lifesteal" % ValueBreakdown.signed_percent(change.lifesteal_add_bp))
 	if change.plus_max_hp_add_bp != 0:
-		bits.append("%s of max HP as damage" % UnitInfo.signed_percent(change.plus_max_hp_add_bp))
+		bits.append("%s of max HP as damage" % ValueBreakdown.signed_percent(change.plus_max_hp_add_bp))
 	if change.hp_cost_add_bp != 0:
-		bits.append("%s of max HP to cast" % UnitInfo.signed_percent(change.hp_cost_add_bp))
+		bits.append("%s of max HP to cast" % ValueBreakdown.signed_percent(change.hp_cost_add_bp))
 	if change.follows_holder:
 		bits.append("its area moves with its caster")
 	if change.raise_grow_add_bp != 0:
-		bits.append("%s HP for each thrall raised before" % UnitInfo.signed_percent(change.raise_grow_add_bp))
+		bits.append("%s HP for each thrall raised before" % ValueBreakdown.signed_percent(change.raise_grow_add_bp))
 	# Ilse's cards (phase 8 part 6).
 	if change.copy_grow_add_bp != 0:
-		bits.append("%s of the stats each later copy takes, for each copy made" % UnitInfo.signed_percent(change.copy_grow_add_bp))
+		bits.append("%s of the stats each later copy takes, for each copy made" % ValueBreakdown.signed_percent(change.copy_grow_add_bp))
 	if change.share_add_bp != 0:
 		# A copy's share is of the stats it copies (Lucan's cards).
 		var copies: bool = KitMod._slot_abilities(kit, change.slot, change.ability_id).any(func(ability: AbilityDef) -> bool:
 			return ability.effects.any(func(effect: EffectDef) -> bool: return effect.copy_of != EffectDef.CopyOf.NONE))
-		bits.append("%s of %s" % [UnitInfo.signed_percent(change.share_add_bp), "the stats it copies" if copies else "its stacks"])
+		bits.append("%s of %s" % [ValueBreakdown.signed_percent(change.share_add_bp), "the stats it copies" if copies else "its stacks"])
 	if change.grow_every_add_ticks != 0:
 		bits.append("spreads %s %s" % [UnitInfo.seconds(absi(change.grow_every_add_ticks)), "sooner" if change.grow_every_add_ticks < 0 else "later"])
 	if change.grow_max_add != 0:
 		bits.append("spreads %s hex further" % signed(change.grow_max_add))
 	if change.heal_cap_bp != 0:
-		bits.append("heals stop at %s of max HP" % ValueBreakdown._percent(change.heal_cap_bp))
+		bits.append("heals stop at %s of max HP" % ValueBreakdown.percent(change.heal_cap_bp))
 	# Ottilie's cards.
 	if change.per_stacks_add != 0:
 		bits.append("counts every %s stack%s %s" % [absi(change.per_stacks_add), "" if absi(change.per_stacks_add) == 1 else "s", "sooner" if change.per_stacks_add < 0 else "later"])
 	if change.cap_add_bp != 0:
-		bits.append("%s to its cap" % UnitInfo.signed_percent(change.cap_add_bp))
+		bits.append("%s to its cap" % ValueBreakdown.signed_percent(change.cap_add_bp))
 	if change.per_stack_amount_add != 0:
 		bits.append("%s for each stack" % signed(change.per_stack_amount_add))
 	for effect: EffectDef in change.add_to_areas:
@@ -287,7 +287,7 @@ static func _count_word(steps: int) -> String:
 static func _statuses_word(change: KitMod.AbilityChange, content: ContentDb) -> String:
 	var names: Array[String] = []
 	for status_id: String in change.statuses:
-		names.append(content.statuses[status_id].name if content.statuses.has(status_id) else status_id)
+		names.append(UnitInfo.status_name(status_id, content))
 	return "" if names.is_empty() else " " + " and ".join(names)
 
 
@@ -361,7 +361,7 @@ static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentD
 	if upgrade.shop != null:
 		parts.append(shop_numbers(upgrade.shop))
 	if upgrade.snowball_bp > 0:
-		parts.append("its %s's snowball counts x%s" % ["apex" if upgrade.layer == UpgradeDef.Layer.APEX else "path", ValueBreakdown._ratio(FixedMath.BP_ONE + upgrade.snowball_bp)])
+		parts.append("its %s's snowball counts x%s" % ["apex" if upgrade.layer == UpgradeDef.Layer.APEX else "path", ValueBreakdown.ratio(FixedMath.BP_ONE + upgrade.snowball_bp)])
 	if upgrade.holding_less > 0:
 		parts.append("fights won holding %d+ shards count" % (RunFlow.WON_HOLDING_SHARDS - upgrade.holding_less))
 	if upgrade.grows != null:
@@ -392,7 +392,7 @@ static func tithe_numbers(tithe: TitheDef) -> String:
 	if tithe.harder_add > 0:
 		parts.append("+%d after the harder fight" % tithe.harder_add)
 	if tithe.elite_bp > 0:
-		parts.append("+%s after an elite" % ValueBreakdown._percent(tithe.elite_bp))
+		parts.append("+%s after an elite" % ValueBreakdown.percent(tithe.elite_bp))
 	if tithe.once_per_act > 0:
 		parts.append("+%d after the first won fight each act" % tithe.once_per_act)
 	return "Tithe: " + ", ".join(parts) if not parts.is_empty() else ""
@@ -407,11 +407,11 @@ static func shop_numbers(rules: ShopRulesDef) -> String:
 	if rules.cheap_rerolls > 0:
 		parts.append("next %s 1 shard" % ("reroll" if rules.cheap_rerolls == 1 else "%d rerolls" % rules.cheap_rerolls))
 	if rules.reroll_less_bp > 0:
-		parts.append("rerolls -%s" % ValueBreakdown._percent(rules.reroll_less_bp))
+		parts.append("rerolls -%s" % ValueBreakdown.percent(rules.reroll_less_bp))
 	if rules.reroll_add > 0:
 		parts.append("rerolls +%d shard%s" % [rules.reroll_add, "" if rules.reroll_add == 1 else "s"])
 	if rules.sell_less_bp > 0:
-		parts.append("items sell for %s of their price" % ValueBreakdown._percent(5000 - rules.sell_less_bp))
+		parts.append("items sell for %s of their price" % ValueBreakdown.percent(5000 - rules.sell_less_bp))
 	if rules.item_less > 0:
 		parts.append("items -%d shard%s" % [rules.item_less, "" if rules.item_less == 1 else "s"])
 	if rules.first_relic_less > 0:
@@ -434,7 +434,7 @@ static func transmute_numbers(transmute: TransmuteDef) -> String:
 	if transmute.per_shop > 0:
 		parts.append("%d item%s a shop" % [transmute.per_shop, "" if transmute.per_shop == 1 else "s"])
 	if transmute.pay_bp > 0:
-		parts.append("%s of the price" % ValueBreakdown._percent(FixedMath.BP_ONE + transmute.pay_bp))
+		parts.append("%s of the price" % ValueBreakdown.percent(FixedMath.BP_ONE + transmute.pay_bp))
 	if transmute.rank_ii_add > 0:
 		parts.append("+%d at rank II" % transmute.rank_ii_add)
 	if transmute.rank_iii_add > 0:
@@ -547,7 +547,7 @@ static func counted(counts: DeedDef, per: int) -> String:
 			var shares: Array[String] = []
 			for share_bp: int in counts.overkill_steps_bp:
 				if share_bp > 0:
-					shares.append(ValueBreakdown._percent(share_bp))
+					shares.append(ValueBreakdown.percent(share_bp))
 			return "kill that overkills (one more past %s of its max HP)" % " and ".join(shares) if per == 1 else \
 				"%d kills' overkill steps" % per
 		DeedDef.Counts.DAMAGE:
@@ -616,7 +616,7 @@ static func counted(counts: DeedDef, per: int) -> String:
 		DeedDef.Counts.TAKEN:
 			return "%s damage taken%s" % [amount, " after rising" if counts.after_rising else ""]
 		DeedDef.Counts.MS_BELOW:
-			return "%s below %s HP" % [amount, ValueBreakdown._percent(counts.while_below_bp)]
+			return "%s below %s HP" % [amount, ValueBreakdown.percent(counts.while_below_bp)]
 		DeedDef.Counts.KILLS:
 			return "%s kills" % amount
 		DeedDef.Counts.CRITS:
@@ -674,11 +674,11 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 	if relic.streak_wins > 0:
 		parts.append("%s shards, once, for %d won fights in a row with no hero falling" % [signed(relic.streak_shards), relic.streak_wins])
 	if relic.growth_bp > 0:
-		parts.append("growing cards count x%s as fast" % ValueBreakdown._ratio(relic.growth_bp))
+		parts.append("growing cards count x%s as fast" % ValueBreakdown.ratio(relic.growth_bp))
 	if relic.per_relic_bp > 0:
-		parts.append("Heroes: %s HP, ATK, MGK, DEF, CRIT, and ATSP per relic held" % UnitInfo.signed_percent(relic.per_relic_bp))
+		parts.append("Heroes: %s HP, ATK, MGK, DEF, CRIT, and ATSP per relic held" % ValueBreakdown.signed_percent(relic.per_relic_bp))
 	if relic.per_shards > 0:
-		parts.append("Heroes: %s ATK and MGK per %d shards held" % [UnitInfo.signed_percent(relic.per_shards_bp), relic.per_shards])
+		parts.append("Heroes: %s ATK and MGK per %d shards held" % [ValueBreakdown.signed_percent(relic.per_shards_bp), relic.per_shards])
 	if relic.covenant:
 		parts.append("each hero has the team's highest HP, ATK, MGK, DEF, CRIT, and ATSP")
 	if not relic.at_start.is_empty():
@@ -698,17 +698,17 @@ static func rules_numbers(rules: SideRules, content: ContentDb) -> Array[String]
 	if rules.marks_stack:
 		parts.append("Marks heroes apply stack")
 	if rules.crit_steps > 0:
-		parts.append("a crit rolls again up to %d times, each step %s less likely and weaker" % [rules.crit_steps, ValueBreakdown._percent(rules.crit_fade_bp)])
+		parts.append("a crit rolls again up to %d times, each step %s less likely and weaker" % [rules.crit_steps, ValueBreakdown.percent(rules.crit_fade_bp)])
 	if rules.echo_steps > 0:
-		parts.append("damage echoes to enemies sharing a keyword at %s, %d steps deep" % [ValueBreakdown._percent(rules.echo_share_bp), rules.echo_steps])
+		parts.append("damage echoes to enemies sharing a keyword at %s, %d steps deep" % [ValueBreakdown.percent(rules.echo_share_bp), rules.echo_steps])
 	if rules.carry_steps > 0:
 		parts.append("overkill carries to the nearest enemy, up to %d times" % rules.carry_steps)
 	if rules.overcharge_steps > 0:
-		parts.append("each full bar past the first fires the signature again, %s more power each time, up to %d more" % [UnitInfo.signed_percent(rules.overcharge_power_bp), rules.overcharge_steps])
+		parts.append("each full bar past the first fires the signature again, %s more power each time, up to %d more" % [ValueBreakdown.signed_percent(rules.overcharge_power_bp), rules.overcharge_steps])
 	if rules.rise_ticks > 0:
-		parts.append("a hero's first fall: it rises after %s at %s HP" % [UnitInfo.seconds(rules.rise_ticks), ValueBreakdown._percent(rules.rise_hp_bp)])
+		parts.append("a hero's first fall: it rises after %s at %s HP" % [UnitInfo.seconds(rules.rise_ticks), ValueBreakdown.percent(rules.rise_hp_bp)])
 	if rules.deeper_steps > 0:
-		parts.append("every chain the heroes start goes %d steps deeper, each step %s stronger than the last" % [rules.deeper_steps, UnitInfo.signed_percent(rules.deeper_grow_bp)])
+		parts.append("every chain the heroes start goes %d steps deeper, each step %s stronger than the last" % [rules.deeper_steps, ValueBreakdown.signed_percent(rules.deeper_grow_bp)])
 	if rules.keywords_twice:
 		parts.append("keywords heroes apply: double stacks or double duration")
 	if rules.keywords_last:
@@ -718,16 +718,16 @@ static func rules_numbers(rules: SideRules, content: ContentDb) -> Array[String]
 	if rules.collapse_immune:
 		parts.append("heroes take no damage from crumbled ground")
 	if rules.collapse_enemy_bp > 0:
-		parts.append("enemies on crumbled ground take %s of max HP a second more" % ValueBreakdown._percent(rules.collapse_enemy_bp))
+		parts.append("enemies on crumbled ground take %s of max HP a second more" % ValueBreakdown.percent(rules.collapse_enemy_bp))
 	if rules.watch_every_ticks > 0:
 		parts.append("no tie until %s; from %s, every hero %s every %s" % [UnitInfo.seconds(rules.watch_tie_ticks), UnitInfo.seconds(rules.watch_from_ticks),
 			_boost(content, "long_watch"), UnitInfo.seconds(rules.watch_every_ticks)])
 	if rules.hold_time_bp > 0:
-		parts.append("Roots and Stuns on enemies last %s" % UnitInfo.signed_percent(rules.hold_time_bp - FixedMath.BP_ONE))
+		parts.append("Roots and Stuns on enemies last %s" % ValueBreakdown.signed_percent(rules.hold_time_bp - FixedMath.BP_ONE))
 	if rules.held_no_mana:
 		parts.append("held enemies gain no mana")
 	if rules.held_weak_bp > 0:
-		parts.append("held enemies deal %s damage, for %s after the hold" % [UnitInfo.signed_percent(-rules.held_weak_bp), UnitInfo.seconds(rules.held_weak_ticks)])
+		parts.append("held enemies deal %s damage, for %s after the hold" % [ValueBreakdown.signed_percent(-rules.held_weak_bp), UnitInfo.seconds(rules.held_weak_ticks)])
 	if rules.held_keeps_burn:
 		parts.append("Burn on held enemies doesn't fade")
 	return parts

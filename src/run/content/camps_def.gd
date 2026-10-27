@@ -1,6 +1,6 @@
 class_name CampsDef
 extends RefCounted
-## Camp's data (data/camps.json; docs/plans/phases/rebuild-phase5-run.md, section 9,
+## Camp's data (data/run/camps.json; docs/plans/phases/rebuild-phase5-run.md, section 9,
 ## Decisions 8, 9, 13): the options' names and lines, the places and their
 ## menus, and camp's numbers; and the day's nodes (phase 5c step 8,
 ## docs/plans/design/days-and-nodes.md): their names, lines, and icons, and when

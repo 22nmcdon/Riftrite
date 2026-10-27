@@ -1,6 +1,6 @@
 class_name ApexDef
 extends RefCounted
-## One of a path's two apexes, in its entry in data/paths.json
+## One of a path's two apexes, in its entry in data/heroes/<hero>/paths.json
 ## (docs/plans/phases/rebuild-phase8-apexes.md; apexes.md): the path's final form.
 ##   "apexes": [{"id": "windrunner", "name": "Windrunner", "title": "...",
 ##     "fantasy": "...",

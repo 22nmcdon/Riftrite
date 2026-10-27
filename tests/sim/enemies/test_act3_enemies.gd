@@ -1,5 +1,5 @@
 extends GutTest
-## Act 3's enemies in data/enemies.json (docs/plans/acts/act3-shattered-crown.md,
+## Act 3's enemies in data/acts/act<N>/enemies.json (docs/plans/acts/act3-shattered-crown.md,
 ## sections 3, 5 to 7; rebuild-phase8-act3.md, 8c-6a): each one's threat
 ## happens, and so does each new face's two specializations. Each test is a
 ## small fight built for one enemy, over the void where it needs some.

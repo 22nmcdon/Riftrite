@@ -1,6 +1,6 @@
 class_name PathDef
 extends RefCounted
-## One of a hero's three paths, in data/paths.json
+## One of a hero's three paths, in data/heroes/<hero>/paths.json
 ## (docs/plans/phases/rebuild-phase4-paths.md, section 1): what vowing to it does
 ## (the taste and its cost), what transforming into it does, and its deed.
 ##   {"id": "deadeye", "hero": "maren", "name": "Deadeye", "title": "the sniper",

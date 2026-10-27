@@ -301,7 +301,7 @@ func _section(title: String, line: String = "") -> VBoxContainer:
 	section.add_theme_constant_override("separation", 12)
 	section.add_child(UiStyle.heading(title, 30, UiStyle.TEXT))
 	if not line.is_empty():
-		section.add_child(_wrapped(line, 17, UiStyle.TEXT_DIM))
+		section.add_child(UiStyle.wrapped(line, 17, UiStyle.TEXT_DIM))
 	body.add_child(section)
 	return section
 
@@ -342,13 +342,6 @@ static func _row() -> HBoxContainer:
 	return row
 
 
-static func _wrapped(text: String, size: int, color: Color) -> Label:
-	var label: Label = UiStyle.label(text, size, color)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return label
-
-
 ## A line for each growing card the last fight stepped up (phase 5c step 4):
 ## "Notched Bow (Maren): now +3% ATK".
 static func grew_lines(run_session: RunSession) -> Array[String]:
@@ -386,17 +379,17 @@ func _fill_waiting() -> void:
 	if not state.grew.is_empty():
 		var section: VBoxContainer = _section("What grew", "Growing cards step up with what the heroes do, for the rest of the run.")
 		for line: String in grew_lines(session):
-			section.add_child(_wrapped(line, 17, UiStyle.HIGHLIGHT))
+			section.add_child(UiStyle.wrapped(line, 17, UiStyle.HIGHLIGHT))
 	if not state.ranked.is_empty():
 		var section: VBoxContainer = _section("Ranked up", "Items rank up with use, for the rest of the run.")
 		for id: String in state.ranked:
 			var item: ItemDef = session.run.items[id]
 			var rank: int = state.item_ranks.get(id, 1)
-			section.add_child(_wrapped("%s: rank %s · %s" % [item.name, ItemDef.RANK_NAMES[rank - 1], ModInfo.item_numbers(item, null, session.content, rank)], 17, UiStyle.HIGHLIGHT))
+			section.add_child(UiStyle.wrapped("%s: rank %s · %s" % [item.name, ItemDef.RANK_NAMES[rank - 1], ModInfo.item_numbers(item, null, session.content, rank)], 17, UiStyle.HIGHLIGHT))
 	for hero_id: String in state.just_transformed:
 		var path: PathDef = session.path_of(hero_id)
 		var section: VBoxContainer = _section("%s transforms: %s" % [_hero_name(hero_id), path.name], path.transformed_text)
-		section.add_child(_wrapped("Cost: " + path.transformed_cost, 17, UiStyle.BAD))
+		section.add_child(UiStyle.wrapped("Cost: " + path.transformed_cost, 17, UiStyle.BAD))
 	for hero_id: String in state.just_apexed:
 		var apex: ApexDef = session.apex_of(hero_id)
 		_section("%s reaches the apex: %s" % [_hero_name(hero_id), apex.name], apex.text)
@@ -423,10 +416,10 @@ func _fill_apex_vows() -> void:
 		for apex: ApexDef in path.apexes:
 			var card: VBoxContainer = _card(row, 0, UiStyle.GOLD_500)
 			card.add_child(UiStyle.heading(apex.name, 26, UiStyle.TEXT))
-			card.add_child(_wrapped(apex.fantasy, 16, UiStyle.TEXT_DIM))
-			card.add_child(_wrapped("Taste: " + apex.taste, 17, UiStyle.HIGHLIGHT))
-			card.add_child(_wrapped("Apex: " + apex.text, 17, UiStyle.ACCENT_TEXT))
-			card.add_child(_wrapped("Deed: %s (%s)" % [apex.deed.text, UnitInfo.deed_amount_text(apex.deed, apex.deed.threshold)], 16, UiStyle.TEXT_DIM))
+			card.add_child(UiStyle.wrapped(apex.fantasy, 16, UiStyle.TEXT_DIM))
+			card.add_child(UiStyle.wrapped("Taste: " + apex.taste, 17, UiStyle.HIGHLIGHT))
+			card.add_child(UiStyle.wrapped("Apex: " + apex.text, 17, UiStyle.ACCENT_TEXT))
+			card.add_child(UiStyle.wrapped("Deed: %s (%s)" % [apex.deed.text, UnitInfo.deed_amount_text(apex.deed, apex.deed.threshold)], 16, UiStyle.TEXT_DIM))
 			card.add_child(UiStyle.primary(UiStyle.button("Vow to %s" % apex.name, _vow_apex.bind(hero_id, apex.id, PathDef.Stage.APEX_VOWED))))
 
 
@@ -441,7 +434,7 @@ func _fill_pick() -> void:
 		_card_head(card, ItemIcon.for_upgrade(upgrade, CARD_ICON), UiStyle.caps(RunDayScreen.upgrade_source(upgrade, session.content), 14, UiStyle.HIGHLIGHT),
 			UiStyle.heading(upgrade.name, 26, UiStyle.TEXT))
 		card.add_child(UiStyle.label("for %s" % _hero_name(upgrade.hero), 16, UiStyle.TEXT_DIM))
-		card.add_child(_wrapped(upgrade.text, 17, UiStyle.TEXT))
+		card.add_child(UiStyle.wrapped(upgrade.text, 17, UiStyle.TEXT))
 		var numbers: String = ModInfo.upgrade_numbers(upgrade, session.run.hero_kit(state.hero(upgrade.hero)), session.content)
 		if upgrade.stacks():
 			numbers = ModInfo.stack_now(upgrade, session.run.stack_amount(state.hero(upgrade.hero), upgrade))
@@ -481,8 +474,8 @@ func _relic_card(row: Container, relic: RelicDef) -> VBoxContainer:
 	var card: VBoxContainer = _card(row, 0, UiStyle.RIFT_300)
 	_card_head(card, ItemIcon.for_relic(relic, CARD_ICON), UiStyle.caps("%s RELIC" % RelicDef.TIER_LABELS[relic.tier].to_upper(), 14, TIER_COLORS[relic.tier]),
 		UiStyle.heading(relic.name, 26, UiStyle.TEXT))
-	card.add_child(_wrapped(relic.flavor, 16, UiStyle.TEXT_DIM))
-	card.add_child(_wrapped(relic.text, 17, UiStyle.TEXT))
+	card.add_child(UiStyle.wrapped(relic.flavor, 16, UiStyle.TEXT_DIM))
+	card.add_child(UiStyle.wrapped(relic.text, 17, UiStyle.TEXT))
 	_add_numbers(card, ModInfo.relic_numbers(relic, session.content))
 	return card
 
@@ -508,7 +501,7 @@ func _fill_nodes() -> void:
 		title.add_child(name_label)
 		if id.begins_with("event:"):
 			card.add_child(UiStyle.caps("EVENT", 14, UiStyle.HIGHLIGHT))
-		card.add_child(_wrapped(RunDayScreen.node_text(session.run, id), 17, UiStyle.TEXT))
+		card.add_child(UiStyle.wrapped(RunDayScreen.node_text(session.run, id), 17, UiStyle.TEXT))
 		card.add_child(UiStyle.primary(UiStyle.button("Go to %s" % node_name, _do.bind(session.flow.choose_node.bind(i)))))
 
 
@@ -553,7 +546,7 @@ func _fill_event() -> void:
 		var choice: EventDef.Choice = scene.choices[i]
 		var card: VBoxContainer = _card(row)
 		card.add_child(UiStyle.heading(choice.label, 24, UiStyle.TEXT))
-		card.add_child(_wrapped(choice.text, 16, UiStyle.TEXT))
+		card.add_child(UiStyle.wrapped(choice.text, 16, UiStyle.TEXT))
 		if choice.needs() == EventDef.Needs.NOTHING:
 			var button: Button = UiStyle.primary(UiStyle.button(choice.label, _do.bind(flow.choose_event.bind(i, ""))))
 			var why: String = flow.event_problem(i)
@@ -596,8 +589,8 @@ func _fill_oath() -> void:
 		var card: VBoxContainer = _card(row, 0, UiStyle.RIFT_300)
 		card.add_child(UiStyle.caps(_hero_name(hero_id).to_upper(), 14, UiStyle.HIGHLIGHT))
 		card.add_child(UiStyle.heading(oath.name, 24, UiStyle.TEXT))
-		card.add_child(_wrapped("Burden: " + oath.burden, 16, UiStyle.TEXT))
-		card.add_child(_wrapped("Reward: " + oath.reward, 16, UiStyle.ACCENT_TEXT))
+		card.add_child(UiStyle.wrapped("Burden: " + oath.burden, 16, UiStyle.TEXT))
+		card.add_child(UiStyle.wrapped("Reward: " + oath.reward, 16, UiStyle.ACCENT_TEXT))
 		card.add_child(UiStyle.primary(UiStyle.button("Swear %s to it" % _hero_name(hero_id), _do.bind(session.flow.take_oath.bind(i)))))
 
 
@@ -618,10 +611,10 @@ func _fill_depths() -> void:
 		var depth: CampsDef.Depth = run.camps.depths[i]
 		var card: VBoxContainer = _card(row, 0, UiStyle.RIFT_300)
 		card.add_child(UiStyle.heading(depth.name, 26, UiStyle.TEXT))
-		card.add_child(_wrapped(depth.text, 17, UiStyle.TEXT))
+		card.add_child(UiStyle.wrapped(depth.text, 17, UiStyle.TEXT))
 		for id: String in drawn.slice(0, depth.modifiers):
 			var modifier: CampsDef.Modifier = run.camps.modifiers[id]
-			card.add_child(_wrapped("%s: %s" % [modifier.name, modifier.text], 16, UiStyle.RIFT_300))
+			card.add_child(UiStyle.wrapped("%s: %s" % [modifier.name, modifier.text], 16, UiStyle.RIFT_300))
 		card.add_child(UiStyle.primary(UiStyle.button("Go %s" % depth.name.to_lower(), _do.bind(session.flow.choose_depth.bind(i)))))
 
 
@@ -635,19 +628,19 @@ func _fill_shrine() -> void:
 	section.add_child(row)
 	var shards: VBoxContainer = _card(row)
 	shards.add_child(UiStyle.heading("Shards", 24, UiStyle.TEXT))
-	shards.add_child(_wrapped("For a rare relic.", 16, UiStyle.TEXT_DIM))
+	shards.add_child(UiStyle.wrapped("For a rare relic.", 16, UiStyle.TEXT_DIM))
 	var pay: Button = UiStyle.button("Offer %d shards" % session.flow.act.shrine_price, _do.bind(session.flow.shrine_offer.bind("shards", "")))
 	pay.disabled = state.shards < session.flow.act.shrine_price
 	shards.add_child(pay)
 	var blood: VBoxContainer = _card(row)
 	blood.add_child(UiStyle.heading("Blood", 24, UiStyle.TEXT))
-	blood.add_child(_wrapped("A wound on a hero, for a rare relic.", 16, UiStyle.TEXT_DIM))
+	blood.add_child(UiStyle.wrapped("A wound on a hero, for a rare relic.", 16, UiStyle.TEXT_DIM))
 	for hero: RunState.Hero in state.heroes:
 		if hero.wounds < session.content.tuning.max_wounds:
 			blood.add_child(UiStyle.button("Offer a wound on %s" % _hero_name(hero.id), _do.bind(session.flow.shrine_offer.bind("wound", hero.id))))
 	var relics: VBoxContainer = _card(row)
 	relics.add_child(UiStyle.heading("A relic", 24, UiStyle.TEXT))
-	relics.add_child(_wrapped("One you hold, for a relic a tier higher.", 16, UiStyle.TEXT_DIM))
+	relics.add_child(UiStyle.wrapped("One you hold, for a relic a tier higher.", 16, UiStyle.TEXT_DIM))
 	for id: String in state.relics:
 		var tier: String = session.flow.shrine_tier(id)
 		if not tier.is_empty():
@@ -686,7 +679,7 @@ func _fill_camp() -> void:
 			var name_label: Label = UiStyle.heading(option.name, 26, UiStyle.TEXT)
 			name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			title.add_child(name_label)
-			card.add_child(_wrapped(option.text, 17, UiStyle.TEXT))
+			card.add_child(UiStyle.wrapped(option.text, 17, UiStyle.TEXT))
 			card.add_child(UiStyle.primary(UiStyle.button("Choose", _do.bind(session.flow.choose_camp.bind(i)))))
 	else:
 		section.add_child(UiStyle.label("Taken: %s" % camps.options[state.camp_used].name, 17, UiStyle.ACCENT_TEXT))
@@ -697,7 +690,7 @@ func _fill_camp() -> void:
 	if state.shrine == "open":
 		_fill_shrine()
 	if state.dig_in and state.rock.is_empty():
-		body.add_child(_wrapped("Dig In: you'll set your rock on the board before the fight (click a hex of your zone).", 17, UiStyle.TEXT_DIM))
+		body.add_child(UiStyle.wrapped("Dig In: you'll set your rock on the board before the fight (click a hex of your zone).", 17, UiStyle.TEXT_DIM))
 
 
 ## A Hunt's pack waiting (camp's Hunt, or Carrion Birds): Fight the Hunt.
@@ -718,7 +711,7 @@ func _fill_mapping() -> void:
 		var encounter: EncounterDef = session.content.encounters[tomorrow[i]]
 		var card: VBoxContainer = _card(row)
 		card.add_child(UiStyle.heading(encounter.name, 24, UiStyle.TEXT))
-		card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
+		card.add_child(UiStyle.wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
 		card.add_child(UiStyle.button("Swap it", _do.bind(session.flow.swap_fight.bind(i))))
 
 
@@ -749,7 +742,7 @@ func _fill_shop() -> void:
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
 		if i == state.black_market_slot:
 			# Black Market (phase 8 part 6): a tier up, at the lower tier's price.
-			card.add_child(_wrapped("Black market: a tier up, at a %s's price" % state.black_market_tier, 15, UiStyle.TEXT_DIM))
+			card.add_child(UiStyle.wrapped("Black market: a tier up, at a %s's price" % state.black_market_tier, 15, UiStyle.TEXT_DIM))
 		var price: int = session.flow.relic_price(i)
 		card.add_child(UiStyle.primary(UiStyle.button("Take · free" if price == 0 else "Buy · %d shards" % price, _do.bind(session.flow.buy_relic.bind(i)))))
 		if i == state.black_market_slot and session.flow.black_market_rerolls_left() > 0:
@@ -797,7 +790,7 @@ func _fill_shop() -> void:
 ## its amount), under its sentence.
 static func _add_numbers(card: Container, numbers: String) -> void:
 	if not numbers.is_empty():
-		card.add_child(_wrapped(numbers, 16, UiStyle.HIGHLIGHT))
+		card.add_child(UiStyle.wrapped(numbers, 16, UiStyle.HIGHLIGHT))
 
 
 ## An item's card at `rank` (phase 5c step 6): its kind and rank, name,
@@ -809,11 +802,11 @@ func _item_card(row: Container, item: ItemDef, rank: int = 1) -> VBoxContainer:
 	_card_head(card, ItemIcon.for_item(item, CARD_ICON),
 		UiStyle.caps("%s · RANK %s" % [ItemDef.KIND_NAMES[item.kind].to_upper(), ItemDef.RANK_NAMES[rank - 1]], 14, colors[item.kind]),
 		UiStyle.heading(item.name, 24, UiStyle.TEXT))
-	card.add_child(_wrapped(item.text, 17, UiStyle.TEXT))
+	card.add_child(UiStyle.wrapped(item.text, 17, UiStyle.TEXT))
 	_add_numbers(card, ModInfo.item_numbers(item, null, session.content, rank))
 	var next: String = ModInfo.next_rank_line(item, session.content, rank)
 	if not next.is_empty():
-		card.add_child(_wrapped(next, 15, UiStyle.TEXT_DIM))
+		card.add_child(UiStyle.wrapped(next, 15, UiStyle.TEXT_DIM))
 	return card
 
 
@@ -883,7 +876,7 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 	var node: String = ActMap.TIER_NODES.get(encounter.tier, "fight")
 	_card_head(card, RunDayScreen.art_icon("nodes/%s" % node, CARD_ICON), UiStyle.caps("%s · %d shards" % [encounter.tier.to_upper(), session.flow.act.pay[encounter.tier]], 14, UiStyle.HIGHLIGHT),
 		UiStyle.heading(encounter.name, 26, UiStyle.TEXT))
-	card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
+	card.add_child(UiStyle.wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
 	card.add_child(_enemies_line(encounter))
 	var learned: Array = state.today_learned[index] if index < state.today_learned.size() else []
 	var drawn: Array = (state.today_specs[index] as Array).duplicate() if index < state.today_specs.size() else []
@@ -893,19 +886,19 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 			drawn[enemy] = ""
 	var specialized: String = RunDayScreen.specs_line(session.content, encounter, drawn)
 	if not specialized.is_empty():
-		card.add_child(_wrapped(specialized, 16, UiStyle.HIGHLIGHT))
+		card.add_child(UiStyle.wrapped(specialized, 16, UiStyle.HIGHLIGHT))
 	var learned_text: String = RunDayScreen.learned_line(session.run, encounter, learned)
 	if not learned_text.is_empty():
-		card.add_child(_wrapped(learned_text, 16, UiStyle.RIFT_300))
+		card.add_child(UiStyle.wrapped(learned_text, 16, UiStyle.RIFT_300))
 	var upgraded: String = RunDayScreen.upgrades_line(session.content, state.today_upgrades[index] if index < state.today_upgrades.size() else [])
 	if not upgraded.is_empty():
-		card.add_child(_wrapped(upgraded, 16, UiStyle.HIGHLIGHT))
+		card.add_child(UiStyle.wrapped(upgraded, 16, UiStyle.HIGHLIGHT))
 	if state.scouted.has(state.day) or session.run.relic_rule(state, "always_scout"):
-		card.add_child(_wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
+		card.add_child(UiStyle.wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
 	if not state.rift_depth.is_empty():
-		card.add_child(_wrapped(RunDayScreen.rift_line(session.run, state), 15, UiStyle.RIFT_300))
+		card.add_child(UiStyle.wrapped(RunDayScreen.rift_line(session.run, state), 15, UiStyle.RIFT_300))
 	if session.flow.floor_number() > 0:
-		card.add_child(_wrapped(RunDayScreen.floor_line(session.flow), 15, UiStyle.RIFT_300))
+		card.add_child(UiStyle.wrapped(RunDayScreen.floor_line(session.flow), 15, UiStyle.RIFT_300))
 	card.add_child(UiStyle.primary(UiStyle.button("Fight this", _do.bind(session.flow.choose_fight.bind(index)))))
 
 
@@ -919,7 +912,7 @@ func _fill_floor(kind: String) -> void:
 		var modifier: CampsDef.Modifier = session.run.camps.modifiers[id]
 		gathered.append("%s: %s" % [modifier.name, modifier.text])
 	if not gathered.is_empty():
-		section.add_child(_wrapped("The rift's modifiers, for good:\n" + "\n".join(gathered), 15, UiStyle.RIFT_300))
+		section.add_child(UiStyle.wrapped("The rift's modifiers, for good:\n" + "\n".join(gathered), 15, UiStyle.RIFT_300))
 	var beside := VBoxContainer.new()
 	beside.custom_minimum_size = Vector2(ROUTE_CARD_WIDTH, 0)
 	section.add_child(beside)
@@ -961,7 +954,7 @@ func _fill_choice() -> void:
 		"Go on to Act %d, or " % next.act if next != null else "End the run here, or ", " (a testing option)" if testing else ""])
 	var best: Dictionary = RunRecords.best(session.records_path, state.act)
 	if not best.is_empty():
-		section.add_child(_wrapped("Your deepest after Act %d so far: floor %d." % [state.act, int(best["floor"])], 16, UiStyle.HIGHLIGHT))
+		section.add_child(UiStyle.wrapped("Your deepest after Act %d so far: floor %d." % [state.act, int(best["floor"])], 16, UiStyle.HIGHLIGHT))
 	var row: HBoxContainer = _row()
 	section.add_child(row)
 	row.add_child(UiStyle.button("End the run", _do.bind(session.flow.end_run)))
@@ -996,7 +989,7 @@ func _enemies_line(encounter: EncounterDef) -> Label:
 	for id: String in order:
 		var enemy: EnemyDef = session.content.enemies[id]
 		lines.append("%s%s: %s" % [enemy.name, " ×%d" % counts[id] if counts[id] > 1 else "", enemy.threat])
-	return _wrapped("\n".join(lines), 16, UiStyle.TEXT)
+	return UiStyle.wrapped("\n".join(lines), 16, UiStyle.TEXT)
 
 
 ## Today's fight's specializations (phase 8 part 3), one line each: "2
@@ -1096,7 +1089,7 @@ func _fill_loadout() -> void:
 		var card: VBoxContainer = _item_card(cards, item, state.item_ranks.get(id, 1))
 		var progress: String = _rank_progress(item)
 		if not progress.is_empty():
-			card.add_child(_wrapped(progress, 15, UiStyle.TEXT_DIM))
+			card.add_child(UiStyle.wrapped(progress, 15, UiStyle.TEXT_DIM))
 		(card.get_parent() as Control).custom_minimum_size = Vector2(360, 0)
 		var buttons: HBoxContainer = _row()
 		card.add_child(buttons)
@@ -1150,19 +1143,19 @@ func _fill_end() -> void:
 		section = _section("The rift takes them on floor %d" % floor_now, "Act %d won, then %d floors deep, with %d relics and %d duo bonds found." % [state.act, floor_now, state.relics.size(), state.bonds_found.size()])
 		var best: Dictionary = RunRecords.best(session.records_path, state.act)
 		var said: String = "A new deepest: floor %d." % floor_now if session.new_best else "Your deepest: floor %d." % int(best.get("floor", floor_now))
-		section.add_child(_wrapped(said, 20, UiStyle.HIGHLIGHT))
+		section.add_child(UiStyle.wrapped(said, 20, UiStyle.HIGHLIGHT))
 	else:
 		section = _section("The rift is quiet: the run is won" if won else "The rift keeps them: the run is lost",
 			"Act %d, day %d of %d, with %d relics and %d duo bonds found." % [state.act, state.day, session.flow.act.days.size(), state.relics.size(), state.bonds_found.size()])
 	if session.run.acts.size() > 1 and not state.endless:
 		var furthest: Dictionary = RunRecords.furthest(session.records_path)
 		if session.new_furthest:
-			section.add_child(_wrapped("Your furthest yet: Act %d, day %d." % [state.act, state.day], 20, UiStyle.HIGHLIGHT))
+			section.add_child(UiStyle.wrapped("Your furthest yet: Act %d, day %d." % [state.act, state.day], 20, UiStyle.HIGHLIGHT))
 		elif not furthest.is_empty():
-			section.add_child(_wrapped("Your furthest: Act %d, day %d." % [int(furthest["act"]), int(furthest["day"])], 16, UiStyle.TEXT_DIM))
+			section.add_child(UiStyle.wrapped("Your furthest: Act %d, day %d." % [int(furthest["act"]), int(furthest["day"])], 16, UiStyle.TEXT_DIM))
 	var lines: Array[String] = []
 	for fought: RunState.Fought in state.fought:
 		lines.append("%sDay %d%s: %s, %s in %ds" % ["Act %d, " % fought.act if state.act > 1 else "", fought.day, " (again)" if fought.attempt > 0 else "", session.content.encounters[fought.encounter].name,
 			RunDayScreen.outcome_word(fought.outcome).to_lower(), fought.seconds])
-	section.add_child(_wrapped("\n".join(lines), 16, UiStyle.TEXT))
+	section.add_child(UiStyle.wrapped("\n".join(lines), 16, UiStyle.TEXT))
 	body.add_child(UiStyle.primary(UiStyle.button("Back to the title", func() -> void: finished.emit())))

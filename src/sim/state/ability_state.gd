@@ -11,8 +11,6 @@ var source: EffectSource
 var progress_bp: int = 0
 ## The cooldown in basis points of a tick (progress it needs), with auras.
 var needed: int = FixedMath.BP_ONE
-## From auras (AuraDef cooldown_bp): -1500 makes the cooldown 15% shorter.
-var cooldown_add_bp: int = 0
 ## The signature's trigger is mana, or fires once a fight (read each tick,
 ## so worked out once).
 var mana_trigger: bool = false
@@ -89,7 +87,6 @@ static func make(ability: AbilityDef, unit_id: String) -> AbilityState:
 
 ## Auras changed its cooldown by `bp` (-1500: 15% shorter). Never under a tick.
 func set_cooldown_add(bp: int) -> void:
-	cooldown_add_bp = bp
 	needed = maxi(def.cooldown_ticks * (FixedMath.BP_ONE + bp), FixedMath.BP_ONE)
 
 

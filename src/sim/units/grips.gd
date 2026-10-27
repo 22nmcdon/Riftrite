@@ -26,7 +26,6 @@ static func start(sim: CombatSim, unit: UnitState, state: AbilityState, target: 
 	unit.grip_target = target
 	unit.grip_state = state
 	unit.grip_next = sim.tick + ability.grip_every_ticks
-	sim.any_grips = true
 	if not ability.grip_veil.is_empty():
 		# It lasts as long as the grip (it ends with it).
 		Statuses.apply(sim, unit, ability.grip_veil, 1, sim.tuning.tie_ticks, state.source)

@@ -1,6 +1,6 @@
 class_name ActDef
 extends RefCounted
-## An act's shape (data/act1.json; docs/plans/phases/rebuild-phase5-run.md, sections
+## An act's shape (data/acts/act1/act.json; docs/plans/phases/rebuild-phase5-run.md, sections
 ## 2 and 3): its days (normal, elite, or boss), the shards a won fight pays by
 ## its tier, the shards a run starts with, how many losses end it, and each
 ## hero's loadout slots, the after-fight pick's shards and wild cards, and

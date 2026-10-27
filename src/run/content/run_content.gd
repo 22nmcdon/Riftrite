@@ -37,7 +37,7 @@ var bonds: Dictionary[String, BondDef] = {}
 var bond_ids: Array[String] = []
 ## The Event node's scenes and oaths (phase 5c step 8c).
 var events: EventDef = null
-## The rift learns (phase 8 part 3; data/rift_learns.json), or null.
+## The rift learns (phase 8 part 3; data/acts/rift_learns.json), or null.
 var learns: RiftLearnsDef = null
 var errors: Array[String] = []
 ## FOR TESTING ONLY (docs/plans/phases/easy-start.md, ES-4): item and relic id ->

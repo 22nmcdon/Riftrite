@@ -1,5 +1,5 @@
 extends GutTest
-## The nine Act 1 enemies in data/enemies.json: each one's threat happens
+## The nine Act 1 enemies in data/acts/act<N>/enemies.json: each one's threat happens
 ## (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 5). Each test is a
 ## small fight built for one enemy; units that shouldn't walk are Rooted.
 

@@ -106,7 +106,7 @@ static func hook(sim: CombatSim, target: UnitState, puller: UnitState, source: E
 	if target.flying:
 		target.airborne = false
 	_log(sim, LogEntry.Kind.PUSH, source, target, from, spot, "hooked")
-	_place(sim, target, spot)
+	place(sim, target, spot)
 
 
 ## Pulls `target` toward `puller`, no further than touching it.
@@ -153,7 +153,7 @@ static func push(sim: CombatSim, unit: UnitState, dir: Vector2i, distance: int, 
 				to = spot
 				note += ", dropped clear"
 	_log(sim, LogEntry.Kind.PUSH, source, unit, from, to, note)
-	_place(sim, unit, to)
+	place(sim, unit, to)
 	# Over the void (phase 8 part 3): it falls.
 	var fell: bool = sim.has_void and Islands.check_fall(sim, unit, source)
 	if sweep.hit != ArenaPlane.Hit.NONE:
@@ -221,7 +221,7 @@ static func leap(sim: CombatSim, unit: UnitState, target: UnitState, effect: Eff
 	var land_ticks: int = effect.land_ticks if effect.land_ticks >= 0 else sim.tuning.leap_land_ticks
 	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, target, from, spot, "behind" if effect.leap_behind else "")
 	entry.end_tick = sim.tick + land_ticks
-	_place(sim, unit, spot)
+	place(sim, unit, spot)
 	unit.landing_until = sim.tick + land_ticks
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, spot)
@@ -245,7 +245,7 @@ static func leap_home(sim: CombatSim, unit: UnitState, effect: EffectDef, source
 	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, unit, from, spot, "back to where it started")
 	entry.end_tick = sim.tick + land_ticks
 	unit.airborne = false
-	_place(sim, unit, spot)
+	place(sim, unit, spot)
 	unit.landing_until = sim.tick + land_ticks
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, spot)
@@ -265,7 +265,7 @@ static func step(sim: CombatSim, unit: UnitState, target: UnitState, effect: Eff
 	var land_ticks: int = effect.land_ticks if effect.land_ticks >= 0 else sim.tuning.leap_land_ticks
 	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, target, from, spot, "steps")
 	entry.end_tick = sim.tick + land_ticks
-	_place(sim, unit, spot)
+	place(sim, unit, spot)
 	unit.landing_until = sim.tick + land_ticks
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, spot)
@@ -311,7 +311,7 @@ static func charge(sim: CombatSim, unit: UnitState, target: UnitState, effect: E
 			hit_unit = null
 			note = "stopped at the void's edge"
 	_log(sim, LogEntry.Kind.CHARGE, source, target, from, to, note)
-	_place(sim, unit, to)
+	place(sim, unit, to)
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, to)
 	if hit_unit != null and hit_unit.side != unit.side and effect.knockback_hexes > 0 and not carried:
@@ -415,18 +415,13 @@ static func _hop_from(sim: CombatSim, unit: UnitState, near: UnitState, source: 
 	var entry: LogEntry = _log(sim, LogEntry.Kind.HOP, source, near, unit.pos, to, "")
 	if short:
 		entry.note = "cut short"
-	_place(sim, unit, to)
+	place(sim, unit, to)
 	return true
-
-
-## Moves `unit` to `point` (Gambits' swap; phase 5c step 6d).
-static func place(sim: CombatSim, unit: UnitState, point: Vector2i) -> void:
-	_place(sim, unit, point)
 
 
 ## Moves `unit` to `point`: its path is dropped, and an engagement it's been
 ## moved out of ends.
-static func _place(sim: CombatSim, unit: UnitState, point: Vector2i) -> void:
+static func place(sim: CombatSim, unit: UnitState, point: Vector2i) -> void:
 	unit.pos = point
 	unit.moved_at = sim.tick
 	unit.route.clear()
