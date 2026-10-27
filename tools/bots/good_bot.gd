@@ -1,5 +1,5 @@
 extends "res://tools/bots/bot.gd"
-## The good bot (docs/plans/rebuild-phase6-bot-tuning.md, sections 2.2 and
+## The good bot (docs/plans/phases/rebuild-phase6-bot-tuning.md, sections 2.2 and
 ## 2.3): it places by reading the fight (tools/bots/placement.gd), never by
 ## fighting it, and judges its choices by practice fights
 ## (tools/bots/practice.gd): each option is tried on a copy of the run and

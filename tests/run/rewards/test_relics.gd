@@ -1,5 +1,5 @@
 extends GutTest
-## The relic pool's first part (docs/plans/rebuild-phase5c-combos.md, step
+## The relic pool's first part (docs/plans/phases/rebuild-phase5c-combos.md, step
 ## 5a, section 10): the tiers, every 5a relic's effect (in a small fight, on
 ## a kit, or on the run), the run rules, the shops' relics and rerolls, the
 ## boss shop, and the boss relic choice. And its second (step 5b,
@@ -7,7 +7,7 @@ extends GutTest
 ## Circle in the run's fight setups, and Reliquary's doubling. And step 5c's
 ## engines (section 12.1).
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 

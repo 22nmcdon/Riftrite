@@ -6,7 +6,7 @@ Status: **approved in direction (2026-09-26); being built in steps.** The decisi
 
 ## What the numbers say (2026-09-26)
 
-These come from the run bot (`tools/run_runner.gd`, 200 runs), the combat sim (`tools/sim_runner.gd`), and a one-off probe over 100 runs.
+These come from the run bot (`tools/runners/run_runner.gd`, 200 runs), the combat sim (`tools/runners/sim_runner.gd`), and a one-off probe over 100 runs.
 
 | Finding | Number |
 | --- | --- |

@@ -1,7 +1,7 @@
 class_name FightNames
 extends RefCounted
 ## Display names for a fight's units, and the log's lines with them
-## (docs/plans/rebuild-phase3-fight-sandbox.md, section 6). The log uses ids
+## (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 6). The log uses ids
 ## like rift_hound#2; the screen says "Rift Hound 2".
 ##   - Heroes go by their token's name ("Brannoc"); other units by their
 ##     kit's name.

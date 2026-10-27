@@ -1,6 +1,6 @@
 class_name FightChart
 extends VBoxContainer
-## The fight chart (docs/plans/rebuild-phase3-fight-sandbox.md, section 6),
+## The fight chart (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 6),
 ## shown above the log: three tabs (Damage, Healing and Shield, Damage
 ## taken), a legend, and a bar per hero, largest first, split into colored
 ## types. Hovering a bar lists its sources. Reads a FightTally; call

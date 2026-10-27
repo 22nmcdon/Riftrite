@@ -1,5 +1,5 @@
 extends GutTest
-## Paths and stages (docs/plans/rebuild-phase4-paths.md, sections 1 and 2):
+## Paths and stages (docs/plans/phases/rebuild-phase4-paths.md, sections 1 and 2):
 ## reading a path, building its vowed and transformed kits from the hero's
 ## base kit (KitPatch), the checks across files, and a fight's setup taking a
 ## hero's vow and stage. The deeds' counting is test_deeds.gd's.

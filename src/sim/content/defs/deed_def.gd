@@ -1,6 +1,6 @@
 class_name DeedDef
 extends RefCounted
-## A path's deed (docs/plans/rebuild-phase4-paths.md, section 3): one thing
+## A path's deed (docs/plans/phases/rebuild-phase4-paths.md, section 3): one thing
 ## its hero does in fights, counted in every fight whatever path the hero is
 ## on (Deeds). The deed's taste is what makes it possible, so without the
 ## vow it barely moves.

@@ -1,5 +1,5 @@
 extends GutTest
-## The sim pieces phase 5's sigils and tactics need (docs/plans/rebuild-phase5-run.md,
+## The sim pieces phase 5's sigils and tactics need (docs/plans/phases/rebuild-phase5-run.md,
 ## section 7): a signature's extra triggers (an ally falls; below an HP
 ## share), its Echo, and the Plant your feet tactic (stop_near).
 

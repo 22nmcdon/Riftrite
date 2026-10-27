@@ -1,7 +1,7 @@
 class_name RelicDef
 extends RefCounted
-## A relic (data/relics.json; docs/plans/relics/README.md; phase 5c step 5a,
-## docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, kept for the
+## A relic (data/relics.json; docs/plans/design/relics/README.md; phase 5c step 5a,
+## docs/plans/phases/rebuild-phase5c-combos.md, section 10): team-wide, kept for the
 ## run, with no downsides. "text" is the player's line; "flavor" its line of
 ## flavor; "tier" one of common, rare, epic, legendary, boss, bond. What it does:
 ##   "mod": {...KitMod...}        every hero's kit (after the loadout)

@@ -1,9 +1,9 @@
 class_name UnitSetup
 extends RefCounted
 ## One unit placed for a fight: its kit, its side, the hex it starts on
-## (docs/plans/rebuild-phase1-arena-sim.md, section 1), and a hero's tactic,
-## if it took one (docs/plans/rebuild-phase3b-tactics.md, section 3). A hero
-## on a path (docs/plans/rebuild-phase4-paths.md, section 2) has that path's
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, section 1), and a hero's tactic,
+## if it took one (docs/plans/phases/rebuild-phase3b-tactics.md, section 3). A hero
+## on a path (docs/plans/phases/rebuild-phase4-paths.md, section 2) has that path's
 ## kit at its stage as `def`, and counts the deeds of `deed_paths`.
 
 var def: UnitDef

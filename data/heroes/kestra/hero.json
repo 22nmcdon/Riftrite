@@ -1,5 +1,5 @@
 {
-  "_note": "Hero 11 (docs/plans/rebuild-heroes.md section 8k; rebuild-phase8-last-heroes.md 8f-3). DEF, CRIT, speed, range, mana, Sic 'Em, Bond, and Grit's shares are the design's; HP 250 and ATK 15 (the design's 300 and 18) keep her team within the base-kit band (+10); Spear Jab's 1.2s cooldown and Grit's DEF, speed, and 0.8s bite are first numbers. She can't be drafted until her paths come.",
+  "_note": "Hero 11 (docs/plans/design/rebuild-heroes.md section 8k; rebuild-phase8-last-heroes.md 8f-3). DEF, CRIT, speed, range, mana, Sic 'Em, Bond, and Grit's shares are the design's; HP 250 and ATK 15 (the design's 300 and 18) keep her team within the base-kit band (+10); Spear Jab's 1.2s cooldown and Grit's DEF, speed, and 0.8s bite are first numbers. She can't be drafted until her paths come.",
   "id": "kestra",
   "name": "Kestra Fenn",
   "title": "the beastwarden",

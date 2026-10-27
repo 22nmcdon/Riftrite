@@ -1,6 +1,6 @@
 class_name Mana
 extends RefCounted
-## Mana (docs/plans/rebuild-phase1-arena-sim.md, section 5), for units with a
+## Mana (docs/plans/phases/rebuild-phase1-arena-sim.md, section 5), for units with a
 ## mana bar (UnitDef.mana). It's kept in hundredths, so "1 per 10 damage
 ## taken" stays an integer; the data gives whole mana.
 ##   - It comes from each basic attack that fires (per_attack, or

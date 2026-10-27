@@ -1,6 +1,6 @@
 class_name Engage
 extends RefCounted
-## The Engage trait (docs/plans/rebuild-phase1-arena-sim.md, section 4,
+## The Engage trait (docs/plans/phases/rebuild-phase1-arena-sim.md, section 4,
 ## decided): a tank that holds enemies in place.
 ##   - An enemy whose center is within engage_reach (1 hex) of an engager is
 ##     next to it (farther for an engager whose kit reaches farther:

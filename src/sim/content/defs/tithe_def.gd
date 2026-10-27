@@ -1,6 +1,6 @@
 class_name TitheDef
 extends RefCounted
-## Tithe (phase 8 part 5, docs/plans/rebuild-phase8-severine-edric.md
+## Tithe (phase 8 part 5, docs/plans/phases/rebuild-phase8-severine-edric.md
 ## section 6; Edric's Tithe-Collector): shards the run pays after a won day
 ## fight, worked out from what the fight reports. The sim never reads it.
 ##   {"per_standing": 2}                    a path's stage, an apex's stage

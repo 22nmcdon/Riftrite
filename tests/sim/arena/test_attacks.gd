@@ -1,6 +1,6 @@
 extends GutTest
 ## Basic attacks: reach, cooldowns, attack speed, and the numbers
-## (docs/plans/rebuild-phase1-arena-sim.md, sections 4 and 5).
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, sections 4 and 5).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 

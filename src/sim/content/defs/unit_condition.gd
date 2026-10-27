@@ -1,6 +1,6 @@
 class_name UnitCondition
 extends RefCounted
-## "A unit that is ..." (docs/plans/rebuild-phase5c-combos.md, step 3,
+## "A unit that is ..." (docs/plans/phases/rebuild-phase5c-combos.md, step 3,
 ## section 8.3): the one shape cards use to look at a unit's state. Every
 ## field given must hold; a list holds if any of it does:
 ##   {"keywords": ["rooted"]}                Rooted (Keywords.NAMES)

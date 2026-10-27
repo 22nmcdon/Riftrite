@@ -1,5 +1,5 @@
 extends GutTest
-## Confused and controlled (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Confused and controlled (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-4; Decision 7): a confused enemy attacks the nearest other unit of its
 ## own side; a controlled one fights for the side of whoever set it, owned by
 ## them, keeping no side up, nobody's fallen ally, and goes back as it ends;

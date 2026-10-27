@@ -1,6 +1,6 @@
 class_name ShapeDef
 extends RefCounted
-## An area's shape (docs/plans/rebuild-phase1-arena-sim.md, section 7),
+## An area's shape (docs/plans/phases/rebuild-phase1-arena-sim.md, section 7),
 ## measured in hexes:
 ##   {"kind": "circle", "radius": 2}   within 2 hexes of its center
 ##   {"kind": "ring", "radius": 2}     between 1.5 and 2.5 hexes from it

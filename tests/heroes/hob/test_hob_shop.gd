@@ -1,5 +1,5 @@
 extends GutTest
-## Hob's run pieces (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Hob's run pieces (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## section 8 and Decision 6; 8f-5b): shop rules on a path's stage and on
 ## cards (Haggle's free reroll, Second Haggle's cheap one, Fence's half-price
 ## rerolls and quarter sell-back, the Hoarder's dearer rerolls, Wholesale,

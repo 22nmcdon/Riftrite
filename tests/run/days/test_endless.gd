@@ -1,11 +1,11 @@
 extends GutTest
-## Endless after Act 1 (docs/plans/rebuild-phase8-endless.md, part 8a-1):
+## Endless after Act 1 (docs/plans/phases/rebuild-phase8-endless.md, part 8a-1):
 ## the choice after the act's boss shop, floors as days (their kind, fight,
 ## and growth), rift modifiers gathered every 3 floors, the collapse and
 ## crumbled ground, the shops' legendaries, boss relics then legendaries,
 ## the first loss ending the run, the save, and the records file.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const RECORDS_PATH: String = "user://test_records.json"
 
 var _run: RunContent

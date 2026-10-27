@@ -4,31 +4,31 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 
 | Part | Plan |
 | --- | --- |
-| Heroes, paths, vows, deeds, mana | `docs/plans/rebuild-heroes.md` |
-| The arena: placement, movement, tanks, areas, the collapse | `docs/plans/rebuild-arena.md` |
-| Enemies, elites, the boss | `docs/plans/rebuild-enemies.md` |
-| The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
-| Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/rebuild-between-fights.md` |
-| Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
-| Enemy specializations and upgrades, rift modifiers, and the rift learns | `docs/plans/enemy-growth.md` |
-| Endless mode: floors, how the rift scales, the score | `docs/plans/endless.md` |
-| Every shard source and price, and the Act 1 spending target | `docs/plans/economy.md` |
-| What the UI must show for the new systems (input for the UI redesign) | `docs/plans/ui-new-systems.md` |
-| The first content pool (part 7b): keyword sources, growing upgrades, and the combos the pool is built for | `docs/plans/rebuild-content-pool.md` |
-| The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
-| The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
-| The Magpie node, selling relics and items, and why grafts were cut | `docs/plans/magpie.md` |
-| The after-fight pick's pools: each hero's, taste and path upgrades, stacking | `docs/plans/upgrade-pools.md` |
-| A day's loop and its nodes, Rift Tear's depths, the Shrine | `docs/plans/days-and-nodes.md` |
-| Events and the Bloodied Oath | `docs/plans/events.md` |
-| Duo bonds and their bond relics | `docs/plans/duo-bonds.md` |
-| The 18 apexes, their snowballs and upgrades | `docs/plans/apexes.md` |
+| Heroes, paths, vows, deeds, mana | `docs/plans/design/rebuild-heroes.md` |
+| The arena: placement, movement, tanks, areas, the collapse | `docs/plans/design/rebuild-arena.md` |
+| Enemies, elites, the boss | `docs/plans/design/rebuild-enemies.md` |
+| The run: days, camp, fights, relics, duo bonds | `docs/plans/design/rebuild-run.md` |
+| Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/design/rebuild-between-fights.md` |
+| Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/design/rebuild-combos.md` |
+| Enemy specializations and upgrades, rift modifiers, and the rift learns | `docs/plans/design/enemy-growth.md` |
+| Endless mode: floors, how the rift scales, the score | `docs/plans/design/endless.md` |
+| Every shard source and price, and the Act 1 spending target | `docs/plans/design/economy.md` |
+| What the UI must show for the new systems (input for the UI redesign) | `docs/plans/design/ui-new-systems.md` |
+| The first content pool (part 7b): keyword sources, growing upgrades, and the combos the pool is built for | `docs/plans/design/rebuild-content-pool.md` |
+| The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/design/relics/README.md` (and one file per tier) |
+| The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/design/loadout/README.md` (and one file per kind) |
+| The Magpie node, selling relics and items, and why grafts were cut | `docs/plans/design/magpie.md` |
+| The after-fight pick's pools: each hero's, taste and path upgrades, stacking | `docs/plans/design/upgrade-pools.md` |
+| A day's loop and its nodes, Rift Tear's depths, the Shrine | `docs/plans/design/days-and-nodes.md` |
+| Events and the Bloodied Oath | `docs/plans/design/events.md` |
+| Duo bonds and their bond relics | `docs/plans/design/duo-bonds.md` |
+| The 18 apexes, their snowballs and upgrades | `docs/plans/design/apexes.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
-| Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
-| Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
-| Phase 3, the fight sandbox (build plan) | `docs/plans/rebuild-phase3-fight-sandbox.md` |
-| Phase 3b, tactics in Practice (build plan) | `docs/plans/rebuild-phase3b-tactics.md` |
-| Phase 4, paths (build plan) | `docs/plans/rebuild-phase4-paths.md` |
+| Phase 1, the arena sim (build plan) | `docs/plans/phases/rebuild-phase1-arena-sim.md` |
+| Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/phases/rebuild-phase2-heroes-enemies.md` |
+| Phase 3, the fight sandbox (build plan) | `docs/plans/phases/rebuild-phase3-fight-sandbox.md` |
+| Phase 3b, tactics in Practice (build plan) | `docs/plans/phases/rebuild-phase3b-tactics.md` |
+| Phase 4, paths (build plan) | `docs/plans/phases/rebuild-phase4-paths.md` |
 
 Where this summary and a plan disagree, the plan wins; fix this document.
 

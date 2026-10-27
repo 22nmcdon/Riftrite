@@ -8,7 +8,7 @@ extends SceneTree
 ## encounter); --no-progress turns that off.
 
 const Placement = preload("res://tools/bots/placement.gd")
-const SimReport = preload("res://tools/sim_report.gd")
+const SimReport = preload("res://tools/reports/sim_report.gd")
 const Progress = preload("res://tools/progress.gd")
 
 

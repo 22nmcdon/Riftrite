@@ -1,6 +1,6 @@
 extends GutTest
 ## FightTally: the fight chart's and the sim runner's numbers, added up from
-## the log (docs/plans/rebuild-phase3-fight-sandbox.md, section 6).
+## the log (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 6).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")

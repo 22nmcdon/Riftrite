@@ -1,5 +1,5 @@
 extends GutTest
-## Counting deeds (Deeds, DeedDef; docs/plans/rebuild-phase4-paths.md,
+## Counting deeds (Deeds, DeedDef; docs/plans/phases/rebuild-phase4-paths.md,
 ## section 3), in tiny fights: each kind counts what it says, each filter
 ## keeps out what it should, and counting never changes the fight. The board
 ## runs in the plan's terms: heroes in rows 0-2, enemies in rows 4-6, a row

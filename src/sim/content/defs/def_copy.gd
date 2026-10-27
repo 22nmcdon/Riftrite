@@ -1,7 +1,7 @@
 class_name DefCopy
 extends RefCounted
 ## Copies of content definitions, for changing one without touching the
-## shared one the content loaded (docs/plans/rebuild-phase5-run.md, section
+## shared one the content loaded (docs/plans/phases/rebuild-phase5-run.md, section
 ## 7: kit modifiers). A shallow copy: every script variable is copied, and
 ## arrays are duplicated (their items shared), so a caller copies deeper
 ## only what it changes.

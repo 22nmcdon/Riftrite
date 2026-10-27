@@ -1,6 +1,6 @@
 class_name Collapse
 extends RefCounted
-## Rift Collapse, the shrinking arena (docs/plans/rebuild-phase1-arena-sim.md,
+## Rift Collapse, the shrinking arena (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 9). It runs first each tick.
 ##
 ##   - Rings follow the placement grid (HexGrid.ring): the border is ring 0,

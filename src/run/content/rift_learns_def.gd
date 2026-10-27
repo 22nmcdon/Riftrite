@@ -1,7 +1,7 @@
 class_name RiftLearnsDef
 extends RefCounted
 ## The rift learns' data (data/rift_learns.json; phase 8 part 3,
-## docs/plans/rebuild-phase8-act3.md section 5, enemy-growth.md section 5):
+## docs/plans/phases/rebuild-phase8-act3.md section 5, enemy-growth.md section 5):
 ## how many fights it reads, and the habits it answers, each with what a
 ## fight counts toward it, how much a fight of it is a habit, and the
 ## upgrades and specializations that answer it. RiftLearns does the rest.

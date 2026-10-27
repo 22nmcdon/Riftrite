@@ -2,7 +2,7 @@ class_name CombatSim
 extends RefCounted
 ## Runs one fight in the arena, tick by tick (20 ticks per second). Pure
 ## logic: no nodes, no rendering (CLAUDE.md rule 2). Same FightSetup + same
-## content = same log. Design: docs/plans/rebuild-phase1-arena-sim.md.
+## content = same log. Design: docs/plans/phases/rebuild-phase1-arena-sim.md.
 ##
 ## Each tick (section 3; the parts marked "later" come with later steps):
 ##   0. Auras whose window opens or closes now are folded in again (Passives).

@@ -1,5 +1,5 @@
 extends GutTest
-## Severine's upgrade cards (phase 8 part 5, docs/plans/upgrade-pools.md
+## Severine's upgrade cards (phase 8 part 5, docs/plans/design/upgrade-pools.md
 ## Severine; rebuild-phase8-severine-edric.md 8e-2d) on her real kits: each
 ## changes the kit it's offered on, a card on Drain reaches it as her
 ## signature or as her habit, and the new knobs (lifesteal_add_bp,

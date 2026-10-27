@@ -1,7 +1,7 @@
 class_name UnitInfo
 extends RefCounted
 ## A unit's details for the enemy panel and the hero popup
-## (docs/plans/rebuild-phase3-fight-sandbox.md, section 7, Decision 3): one
+## (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 7, Decision 3): one
 ## line per ability, passive, and trait, each with its sentence and a numbers
 ## line under it.
 ##   - The sentence is the data's "text" (hand-written, so it reads well; a

@@ -1,5 +1,5 @@
 extends GutTest
-## Copying a signature (docs/plans/rebuild-phase8-act3.md, part 8c-5c-3;
+## Copying a signature (docs/plans/phases/rebuild-phase8-act3.md, part 8c-5c-3;
 ## Copies, the copy passive): the first copyable hero signature becomes the
 ## copier's, cast on its own bar with the sides turned; what can't be
 ## copied; Greedy, Twinned, and the Queen's court.

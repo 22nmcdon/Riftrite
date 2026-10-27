@@ -1,12 +1,12 @@
 extends GutTest
-## Enemy upgrades in the run (docs/plans/rebuild-phase8-act3.md, part 8c-5a):
+## Enemy upgrades in the run (docs/plans/phases/rebuild-phase8-act3.md, part 8c-5a):
 ## each elite day fight draws 1–2 when the day starts (from the act's
 ## elite_upgrades, fresh on each attempt), carried by every enemy in it they
 ## change; the fight's kits and names, the save (version 9), and the fight
 ## card's line. On stand-in acts (tests/run/days/test_acts.gd) whose Act 2 draws
 ## upgrades.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const ActsTest = preload("res://tests/run/days/test_acts.gd")
 
 var _run: RunContent

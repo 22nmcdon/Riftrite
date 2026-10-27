@@ -1,10 +1,10 @@
 class_name RunFlow
 extends RefCounted
-## The run's rules (docs/plans/rebuild-phase5-run.md, sections 1 and 3): the
+## The run's rules (docs/plans/phases/rebuild-phase5-run.md, sections 1 and 3): the
 ## only thing that changes a RunState, one action at a time. Each action
 ## checks it's legal now and returns "" if it happened, or why it didn't
 ## (the state is then untouched). The UI and the run bot both drive it.
-## A day (phase 5c step 8, docs/plans/days-and-nodes.md): the route (choose
+## A day (phase 5c step 8, docs/plans/design/days-and-nodes.md): the route (choose
 ## one of today's two fights), the loadout and placement, the fight (fight()
 ## runs it, CombatSim.run on fight_setup()'s setup), after it (the pick, a
 ## relic choice), the shop (the Pedlar), then a node (Camp, Rift Tear at a

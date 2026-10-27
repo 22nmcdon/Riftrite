@@ -1,5 +1,5 @@
 extends GutTest
-## Garrow's upgrade cards (phase 8 part 4, docs/plans/upgrade-pools.md Garrow;
+## Garrow's upgrade cards (phase 8 part 4, docs/plans/design/upgrade-pools.md Garrow;
 ## rebuild-phase8-heroes.md 8d-2d) on his real kits: each changes the kit it's
 ## offered on, a card on Haul reaches it as his signature or as his habit
 ## (a cost change moves the habit's every by one), and the knobs they added.

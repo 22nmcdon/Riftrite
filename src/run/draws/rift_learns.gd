@@ -1,6 +1,6 @@
 class_name RiftLearns
 extends RefCounted
-## The rift learns (phase 8 part 3, docs/plans/rebuild-phase8-act3.md
+## The rift learns (phase 8 part 3, docs/plans/phases/rebuild-phase8-act3.md
 ## section 5; enemy-growth.md section 5; its data RiftLearnsDef). A run
 ## piece: it reads fights after they're fought and changes no fight but the
 ## boss's, through the specializations and upgrades it picks.

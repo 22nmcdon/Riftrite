@@ -1,6 +1,6 @@
 class_name ShopRulesDef
 extends RefCounted
-## Shop rules (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Shop rules (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## section 8; Hob's Fence and Hoarder): how the Pedlar and the boss shop
 ## price things for the team (Decision 6: the Magpie keeps his own). The sim
 ## never reads it.

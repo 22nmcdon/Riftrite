@@ -1,5 +1,5 @@
 extends GutTest
-## Unit details (docs/plans/rebuild-phase3-fight-sandbox.md, section 7,
+## Unit details (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 7,
 ## Decisions 3 and 5): every ability has its sentence, one with a reach names
 ## it, the numbers lines come from the kit; hovering an enemy fills the side
 ## panel, and clicking a hero opens its popup only while the fight isn't

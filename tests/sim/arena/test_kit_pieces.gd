@@ -1,5 +1,5 @@
 extends GutTest
-## The sim pieces phase 2's kits need (docs/plans/rebuild-phase2-heroes-enemies.md,
+## The sim pieces phase 2's kits need (docs/plans/phases/rebuild-phase2-heroes-enemies.md,
 ## section 4): an aura that holds while its holder is taunting, the
 ## on_ally_below_hp, on_interval, and on_fall passive triggers, areas in
 ## passives, heals of a share of max HP, and damage that grows with nearby

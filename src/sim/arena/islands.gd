@@ -1,7 +1,7 @@
 class_name Islands
 extends RefCounted
-## The void, Act 3's board rule (docs/plans/rebuild-phase8-act3.md, section
-## 3; docs/plans/act3-shattered-crown.md, section 2). An encounter lists its
+## The void, Act 3's board rule (docs/plans/phases/rebuild-phase8-act3.md, section
+## 3; docs/plans/acts/act3-shattered-crown.md, section 2). An encounter lists its
 ## void hexes the way it lists water (FightSetup.void); a fight without any
 ## never makes one of these, so nothing below runs.
 ##

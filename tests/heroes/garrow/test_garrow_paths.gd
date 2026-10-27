@@ -1,5 +1,5 @@
 extends GutTest
-## Garrow's paths (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md section
+## Garrow's paths (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md section
 ## 4; rebuild-heroes.md section 8d) in real fights: Aegisfang's capped Shield
 ## and its Burst, Chainwarden's Bleeding chains and Maelstrom, Spitemail's
 ## Spikes and Iron Maiden, Haul as each one's habit, and each deed moving.

@@ -1,6 +1,6 @@
 class_name Gambits
 extends RefCounted
-## Gambits in a fight (docs/plans/rebuild-phase5c-combos.md, step 6d,
+## Gambits in a fight (docs/plans/phases/rebuild-phase5c-combos.md, step 6d,
 ## section 14.7): placement and fight-start rules, read from the kit
 ## (UnitDef's gambit fields, set by a gambit's kit mod). A fight with none
 ## never reaches this code.

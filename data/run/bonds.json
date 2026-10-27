@@ -1,6 +1,6 @@
 [
   {
-    "_note": "Duo bonds (docs/plans/duo-bonds.md; phase 5c step 5d, docs/plans/rebuild-phase5c-combos.md, section 13): two paths of two heroes, with no boost of their own. Once both heroes have transformed into them the bond is on, and its bond relic (a relic of the bond tier, free) can show up in the shops. Vowing both shows the bond as \"?\" (a bond stirs).",
+    "_note": "Duo bonds (docs/plans/design/duo-bonds.md; phase 5c step 5d, docs/plans/phases/rebuild-phase5c-combos.md, section 13): two paths of two heroes, with no boost of their own. Once both heroes have transformed into them the bond is on, and its bond relic (a relic of the bond tier, free) can show up in the shops. Vowing both shows the bond as \"?\" (a bond stirs).",
     "id": "sentry_and_sniper",
     "name": "Sentry and Sniper",
     "text": "The wall and the eye behind it.",

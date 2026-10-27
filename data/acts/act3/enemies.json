@@ -1,6 +1,6 @@
 [
   {
-    "_note": "Act 3's enemies (docs/plans/act3-shattered-crown.md; rebuild-phase8-act3.md 8c-6a). Every number a placeholder until 8c-6c.",
+    "_note": "Act 3's enemies (docs/plans/acts/act3-shattered-crown.md; rebuild-phase8-act3.md 8c-6a). Every number a placeholder until 8c-6c.",
     "id": "cliffmite",
     "name": "Cliffmite",
     "archetype": "swarm",

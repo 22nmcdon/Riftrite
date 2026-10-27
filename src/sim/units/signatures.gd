@@ -1,6 +1,6 @@
 class_name Signatures
 extends RefCounted
-## Signatures and their triggers (docs/plans/rebuild-phase1-arena-sim.md,
+## Signatures and their triggers (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 5; the data is AbilityDef and TriggerDef).
 ##
 ## In each unit's update every tick, right after its mana regen (act;

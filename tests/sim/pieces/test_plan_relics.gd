@@ -1,6 +1,6 @@
 extends GutTest
 ## The tuning phase's relics for sustain, control, and swarms
-## (docs/plans/tuning-phase.md, T-1; relics/): each one's effect in a small
+## (docs/plans/phases/tuning-phase.md, T-1; relics/): each one's effect in a small
 ## fight, with the sim pieces they brought: plain hits, once_per_enemy,
 ## on_enemy_near, above_hp_pct, and the hero rules holds, held_weak, and
 ## held_keeps_burn.

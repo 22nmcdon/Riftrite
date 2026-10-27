@@ -1,6 +1,6 @@
 extends GutTest
 ## The pieces Tamsin's cards and her bond relic added (phase 8 part 4,
-## docs/plans/rebuild-phase8-heroes.md 8d-3d), each in a small fight: the aura
+## docs/plans/phases/rebuild-phase8-heroes.md 8d-3d), each in a small fight: the aura
 ## stat evade_bp (Evasive), a pull toward the unit's nearest ally (Drag), the
 ## conditions targets_holder (Backstab) and target (Stalker), a cleanse on
 ## on_status keeping its own statuses (Mist Step), a signature's reach_add and

@@ -94,6 +94,6 @@ One new piece: **enemy phases.** An enemy can list phases, each entered once whe
 
 ## Balance findings (placeholders)
 
-- **The run bot** (`tools/run_runner.gd -- --runs=200 --seed=1`): 59 of 200 runs reach her, and **58% of those beat her** (1.15 boss fights each, counting a replay after a loss). 17% of runs clear the act.
+- **The run bot** (`tools/runners/run_runner.gd -- --runs=200 --seed=1`): 59 of 200 runs reach her, and **58% of those beat her** (1.15 boss fights each, counting a replay after a loss). 17% of runs clear the act.
 - **The fixed balance parties** (four heroes at C or A, no relics) all lose to her now, in about 55s. By day 6, a bot run's guild is much stronger than those parties (more heroes, higher tiers, relics, infusions).
 - **Tuning steps tried** (bot win rate against the boss): 2400 HP → 100%, 5000 → 97%, 7500 → 88%, 11000 → 58%.

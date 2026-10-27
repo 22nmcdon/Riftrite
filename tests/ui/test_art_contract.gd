@@ -1,6 +1,6 @@
 extends GutTest
-## The art in art/ keeps docs/plans/asset-contract.md (built in phase 7a,
-## docs/plans/rebuild-phase7a-asset-loading.md): every manifest entry names a
+## The art in art/ keeps docs/plans/art/asset-contract.md (built in phase 7a,
+## docs/plans/phases/rebuild-phase7a-asset-loading.md): every manifest entry names a
 ## figure and keeps its points inside its canvas, every PNG has the
 ## contract's size, and every texture imports with mipmaps.
 

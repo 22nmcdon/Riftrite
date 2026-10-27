@@ -1,6 +1,6 @@
 extends GutTest
 ## The nine Act 1 enemies in data/enemies.json: each one's threat happens
-## (docs/plans/rebuild-phase2-heroes-enemies.md, section 5). Each test is a
+## (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 5). Each test is a
 ## small fight built for one enemy; units that shouldn't walk are Rooted.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")

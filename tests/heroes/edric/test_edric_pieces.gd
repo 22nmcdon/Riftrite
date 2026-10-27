@@ -1,6 +1,6 @@
 extends GutTest
 ## The fight pieces Edric's paths and apexes added (phase 8 part 5,
-## docs/plans/rebuild-phase8-severine-edric.md section 5, 8e-3a), each in a
+## docs/plans/phases/rebuild-phase8-severine-edric.md section 5, 8e-3a), each in a
 ## small fight: the aura stat shield_absorb_bp (Hallowed Ground: a Shield
 ## absorbs more), trigger_ally on on_ally_shield_broken (the ally whose
 ## Shield broke: Offering, Reforge), lowest_hp_ally's count (Bastion of

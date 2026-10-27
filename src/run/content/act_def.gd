@@ -1,6 +1,6 @@
 class_name ActDef
 extends RefCounted
-## An act's shape (data/act1.json; docs/plans/rebuild-phase5-run.md, sections
+## An act's shape (data/act1.json; docs/plans/phases/rebuild-phase5-run.md, sections
 ## 2 and 3): its days (normal, elite, or boss), the shards a won fight pays by
 ## its tier, the shards a run starts with, how many losses end it, and each
 ## hero's loadout slots, the after-fight pick's shards and wild cards, and
@@ -59,7 +59,7 @@ var magpie_charm_price: int = 12
 ## What the Magpie pays for a relic, by tier (RelicDef.TIER_NAMES; a bond
 ## relic: nothing).
 var relic_sell: Dictionary[String, int] = {}
-## The loadout pool (phase 5c step 6, docs/plans/loadout/): an item's price
+## The loadout pool (phase 5c step 6, docs/plans/design/loadout/): an item's price
 ## by its kind (ItemDef.KIND_NAMES), and what ranks it up: for each kind,
 ## how much it must count to reach rank II, then how much more for rank III
 ## (the count starts again at each rank). Tactics count ms its hero stands
@@ -85,7 +85,7 @@ var item_ranks: Dictionary[String, Array] = {}
 var endless: Endless = null
 
 
-## Endless's numbers (docs/plans/rebuild-phase8-endless.md, section 3): a
+## Endless's numbers (docs/plans/phases/rebuild-phase8-endless.md, section 3): a
 ## floor is a day after the act's last. Enemies' HP and ATK grow growth_bp a
 ## floor (compounded), a rift modifier joins every modifier_every floors for
 ## good, Rift Collapse starts collapse_step_ms earlier a floor (never before

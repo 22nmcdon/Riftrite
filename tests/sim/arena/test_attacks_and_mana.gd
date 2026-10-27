@@ -1,5 +1,5 @@
 extends GutTest
-## Mana (docs/plans/rebuild-phase1-arena-sim.md, section 5): its sources,
+## Mana (docs/plans/phases/rebuild-phase1-arena-sim.md, section 5): its sources,
 ## the cap, Silence, Stun, and drains.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")

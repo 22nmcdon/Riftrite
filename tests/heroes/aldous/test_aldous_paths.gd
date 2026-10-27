@@ -1,5 +1,5 @@
 extends GutTest
-## Aldous's paths (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md 8d-4b;
+## Aldous's paths (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md 8d-4b;
 ## rebuild-heroes.md section 8e) in real fights: Chorister's Shared Breath,
 ## Chorus, and Crescendo, Windcaller's Tailwind, High Wind, and Gale,
 ## Bellwarden's Toll the Hour and Death Knell, Peal as each one's habit, and

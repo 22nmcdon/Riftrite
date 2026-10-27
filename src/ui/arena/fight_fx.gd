@@ -1,7 +1,7 @@
 class_name FightFx
 extends Control
 ## The momentary things on the board during a fight
-## (docs/plans/rebuild-phase3-fight-sandbox.md, section 5), made from the log
+## (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 5), made from the log
 ## entries the FightPlayer hands out and drawn over the tokens:
 ##   SHOT             a dot flying from the shooter's muzzle (FigureArt) to
 ##                    its target's body, landing at the shot's landing tick;

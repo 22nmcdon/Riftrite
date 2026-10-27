@@ -1,5 +1,5 @@
 extends GutTest
-## Tallies (docs/plans/rebuild-phase5c-combos.md, step 4, section 9.4): what
+## Tallies (docs/plans/phases/rebuild-phase5c-combos.md, step 4, section 9.4): what
 ## a hero's growing cards count, the way deeds do, including the kinds and
 ## filters step 4 adds. Counting never changes a fight.
 

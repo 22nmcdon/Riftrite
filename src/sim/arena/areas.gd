@@ -1,6 +1,6 @@
 class_name Areas
 extends RefCounted
-## Area effects (docs/plans/rebuild-phase1-arena-sim.md, section 7; the data
+## Area effects (docs/plans/phases/rebuild-phase1-arena-sim.md, section 7; the data
 ## is EffectDef's area and ShapeDef).
 ##   - Cast (as its ability fires, or on a passive's trigger): where it
 ##     goes is fixed now, so a warned area doesn't follow anyone: a circle

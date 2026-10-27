@@ -1,5 +1,5 @@
 extends GutTest
-## Shots in flight (docs/plans/rebuild-phase1-arena-sim.md, section 5, decided):
+## Shots in flight (docs/plans/phases/rebuild-phase1-arena-sim.md, section 5, decided):
 ## 1 tick per hex, following the target, numbers fixed when fired, still
 ## landing after the shooter falls, fizzling if the target falls first.
 

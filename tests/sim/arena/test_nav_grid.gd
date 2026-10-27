@@ -1,6 +1,6 @@
 extends GutTest
 ## Pathfinding on the plane's hidden grid, and the text board
-## (docs/plans/rebuild-phase1-arena-sim.md, sections 4 and 11).
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, sections 4 and 11).
 
 const UNIT_R: int = 400
 const ROCK_R: int = 500

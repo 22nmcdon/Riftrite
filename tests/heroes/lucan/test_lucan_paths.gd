@@ -1,5 +1,5 @@
 extends GutTest
-## Lucan's paths (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Lucan's paths (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-4; rebuild-heroes.md section 8j) in real fights: Mirrorwright's
 ## Reflection and Hall of Mirrors, Veilweaver's Shroud, Veiled Strike, and
 ## Vanishing Act, Puppeteer's Strings and Dance of Strings, Mirror as each

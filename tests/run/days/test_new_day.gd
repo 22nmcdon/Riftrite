@@ -1,11 +1,11 @@
 extends GutTest
-## The new day (docs/plans/rebuild-phase5c-combos.md, step 8a, section 16;
+## The new day (docs/plans/phases/rebuild-phase5c-combos.md, step 8a, section 16;
 ## days-and-nodes.md): the route, the fight, after it, the Pedlar after every
 ## fight, then a node (Camp always, Rift Tear, the Magpie); the boss's day
 ## (its pay, its relics, then the boss shop: Decision 48); a loss replaying the day with the node's setup held
 ## (Decision 42); the node draw (Decision 41); and the save.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

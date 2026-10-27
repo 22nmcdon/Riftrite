@@ -1,6 +1,6 @@
 # Credits
 
-Every asset in the game that wasn't made for it: its author, where it came from, and its license (`docs/plans/asset-contract.md`, section 9). Everything else in `art/` was made for the game: the placeholder figures and backdrops (`tools/art/`) and the playtester's uploaded UI art.
+Every asset in the game that wasn't made for it: its author, where it came from, and its license (`docs/plans/art/asset-contract.md`, section 9). Everything else in `art/` was made for the game: the placeholder figures and backdrops (`tools/art/`) and the playtester's uploaded UI art.
 
 ## Fonts
 

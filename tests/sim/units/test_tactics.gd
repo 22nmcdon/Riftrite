@@ -1,5 +1,5 @@
 extends GutTest
-## What each tactic does in a fight (Tactics; docs/plans/rebuild-phase3b-tactics.md,
+## What each tactic does in a fight (Tactics; docs/plans/phases/rebuild-phase3b-tactics.md,
 ## section 2), in tiny fights. The board runs left to right in the plan's
 ## terms: heroes in rows 0-2, enemies in rows 4-6, a row a hex apart.
 

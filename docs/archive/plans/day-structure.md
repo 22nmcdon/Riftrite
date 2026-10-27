@@ -125,7 +125,7 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
   - field the strongest five
   - prefer Loot, then Events, then the Forge
   - take rewards when there's room
-- **The runner:** `tools/run_runner.gd -- --runs=200 --seed=1` reports:
+- **The runner:** `tools/runners/run_runner.gd -- --runs=200 --seed=1` reports:
   - the share of runs that beat the act
   - the day runs end on
   - losses per run
@@ -167,7 +167,7 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
 
 ## Built notes
 
-- **Code:** `src/run/`: `RunFlow` (phases and actions), `RunRandom` (seeded streams), `RunContent` with `defs/` (economy, acts, events), `RunBot`, `RunReport`. The runner is `tools/run_runner.gd`.
+- **Code:** `src/run/`: `RunFlow` (phases and actions), `RunRandom` (seeded streams), `RunContent` with `defs/` (economy, acts, events), `RunBot`, `RunReport`. The runner is `tools/runners/run_runner.gd`.
 - **Data:** `data/economy.json`, `data/acts.json`, `data/events.json`. Enemies gained `essence` and encounters gained `kind`.
 - **Encounter pools have day ranges.** A run starts with one hero, so Act 1's first days needed weaker fights. There's a new placeholder enemy, the **Rift Pup**, and new encounters: A Litter of Pups (days 1–2), A Hound and Its Pup (days 2–4), and the elite Hound Alpha (day 3). The Witch Coven is day 5's elite, and **The Rift Throne** is a placeholder boss until step 6.
 - **Offers are saved with the run** (as plain dictionaries), so loading mid-Caravan shows the same wares.
@@ -177,7 +177,7 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
 
 ## Balance findings (placeholders; the first run-bot pass)
 
-`tools/run_runner.gd -- --runs=200 --seed=1` (the bot's simple strategy):
+`tools/runners/run_runner.gd -- --runs=200 --seed=1` (the bot's simple strategy):
 - **The act is cleared in 8% of runs,** with 1.9 losses per run.
 - **Where runs end:** day 2: 6, **day 3: 80**, day 4: 19, day 5: 41, day 6: 39.
 - **Day 3's elite (the Hound Alpha) is a wall** for one or two heroes, and so is the day-5 Witch Coven.

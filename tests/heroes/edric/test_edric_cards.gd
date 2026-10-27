@@ -1,5 +1,5 @@
 extends GutTest
-## Edric's upgrade cards (phase 8 part 5, docs/plans/upgrade-pools.md Edric;
+## Edric's upgrade cards (phase 8 part 5, docs/plans/design/upgrade-pools.md Edric;
 ## rebuild-phase8-severine-edric.md 8e-3c) on his real kits: each changes the
 ## kit it's offered on (or his Tithe), a card on Ward reaches it as his
 ## signature or as his habit, Hallow's cards (an interval through

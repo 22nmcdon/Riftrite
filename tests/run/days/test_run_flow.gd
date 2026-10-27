@@ -1,9 +1,9 @@
 extends GutTest
-## The run layer (docs/plans/rebuild-phase5-run.md, sections 1-3): the act
+## The run layer (docs/plans/phases/rebuild-phase5-run.md, sections 1-3): the act
 ## draw, starting a run, the day's actions and their order, winning, losing
 ## and replays, wounds and deeds, saving and loading, and the simple run bot.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 const SAVE_PATH: String = "user://test_rift_run.json"
 

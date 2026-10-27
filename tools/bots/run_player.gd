@@ -1,5 +1,5 @@
 extends RefCounted
-## Plays a run with a bot (docs/plans/rebuild-phase6-bot-tuning.md, section
+## Plays a run with a bot (docs/plans/phases/rebuild-phase6-bot-tuning.md, section
 ## 2.1): one RunFlow action at a time, each one the bot's answer to what the
 ## run is waiting on (tools/bots/bot.gd). The player owns the order of
 ## things; a bot only decides.

@@ -1,6 +1,6 @@
 class_name PracticeSession
 extends RefCounted
-## Practice's state while the game is open (docs/plans/rebuild-phase3-fight-sandbox.md,
+## Practice's state while the game is open (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## sections 1 and 3, and Decisions 2 and 4). Nothing is saved to disk.
 ##   - One remembered formation for every encounter: the last one fought
 ##     with (Brannoc guarding the other two until then), the fight speed
@@ -10,15 +10,15 @@ extends RefCounted
 ##   - What's legal comes from the sim: a formation is legal when
 ##     `Encounters.setup` builds it and `FightSetup.validate` finds nothing
 ##     wrong. The UI keeps no rules of its own.
-##   - Each hero's tactic (docs/plans/rebuild-phase3b-tactics.md, section 4),
+##   - Each hero's tactic (docs/plans/phases/rebuild-phase3b-tactics.md, section 4),
 ##     kept for every encounter until changed; every setup here carries the
 ##     tactics of the heroes in its formation.
-##   - Each hero's path and stage (docs/plans/rebuild-phase4-paths.md,
+##   - Each hero's path and stage (docs/plans/phases/rebuild-phase4-paths.md,
 ##     section 6): vowed or transformed, chosen in the hero panel and kept
 ##     like tactics; a transformed Trapper's snares, placed like heroes; and
 ##     what the last fight put into each hero's deeds (Practice has no
 ##     thresholds, so the panel shows that instead).
-##   - The team (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md,
+##   - The team (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md,
 ##     Decision 6): any three heroes, chosen on the encounter list; a hero
 ##     whose paths aren't built yet fights at base. A hero not in the
 ##     remembered formation starts on its role's hex (HeroTeam.GUARDED).
@@ -153,7 +153,7 @@ func tactics_in(hero_hexes: Dictionary[String, Vector2i]) -> Dictionary[String, 
 
 ## The tactics `hero_id` can take with its kit now, in tactics.json's order
 ## (Wait to heal needs a signature that heals on mana: Decision 7 of
-## docs/plans/rebuild-phase4-paths.md).
+## docs/plans/phases/rebuild-phase4-paths.md).
 func tactics_for(hero_id: String) -> Array[TacticDef]:
 	var found: Array[TacticDef] = []
 	for tactic_id: String in content.tactic_ids:

@@ -1,6 +1,6 @@
 class_name ModInfo
 extends RefCounted
-## The numbers line for a kit mod (docs/plans/rebuild-phase5c-combos.md,
+## The numbers line for a kit mod (docs/plans/phases/rebuild-phase5c-combos.md,
 ## step 2; part 7, section 6: every stat change says its amount). An item's,
 ## an upgrade's, a relic's, or a duo bond's sentence says what it's for; this
 ## line, worked out from its mod, says how much, the way UnitInfo's numbers

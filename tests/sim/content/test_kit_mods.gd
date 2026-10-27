@@ -1,5 +1,5 @@
 extends GutTest
-## Kit modifiers and wounds (docs/plans/rebuild-phase5-run.md, section 7):
+## Kit modifiers and wounds (docs/plans/phases/rebuild-phase5-run.md, section 7):
 ## each change on each slot, what a mod affects, that the content it reads
 ## is never changed, and that a fight takes them through Encounters.setup.
 

@@ -1,5 +1,5 @@
 extends GutTest
-## Transmuting (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Transmuting (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## section 5 and Decision 6; Ottilie's Transmuter): once a shop, at the
 ## Pedlar or the boss shop, a transformed Transmuter turns an item the run
 ## owns into shards at its full price; Appraise pays more for ranks II and

@@ -1,5 +1,5 @@
 {
-  "_note": "The base kits (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; docs/plans/rebuild-heroes.md, sections 4 and 6-8). Heroes act in this order in a fight. Stats and mana are the design's; cooldowns, Mend's heal, and Hearthguard's Shield are first numbers for step 7 to tune.",
+  "_note": "The base kits (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 3; docs/plans/design/rebuild-heroes.md, sections 4 and 6-8). Heroes act in this order in a fight. Stats and mana are the design's; cooldowns, Mend's heal, and Hearthguard's Shield are first numbers for step 7 to tune.",
   "id": "brannoc",
   "name": "Brannoc of the Hearthwatch",
   "title": "the warden",

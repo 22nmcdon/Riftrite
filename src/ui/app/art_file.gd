@@ -1,6 +1,6 @@
 class_name ArtFile
 extends RefCounted
-## Every art file the game loads (docs/plans/rebuild-phase7a-asset-loading.md):
+## Every art file the game loads (docs/plans/phases/rebuild-phase7a-asset-loading.md):
 ## the file ArtPath names (a PNG before its SVG), loaded once and cached.
 
 static var _cache: Dictionary[String, Texture2D] = {}

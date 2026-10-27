@@ -1,5 +1,5 @@
 extends GutTest
-## Edric's paths (phase 8 part 5, docs/plans/rebuild-phase8-severine-edric.md
+## Edric's paths (phase 8 part 5, docs/plans/phases/rebuild-phase8-severine-edric.md
 ## 8e-3c; rebuild-heroes.md section 8h) in real fights: Aegis's Hallow and
 ## Sanctuary, Tithe-Collector's Collection (its Tithe is the run's:
 ## tests/run/rewards/test_tithe.gd), Psalmist's Offering, Psalm, and Vesper Ward,

@@ -1,6 +1,6 @@
 class_name Deeds
 extends RefCounted
-## Counts deeds as a fight runs (docs/plans/rebuild-phase4-paths.md,
+## Counts deeds as a fight runs (docs/plans/phases/rebuild-phase4-paths.md,
 ## section 3; the rules for each kind and filter are DeedDef's). A unit
 ## counts the deeds of its setup's deed_paths: a hero's three, whatever path
 ## it's on, since the deeds count what it does with no bonus for the vow.
@@ -14,7 +14,7 @@ extends RefCounted
 ##     Rift Collapse's.
 ## Counting never writes to the log or changes the fight: a fight is the same
 ## with or without it (the bench's fingerprints).
-## Tallies (phase 5c step 4, docs/plans/rebuild-phase5c-combos.md, section
+## Tallies (phase 5c step 4, docs/plans/phases/rebuild-phase5c-combos.md, section
 ## 9.4): a hero's growing cards count the same way, each under its key
 ## (UnitSetup.tallies), after its deeds in the same arrays.
 

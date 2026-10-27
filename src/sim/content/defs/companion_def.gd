@@ -1,6 +1,6 @@
 class_name CompanionDef
 extends RefCounted
-## A hero's companion (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## A hero's companion (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## section 6, Kestra): a kit of its own that fights beside the hero, written
 ## in the hero's kit:
 ##   {"kit": {...a kit with "id" and "name"...}, "hp_pct": 40, "atk_pct": 60,

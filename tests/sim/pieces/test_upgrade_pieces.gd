@@ -1,5 +1,5 @@
 extends GutTest
-## The upgrade pools' small knobs (docs/plans/rebuild-phase5c-combos.md, step
+## The upgrade pools' small knobs (docs/plans/phases/rebuild-phase5c-combos.md, step
 ## 7b, section 15.7), each on the real card that uses it or in a small
 ## fight: every_add and "at", times_add, max_standing_add, value_add,
 ## overheal_shield_add_bp, the Guard knobs, add_to_areas, a line's width,

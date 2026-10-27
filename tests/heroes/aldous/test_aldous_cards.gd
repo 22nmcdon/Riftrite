@@ -1,5 +1,5 @@
 extends GutTest
-## Aldous's upgrade cards (phase 8 part 4, docs/plans/upgrade-pools.md Aldous;
+## Aldous's upgrade cards (phase 8 part 4, docs/plans/design/upgrade-pools.md Aldous;
 ## rebuild-phase8-heroes.md 8d-4d) and his bond relics on his real kits:
 ## each changes the kit it's offered on, a card on Peal reaches it as his
 ## signature or as his habit, and the new knobs (within_add, count_add) do

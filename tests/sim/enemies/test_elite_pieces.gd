@@ -1,5 +1,5 @@
 extends GutTest
-## The sim pieces phase 5's elites and boss need (docs/plans/rebuild-phase5-run.md,
+## The sim pieces phase 5's elites and boss need (docs/plans/phases/rebuild-phase5-run.md,
 ## section 7): an aura on while an ally of a kit stands (Pack Bond), a
 ## signature that fires with an ally's (The Hunt), and the inert trait (the
 ## Gloam Totem). Old Mother Ash's walk in (a range aura in a phase) and her

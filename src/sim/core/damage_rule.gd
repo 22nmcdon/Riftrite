@@ -1,7 +1,7 @@
 class_name DamageRule
 extends RefCounted
-## The damage rule (docs/plans/rebuild-combos.md, section 3; phase 5c,
-## docs/plans/rebuild-phase5c-combos.md, step 1): a number is its base times
+## The damage rule (docs/plans/design/rebuild-combos.md, section 3; phase 5c,
+## docs/plans/phases/rebuild-phase5c-combos.md, step 1): a number is its base times
 ## one factor per bonus kind. Bonuses of one kind add; the kinds multiply.
 ##
 ##   base x (1 + power) x (1 + crit) x (1 + vulnerability) x (1 + relic)

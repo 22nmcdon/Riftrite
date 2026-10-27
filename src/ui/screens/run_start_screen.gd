@@ -1,6 +1,6 @@
 class_name RunStartScreen
 extends UiScreen
-## A new run (docs/plans/rebuild-phase5-run.md, section 11): the draft
+## A new run (docs/plans/phases/rebuild-phase5-run.md, section 11): the draft
 ## (phase 8 part 4, Decision 5: three heroes from the roster; a hero whose
 ## paths aren't built yet is greyed), then each drafted hero vows to one of
 ## its three paths (the taste, the cost, and the deed that fills it), then

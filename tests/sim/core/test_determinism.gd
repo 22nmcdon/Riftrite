@@ -1,6 +1,6 @@
 extends GutTest
 ## CLAUDE.md rule 1: same seed, same inputs, same fight, every time
-## (docs/plans/rebuild-phase1-arena-sim.md, section 13). The chaos fight
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, section 13). The chaos fight
 ## (chaos_fight.gd) uses every piece of the arena sim, and a test here checks
 ## it still does.
 

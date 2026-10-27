@@ -2,7 +2,7 @@ class_name Offers
 extends RefCounted
 ## What the run offers, drawn from the run's seed and where it happens
 ## (RunRandom), so an offer is a pure function of the seed and the state
-## (docs/plans/rebuild-phase5-run.md, sections 1 and 5).
+## (docs/plans/phases/rebuild-phase5-run.md, sections 1 and 5).
 
 
 ## An upgrade pick's cards (upgrade ids): one per hero, in the team's order,

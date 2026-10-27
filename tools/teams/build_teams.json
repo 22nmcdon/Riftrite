@@ -1,0 +1,640 @@
+{
+  "_note": "The builds report's teams (tools/reports/build_report.gd, sim_runner.gd --builds; docs/plans/tuning/build-tuning.md and test-teams.md). Each names a path to judge, its type (build-tuning.md, section 6), its build team (every hero on a path, all transformed), the build's relics, and for an enabler the path its lift is measured against. Every hero is built (phase 8 part 6's 8f-6), so no team stands a hero in for another; the old nine joined in 8f-6.",
+  "builds": [
+    {
+      "name": "Bulwark",
+      "path": "aegisfang",
+      "type": "engine",
+      "team": {
+        "garrow": "aegisfang",
+        "vell": "wardweaver",
+        "edric": "aegis"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "shattered_aegis",
+        "overflow_chalice",
+        "wardens_engine",
+        "the_woven_fang"
+      ],
+      "note": "test-teams.md #7"
+    },
+    {
+      "name": "Whirlpool",
+      "path": "chainwarden",
+      "type": "self-sufficient",
+      "team": {
+        "garrow": "chainwarden",
+        "maren": "volley",
+        "ilse": "wildfire"
+      },
+      "relics": [
+        "the_hungering_rift"
+      ],
+      "note": "test-teams.md #8. Retyped self-sufficient (rebuild-phase8-heroes.md Decision 13)"
+    },
+    {
+      "name": "Blood Price",
+      "path": "spitemail",
+      "type": "self-sufficient",
+      "team": {
+        "garrow": "spitemail",
+        "vell": "lanternbearer",
+        "severine": "hemomancer"
+      },
+      "relics": [
+        "leech_tooth",
+        "gluttons_chalice",
+        "overflow_chalice"
+      ],
+      "note": "test-teams.md #11"
+    },
+    {
+      "name": "Thicket",
+      "path": "garrote",
+      "type": "engine",
+      "team": {
+        "maren": "trapper",
+        "tamsin": "garrote",
+        "garrow": "chainwarden"
+      },
+      "relics": [
+        "thicket_engine",
+        "thornwoven_cloak",
+        "grasping_mire",
+        "bramble_seed"
+      ],
+      "note": "test-teams.md #1"
+    },
+    {
+      "name": "Hunt",
+      "path": "headhunter",
+      "type": "engine",
+      "team": {
+        "tamsin": "headhunter",
+        "vell": "vigil_keeper",
+        "aldous": "bellwarden"
+      },
+      "relics": [
+        "hunters_engine",
+        "executioners_mark",
+        "hunters_ledger",
+        "brand_of_guilt"
+      ],
+      "note": "test-teams.md #2"
+    },
+    {
+      "name": "Shadow",
+      "path": "nightblade",
+      "type": "self-sufficient",
+      "team": {
+        "maren": "deadeye",
+        "tamsin": "nightblade",
+        "lucan": "veilweaver"
+      },
+      "relics": [
+        "veil_of_the_lost",
+        "shadow_engine",
+        "smoke_pouch"
+      ],
+      "note": "test-teams.md #12"
+    },
+    {
+      "name": "Choir",
+      "path": "chorister",
+      "type": "enabler",
+      "team": {
+        "aldous": "chorister",
+        "vell": "vigil_keeper",
+        "edric": "psalmist"
+      },
+      "relics": [
+        "echoing_bell",
+        "hollow_drum",
+        "rift_candle"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #15; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Gallery",
+      "path": "windcaller",
+      "type": "enabler",
+      "team": {
+        "aldous": "windcaller",
+        "maren": "deadeye",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "quickened_pulse",
+        "bone_dice",
+        "keen_edge"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #10; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Bell Hunt",
+      "path": "bellwarden",
+      "type": "enabler",
+      "team": {
+        "aldous": "bellwarden",
+        "tamsin": "headhunter",
+        "vell": "vigil_keeper"
+      },
+      "relics": [
+        "hunters_engine",
+        "executioners_mark",
+        "hunters_ledger",
+        "brand_of_guilt"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #2; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Glut",
+      "path": "bloodglut",
+      "type": "self-sufficient",
+      "team": {
+        "severine": "bloodglut",
+        "garrow": "spitemail",
+        "vell": "lanternbearer"
+      },
+      "relics": [
+        "leech_tooth",
+        "gluttons_chalice",
+        "sanguine_frenzy"
+      ],
+      "note": "build-map.md's sustain build; Iron Hunger's pair (Bloodglut and Spitemail) with Vell's heals"
+    },
+    {
+      "name": "Plague",
+      "path": "plaguebearer",
+      "type": "self-sufficient",
+      "team": {
+        "brannoc": "hearthwall",
+        "severine": "plaguebearer",
+        "kestra": "serpent_keeper"
+      },
+      "relics": [
+        "red_thirst",
+        "leech_tooth",
+        "gluttons_chalice"
+      ],
+      "note": "build-map.md's Poison build (test-teams.md #6, Venom's makers)"
+    },
+    {
+      "name": "Bloodletting",
+      "path": "hemomancer",
+      "type": "engine",
+      "team": {
+        "severine": "hemomancer",
+        "vell": "lanternbearer",
+        "garrow": "spitemail"
+      },
+      "relics": [
+        "blood_communion",
+        "soothing_salve",
+        "leech_tooth"
+      ],
+      "note": "test-teams.md #11; Vell's heals push her back above half her HP"
+    },
+    {
+      "name": "Hallowed Wall",
+      "path": "aegis",
+      "type": "enabler",
+      "team": {
+        "edric": "aegis",
+        "garrow": "aegisfang",
+        "vell": "wardweaver"
+      },
+      "relics": [
+        "wardens_engine",
+        "shattered_aegis",
+        "tithe_of_iron"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #7; lift against Edric on base, since he has no self-sufficient path (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Hymnal",
+      "path": "psalmist",
+      "type": "enabler",
+      "team": {
+        "edric": "psalmist",
+        "aldous": "chorister",
+        "vell": "vigil_keeper"
+      },
+      "relics": [
+        "echoing_bell",
+        "hollow_drum",
+        "rift_candle"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #15; lift against Edric on base (Decision 17)"
+    },
+    {
+      "name": "Toll",
+      "path": "tithe_collector",
+      "type": "long-game",
+      "team": {
+        "edric": "tithe_collector",
+        "brannoc": "hearthwall",
+        "maren": "deadeye"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "long-game: judged by its shards over a run (rebuild-phase8-severine-edric.md section 8); in a fight only its floor"
+    },
+    {
+      "name": "Furnace",
+      "path": "furnace",
+      "type": "engine",
+      "team": {
+        "ilse": "furnace",
+        "aldous": "windcaller",
+        "kestra": "cinderhound"
+      },
+      "relics": [
+        "ashen_engine",
+        "ashen_censer",
+        "quickened_pulse"
+      ],
+      "note": "test-teams.md #4"
+    },
+    {
+      "name": "Wildfire Pit",
+      "path": "wildfire",
+      "type": "self-sufficient",
+      "team": {
+        "garrow": "chainwarden",
+        "ilse": "wildfire",
+        "maren": "volley"
+      },
+      "relics": [
+        "the_hungering_rift",
+        "pyre_ash"
+      ],
+      "note": "test-teams.md #8 (Whirlpool), as Wildfire's build"
+    },
+    {
+      "name": "Pyre",
+      "path": "ember_choir",
+      "type": "enabler",
+      "team": {
+        "ilse": "ember_choir",
+        "maren": "volley",
+        "kestra": "cinderhound"
+      },
+      "relics": [
+        "ashen_engine",
+        "ember_heart",
+        "pyre_ash"
+      ],
+      "swap": "wildfire",
+      "note": "test-teams.md #3; lift against Ilse on Wildfire, her self-sufficient path"
+    },
+    {
+      "name": "Rot",
+      "path": "catalyst",
+      "type": "engine",
+      "team": {
+        "ottilie": "catalyst",
+        "severine": "plaguebearer",
+        "ilse": "wildfire"
+      },
+      "relics": [
+        "ashen_engine",
+        "pyre_ash"
+      ],
+      "note": "test-teams.md #5"
+    },
+    {
+      "name": "Greed",
+      "path": "transmuter",
+      "type": "long-game",
+      "team": {
+        "ottilie": "transmuter",
+        "edric": "tithe_collector",
+        "hob": "hoarder"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "test-teams.md #17 (Full Greed); long-game: judged by its shards over a run, in a fight only its floor"
+    },
+    {
+      "name": "Tonic Choir",
+      "path": "apothecary",
+      "type": "enabler",
+      "team": {
+        "ottilie": "apothecary",
+        "aldous": "chorister",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "rift_candle",
+        "echoing_bell",
+        "quickened_pulse"
+      ],
+      "swap": "base",
+      "note": "the Tonic and Hymn bond's team; lift against Ottilie on base, since she has no self-sufficient path (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Ember Hound",
+      "path": "cinderhound",
+      "type": "self-sufficient",
+      "team": {
+        "ilse": "furnace",
+        "aldous": "windcaller",
+        "kestra": "cinderhound"
+      },
+      "relics": [
+        "ashen_engine",
+        "ashen_censer",
+        "quickened_pulse"
+      ],
+      "note": "test-teams.md #4 (Furnace), judged for Kestra"
+    },
+    {
+      "name": "Venom",
+      "path": "serpent_keeper",
+      "type": "self-sufficient",
+      "team": {
+        "severine": "plaguebearer",
+        "kestra": "serpent_keeper",
+        "edric": "aegis"
+      },
+      "relics": [
+        "leech_tooth",
+        "red_thirst"
+      ],
+      "note": "test-teams.md #6"
+    },
+    {
+      "name": "Host",
+      "path": "packleader",
+      "type": "engine",
+      "team": {
+        "kestra": "packleader",
+        "lucan": "puppeteer",
+        "severine": "plaguebearer"
+      },
+      "relics": [
+        "quickened_pulse",
+        "stormcallers_bell"
+      ],
+      "note": "test-teams.md #13"
+    },
+    {
+      "name": "Mirror Volley",
+      "path": "mirrorwright",
+      "type": "self-sufficient",
+      "team": {
+        "lucan": "mirrorwright",
+        "maren": "volley",
+        "ilse": "ember_choir"
+      },
+      "relics": [
+        "ember_heart",
+        "ashen_engine"
+      ],
+      "note": "test-teams.md #14"
+    },
+    {
+      "name": "Shadow Veil",
+      "path": "veilweaver",
+      "type": "enabler",
+      "team": {
+        "tamsin": "nightblade",
+        "lucan": "veilweaver",
+        "maren": "deadeye"
+      },
+      "relics": [
+        "veil_of_the_lost",
+        "shadow_engine",
+        "smoke_pouch"
+      ],
+      "swap": "mirrorwright",
+      "note": "test-teams.md #12; lift against Lucan on Mirrorwright, his self-sufficient path"
+    },
+    {
+      "name": "Puppet Host",
+      "path": "puppeteer",
+      "type": "engine",
+      "team": {
+        "lucan": "puppeteer",
+        "kestra": "packleader",
+        "severine": "plaguebearer"
+      },
+      "relics": [
+        "quickened_pulse",
+        "stormcallers_bell"
+      ],
+      "note": "test-teams.md #13, judged for Lucan"
+    },
+    {
+      "name": "Hoard",
+      "path": "hoarder",
+      "type": "long-game",
+      "team": {
+        "hob": "hoarder",
+        "edric": "tithe_collector",
+        "ottilie": "transmuter"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "shards": 25,
+      "note": "test-teams.md #17 (Full Greed); long-game: judged by Act 3 and endless, in a fight only its floor, with 25 shards held"
+    },
+    {
+      "name": "Haggle",
+      "path": "fence",
+      "type": "long-game",
+      "team": {
+        "hob": "fence",
+        "brannoc": "hearthwall",
+        "maren": "deadeye"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "long-game: judged by the shards it saves and the team's bonus over a run; in a fight only its floor"
+    },
+    {
+      "name": "Bounty",
+      "path": "bounty_hunter",
+      "type": "enabler",
+      "team": {
+        "hob": "bounty_hunter",
+        "tamsin": "headhunter",
+        "garrow": "aegisfang"
+      },
+      "relics": [
+        "hunters_engine",
+        "executioners_mark",
+        "hunters_ledger",
+        "brand_of_guilt"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #16 (Bounty); lift against Hob on base (rebuild-phase8-heroes.md Decision 17: he has no self-sufficient path)"
+    },
+    {
+      "name": "Long Shot",
+      "path": "deadeye",
+      "type": "self-sufficient",
+      "team": {
+        "maren": "deadeye",
+        "brannoc": "hearthwall",
+        "aldous": "windcaller"
+      },
+      "relics": [
+        "the_ninth_arrow",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "test-teams.md #10 (Gallery), judged for Maren (8f-6: the old nine join the builds report)"
+    },
+    {
+      "name": "Snare Line",
+      "path": "trapper",
+      "type": "enabler",
+      "team": {
+        "maren": "trapper",
+        "tamsin": "garrote",
+        "garrow": "chainwarden"
+      },
+      "relics": [
+        "thicket_engine",
+        "thornwoven_cloak",
+        "grasping_mire",
+        "bramble_seed"
+      ],
+      "swap": "volley",
+      "note": "test-teams.md #1 (Thicket), judged for Maren; lift against her on Volley"
+    },
+    {
+      "name": "Arrow Storm",
+      "path": "volley",
+      "type": "self-sufficient",
+      "team": {
+        "maren": "volley",
+        "ilse": "ember_choir",
+        "garrow": "chainwarden"
+      },
+      "relics": [
+        "ember_heart",
+        "splinter_shot"
+      ],
+      "note": "test-teams.md #3 and #8 (Pyre, Whirlpool), judged for Maren"
+    },
+    {
+      "name": "Sentry",
+      "path": "hearthwall",
+      "type": "enabler",
+      "team": {
+        "brannoc": "hearthwall",
+        "maren": "deadeye",
+        "aldous": "windcaller"
+      },
+      "relics": [
+        "the_watchtower_stone",
+        "iron_filings",
+        "wardens_chain"
+      ],
+      "swap": "ironbrand",
+      "note": "test-teams.md #10 (Gallery), judged for Brannoc; lift against him on Ironbrand"
+    },
+    {
+      "name": "Brand and Snare",
+      "path": "ironbrand",
+      "type": "self-sufficient",
+      "team": {
+        "brannoc": "ironbrand",
+        "maren": "trapper",
+        "vell": "lanternbearer"
+      },
+      "relics": [
+        "the_hunters_anvil",
+        "whetstone_of_the_fallen"
+      ],
+      "note": "Snare and Cleave's pair, judged for Brannoc"
+    },
+    {
+      "name": "Last Stand",
+      "path": "last_watch",
+      "type": "self-sufficient",
+      "team": {
+        "brannoc": "last_watch",
+        "vell": "lanternbearer",
+        "ilse": "wildfire"
+      },
+      "relics": [
+        "second_dawn",
+        "the_vigil_lamp",
+        "soothing_salve"
+      ],
+      "note": "test-teams.md #9, judged for Brannoc"
+    },
+    {
+      "name": "Lantern",
+      "path": "lanternbearer",
+      "type": "enabler",
+      "team": {
+        "vell": "lanternbearer",
+        "brannoc": "last_watch",
+        "ilse": "wildfire"
+      },
+      "relics": [
+        "the_vigil_lamp",
+        "soothing_salve",
+        "thorned_bandage"
+      ],
+      "swap": "vigil_keeper",
+      "note": "test-teams.md #9 (Last Stand), judged for Vell; lift against her on Vigil Keeper"
+    },
+    {
+      "name": "Woven Wall",
+      "path": "wardweaver",
+      "type": "enabler",
+      "team": {
+        "vell": "wardweaver",
+        "garrow": "aegisfang",
+        "edric": "aegis"
+      },
+      "relics": [
+        "the_woven_fang",
+        "tithe_of_iron",
+        "shattered_aegis"
+      ],
+      "swap": "vigil_keeper",
+      "note": "test-teams.md #7 (Bulwark), judged for Vell; lift against her on Vigil Keeper"
+    },
+    {
+      "name": "Judgment",
+      "path": "vigil_keeper",
+      "type": "self-sufficient",
+      "team": {
+        "vell": "vigil_keeper",
+        "aldous": "bellwarden",
+        "tamsin": "headhunter"
+      },
+      "relics": [
+        "the_toll_of_dawn",
+        "hunters_engine",
+        "brand_of_guilt"
+      ],
+      "note": "test-teams.md #2 (Hunt), judged for Vell"
+    }
+  ]
+}

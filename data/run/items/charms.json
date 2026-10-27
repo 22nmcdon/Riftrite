@@ -1,6 +1,6 @@
 [
   {
-    "_note": "The loadout pool (docs/plans/loadout/, docs/plans/rebuild-phase5c-combos.md, section 14): charms, tactics, sigils, and gambits, each with three ranks (charms', sigils', and gambits' are whole kit mods; a tactic's are its tactics.json entry's). Any hero can hold any; one that does nothing on its hero shows nothing. Prices and what ranks an item up are act1.json's (items). Numbers are placeholders.",
+    "_note": "The loadout pool (docs/plans/design/loadout/, docs/plans/phases/rebuild-phase5c-combos.md, section 14): charms, tactics, sigils, and gambits, each with three ranks (charms', sigils', and gambits' are whole kit mods; a tactic's are its tactics.json entry's). Any hero can hold any; one that does nothing on its hero shows nothing. Prices and what ranks an item up are act1.json's (items). Numbers are placeholders.",
     "id": "ember_tipped",
     "kind": "charm",
     "name": "Ember-Tipped",

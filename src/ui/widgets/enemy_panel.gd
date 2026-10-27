@@ -1,6 +1,6 @@
 class_name EnemyPanel
 extends PanelContainer
-## The side panel for a hovered enemy (docs/plans/rebuild-phase3-fight-sandbox.md,
+## The side panel for a hovered enemy (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 7, Decision 3): its name, archetype, threat line, stats, and a
 ## line per ability (UnitInfo), in placement or during the fight. In a fight
 ## it also shows the unit's numbers now (show_live). With no enemy shown it

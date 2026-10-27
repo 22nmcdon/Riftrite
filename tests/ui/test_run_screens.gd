@@ -1,5 +1,5 @@
 extends GutTest
-## The run on screen (docs/plans/rebuild-phase5-run.md, section 11), driven
+## The run on screen (docs/plans/phases/rebuild-phase5-run.md, section 11), driven
 ## headless through a real Main: the title's New run and Continue, vowing,
 ## a day (route, loadout, the fight, the Pedlar, a node), the fight on the arena (exactly RunFlow's),
 ## the pick after it, a Hunt, the hero bar and panel in a run, and the run's
@@ -9,7 +9,7 @@ const ActsTest = preload("res://tests/run/days/test_acts.gd")
 const SpecsTest = preload("res://tests/run/draws/test_specializations.gd")
 const MainScript = preload("res://src/ui/app/main.gd")
 const U = preload("res://tests/ui/ui_test_kit.gd")
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const SAVE: String = "user://test_run_screens.json"
 const OLD_SAVE: String = "user://test_run_screens_old.json"
 const RECORDS: String = "user://test_run_screens_records.json"
@@ -358,7 +358,7 @@ func test_big_numbers_are_short() -> void:
 	assert_eq([RunDayScreen.times(15209), RunDayScreen.times(662118), RunDayScreen.times(120000000)], ["1.52", "66.2", "12.0k"])
 
 
-## The route is the act map (docs/plans/rebuild-phase5b-art.md, section 4):
+## The route is the act map (docs/plans/phases/rebuild-phase5b-art.md, section 4):
 ## an island a day with its fights, today's clickable; a click shows that
 ## fight's card, and Fight this takes it.
 func test_the_route_is_the_act_map() -> void:

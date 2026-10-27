@@ -1,15 +1,15 @@
 extends GutTest
-## Phase 6's bots (docs/plans/rebuild-phase6-bot-tuning.md, section 2): each
+## Phase 6's bots (docs/plans/phases/rebuild-phase6-bot-tuning.md, section 2): each
 ## plays whole runs through RunPlayer without a refused action, and a run
 ## repeats from its seed; and the run report's run lines survive --jobs.
 
 const RunPlayer = preload("res://tools/bots/run_player.gd")
-const Report = preload("res://tools/run_report.gd")
+const Report = preload("res://tools/reports/run_report.gd")
 const Placement = preload("res://tools/bots/placement.gd")
 const Practice = preload("res://tools/bots/practice.gd")
 const GoodBot = preload("res://tools/bots/good_bot.gd")
 const ExpertBot = preload("res://tools/bots/expert_bot.gd")
-const Simple = preload("res://tools/run_bot.gd")
+const Simple = preload("res://tools/bots/run_bot.gd")
 
 var _run: RunContent
 

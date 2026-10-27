@@ -1,5 +1,5 @@
 extends GutTest
-## Hob's paths (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Hob's paths (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-5; rebuild-heroes.md section 8f) in real fights: the Hoarder's Nest Egg
 ## and Heavy Purse, the Fence's Cut Purse, the Bounty Hunter's Bounty and
 ## Collect, Grab as each one's habit, and each fight deed moving only with

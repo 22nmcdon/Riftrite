@@ -1,6 +1,6 @@
 class_name HeroPanel
 extends Control
-## A hero's panel (docs/plans/rebuild-phase4-paths.md, section 6), laid out
+## A hero's panel (docs/plans/phases/rebuild-phase4-paths.md, section 6), laid out
 ## and colored after the playtester's mock (docs/mockups/hero-panel-layout.pdf,
 ## page 1). It opens over the screen above the hero bar when a hero's card in
 ## the bar is clicked; it reads the Practice session and asks ArenaScreen for

@@ -1,11 +1,11 @@
 extends GutTest
-## Camp, relics, and duo bonds in a run (docs/plans/rebuild-phase5-run.md,
+## Camp, relics, and duo bonds in a run (docs/plans/phases/rebuild-phase5-run.md,
 ## sections 8 and 9): places and their options, each option's one job, the
 ## next fight's modifiers, relic choices and relics' rules, and bonds. Since
 ## phase 5c step 8 Camp is a node after the day's shop, and its modifiers are
 ## for tomorrow's fight.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

@@ -1,5 +1,5 @@
 extends GutTest
-## The rift learns (docs/plans/rebuild-phase8-act3.md, part 8c-5d; RiftLearns,
+## The rift learns (docs/plans/phases/rebuild-phase8-act3.md, part 8c-5d; RiftLearns,
 ## data/rift_learns.json): each fight's summary kept on its Fought, the
 ## habits scored from the last fights, the boss's adds' learned picks on a
 ## boss day of an act with rift_learns, the fight with them, the save
@@ -7,7 +7,7 @@ extends GutTest
 ## (tests/run/days/test_acts.gd) whose Act 2 learns, with a stand-in boss fight
 ## whose adds have specializations.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const ActsTest = preload("res://tests/run/days/test_acts.gd")
 const BOSS: String = "learning_heart"
 

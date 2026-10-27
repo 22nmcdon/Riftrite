@@ -1,5 +1,5 @@
 extends GutTest
-## Hob's six apexes (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Hob's six apexes (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-5; apexes.md) in real fights: each loads on its path's transformed kit
 ## with its taste and deed, and what it does at apex: Dragon's Hoard's Nest
 ## Egg for every hero, Golden Idol's purse of a Shield and Recast, Silver

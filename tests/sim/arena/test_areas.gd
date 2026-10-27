@@ -1,5 +1,5 @@
 extends GutTest
-## Areas and warnings (docs/plans/rebuild-phase1-arena-sim.md, section 7):
+## Areas and warnings (docs/plans/phases/rebuild-phase1-arena-sim.md, section 7):
 ## shapes, anchors, warnings, what's hit when it lands, and the log.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")

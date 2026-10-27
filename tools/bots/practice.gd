@@ -1,5 +1,5 @@
 extends RefCounted
-## Practice fights (docs/plans/rebuild-phase6-bot-tuning.md, section 2.3):
+## Practice fights (docs/plans/phases/rebuild-phase6-bot-tuning.md, section 2.3):
 ## how much a fight is worth to the heroes, and how much a choice is worth to
 ## a run, for the good bot's judgments and the expert's tries.
 ##   - A fight's worth is a win (1) plus the share of the heroes' HP left (so
@@ -20,7 +20,7 @@ extends RefCounted
 ##     already fought.
 
 const Placement = preload("res://tools/bots/placement.gd")
-const Simple = preload("res://tools/run_bot.gd")
+const Simple = preload("res://tools/bots/run_bot.gd")
 const Bot = preload("res://tools/bots/bot.gd")
 
 ## What a shard is worth against a fight's worth on day 1: a rare relic

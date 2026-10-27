@@ -1,6 +1,6 @@
 class_name TransmuteDef
 extends RefCounted
-## Transmuting (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Transmuting (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## section 5; Ottilie's Transmuter): turning an item the run owns into shards
 ## at the Pedlar or the boss shop (Decision 6), at its full price where
 ## selling pays half. The sim never reads it.

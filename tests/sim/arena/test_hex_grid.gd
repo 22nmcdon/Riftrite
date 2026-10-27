@@ -1,5 +1,5 @@
 extends GutTest
-## The placement board (docs/plans/rebuild-phase1-arena-sim.md, section 1):
+## The placement board (docs/plans/phases/rebuild-phase1-arena-sim.md, section 1):
 ## flat-topped hexes in columns, 8 x 7, with 3-row zones.
 
 var grid: HexGrid = HexGrid.make()

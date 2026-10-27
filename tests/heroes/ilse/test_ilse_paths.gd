@@ -1,5 +1,5 @@
 extends GutTest
-## Ilse's paths (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Ilse's paths (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-1; rebuild-heroes.md section 8b) in real fights: Heat as her only mana,
 ## Furnace's Stoke and Immolate, Wildfire's Kindling and Firestorm, Ember
 ## Choir's Blessing and Hymn of Cinders, Flare as each one's habit, and each

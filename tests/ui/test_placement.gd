@@ -1,5 +1,5 @@
 extends GutTest
-## Placement (docs/plans/rebuild-phase3-fight-sandbox.md, section 3):
+## Placement (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 3):
 ## PracticeSession's remembered formation, moving heroes on ArenaScreen by
 ## dragging, legality from the sim, the enemy panel, and the Fight button.
 

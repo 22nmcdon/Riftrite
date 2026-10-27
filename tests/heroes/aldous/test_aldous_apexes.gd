@@ -1,5 +1,5 @@
 extends GutTest
-## Aldous's six apexes (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md
+## Aldous's six apexes (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md
 ## 8d-4c; apexes.md) in real fights: each loads on its path's transformed
 ## kit with its taste and deed, and its snowball grows at apex: Grand
 ## Chorus's stronger next signatures and mana for every signature, Wellspring's

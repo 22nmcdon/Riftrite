@@ -1,5 +1,5 @@
 extends GutTest
-## The damage rule (docs/plans/rebuild-phase5c-combos.md, step 1): bonuses of
+## The damage rule (docs/plans/phases/rebuild-phase5c-combos.md, step 1): bonuses of
 ## one kind add, the kinds multiply, and the number is rounded once.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")

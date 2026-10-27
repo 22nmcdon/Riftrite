@@ -1,5 +1,5 @@
 extends GutTest
-## Shallow water, Act 2's board rule (docs/plans/rebuild-phase8-act2.md,
+## Shallow water, Act 2's board rule (docs/plans/phases/rebuild-phase8-act2.md,
 ## section 3; Water): half speed unless a unit swims or flies, routes round
 ## it when that's shorter, Burn halved on it, the on_water condition, the
 ## Steaming Ashling, and the setup's checks.

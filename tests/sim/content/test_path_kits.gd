@@ -1,5 +1,5 @@
 extends GutTest
-## The nine paths as data (docs/plans/rebuild-phase4-paths.md, section 4):
+## The nine paths as data (docs/plans/phases/rebuild-phase4-paths.md, section 4):
 ## each hero's three, in the design's order; every ability's sentence names
 ## its reaches and has a numbers line; each path's kits carry what its texts
 ## say; and each taste fills its deed where the base kit barely does.

@@ -1,7 +1,7 @@
 class_name EnemyUpgradeDef
 extends RefCounted
-## An enemy upgrade (docs/plans/enemy-growth.md, section 3; built in phase 8
-## part 3, docs/plans/rebuild-phase8-act3.md, section 2): a small change an
+## An enemy upgrade (docs/plans/design/enemy-growth.md, section 3; built in phase 8
+## part 3, docs/plans/phases/rebuild-phase8-act3.md, section 2): a small change an
 ## elite fight's enemies carry, one or two at a time, as a kit mod on the
 ## enemy's kit, with its word put before the enemy's name and the player's
 ## sentence for it. Any enemy can carry any upgrade, so they live in their

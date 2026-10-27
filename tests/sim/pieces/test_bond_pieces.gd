@@ -1,5 +1,5 @@
 extends GutTest
-## The bond relics' pieces (docs/plans/rebuild-phase5c-combos.md, step 5d,
+## The bond relics' pieces (docs/plans/phases/rebuild-phase5c-combos.md, step 5d,
 ## section 13.3), each in a small fight: an aura behind an allied wall,
 ## on_knockback, and on_guard with its cooldown for each ally.
 

@@ -1,5 +1,5 @@
 extends GutTest
-## The log tells the whole story of the board (docs/plans/rebuild-phase1-arena-sim.md,
+## The log tells the whole story of the board (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 11): replaying every leg, stop, push, and summon from the log
 ## alone gives each unit's exact position on every tick, and every entry
 ## names its source (CLAUDE.md rule 4), in a busy fight, the chaos fight, and

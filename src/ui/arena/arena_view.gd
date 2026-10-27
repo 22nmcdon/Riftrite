@@ -1,12 +1,12 @@
 class_name ArenaView
 extends Control
-## The arena on screen (docs/plans/rebuild-phase3-fight-sandbox.md, section
+## The arena on screen (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section
 ## 2): one view for placement and the fight. It maps the sim's plane to
 ## pixels, draws the board, and keeps a token per unit. It only reads the
 ## setup or the fight; it never changes them.
 ##   - The board fits the view, centered, `MARGIN` pixels in, with the
 ##     heroes at the bottom and the enemies at the top
-##     (docs/plans/rebuild-phase5b-art.md, Decision 1). The plane's x (the
+##     (docs/plans/phases/rebuild-phase5b-art.md, Decision 1). The plane's x (the
 ##     columns) grows to the right and its y (the sim's rows; row 0 is the
 ##     heroes' back row) grows up the screen, so the sim's flat-top hexes
 ##     are drawn flat-top. A hex's corners reach past the plane's edge at
@@ -14,7 +14,7 @@ extends Control
 ##     plane (`drawn_rect`), and room is kept over it for the top row's
 ##     figures and bars (`TOP_ROOM_HEXES`).
 ##   - The board stands on the floating island (the uploaded art,
-##     docs/plans/rebuild-phase5b-art.md, section 3): the island's frame
+##     docs/plans/phases/rebuild-phase5b-art.md, section 3): the island's frame
 ##     around it, its ground tiled under the hexes, and thin pale hex lines.
 ##     Placement mode tints the zones (yours gold, theirs red); fight mode
 ##     leaves the ground bare, since distances still count in hexes.
@@ -42,7 +42,7 @@ extends Control
 ##     placing and from the fight's islands each frame. A unit that falls
 ##     shows "Falls", then its ghost (FightFx). A bridge warned before it
 ##     breaks (8c-5c) is tinted red until it does.
-##   - Paths (docs/plans/rebuild-phase4-paths.md, section 6): a transformed
+##   - Paths (docs/plans/phases/rebuild-phase4-paths.md, section 6): a transformed
 ##     hero stands as its path's figure; a vowed one keeps its base figure.
 ##     Either way the path is named under it while placing, with its
 ##     tactic. A transformed Trapper's snares are markers on their hexes,
@@ -229,7 +229,7 @@ static func prop_for(hex: Vector2i) -> String:
 
 
 ## A hero's form: its apex's once earned, where that figure is drawn
-## (docs/plans/asset-contract.md, section 3), else its path's once
+## (docs/plans/art/asset-contract.md, section 3), else its path's once
 ## transformed, else "base".
 static func form_of(unit: UnitSetup) -> String:
 	if unit.apex != null and unit.stage == PathDef.Stage.APEX and FigureArt.has_figure(FigureArt.key_for(unit.def.id, true, unit.apex.id)):

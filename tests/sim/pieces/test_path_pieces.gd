@@ -1,5 +1,5 @@
 extends GutTest
-## The sim pieces phase 4's paths need (docs/plans/rebuild-phase4-paths.md,
+## The sim pieces phase 4's paths need (docs/plans/phases/rebuild-phase4-paths.md,
 ## section 5), one rule at a time: an ability's own "every", the targets
 ## near the target and lowest_hp_ally, gain_mana and far-shot mana, heals
 ## and hits worth a share of the hit, overheal that comes back as Shield,

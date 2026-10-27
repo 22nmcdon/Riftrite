@@ -1,7 +1,7 @@
 class_name SpecializationDef
 extends RefCounted
-## An enemy's specialization (docs/plans/enemy-growth.md, section 2; built in
-## phase 8 part 3, docs/plans/rebuild-phase8-act2.md, section 2): a change to
+## An enemy's specialization (docs/plans/design/enemy-growth.md, section 2; built in
+## phase 8 part 3, docs/plans/phases/rebuild-phase8-act2.md, section 2): a change to
 ## how the enemy plays, as a kit mod on its kit, with the word put before its
 ## name and the player's sentence for it. An enemy has at most two.
 ##   {"id": "gnawing_pup", "name": "Gnawing",

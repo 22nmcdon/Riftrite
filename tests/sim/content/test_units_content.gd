@@ -1,6 +1,6 @@
 extends GutTest
 ## heroes.json, enemies.json, and encounters.json: reading them, and the checks
-## across files (docs/plans/rebuild-phase2-heroes-enemies.md, section 2).
+## across files (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 2).
 ## Each test loads the real tuning and statuses with made-up units.
 
 

@@ -1,5 +1,5 @@
 extends GutTest
-## The heroes' rules (docs/plans/rebuild-phase5c-combos.md, step 5c, section
+## The heroes' rules (docs/plans/phases/rebuild-phase5c-combos.md, step 5c, section
 ## 12.2; SideRules), each in a small fight and each shown changing nothing
 ## without its rule: Crown of Stars, Shared Pain, The Hungering Rift,
 ## Overcharge, Second Dawn, Chain of Echoes, Crown of the Hollow King,

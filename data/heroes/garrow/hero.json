@@ -1,5 +1,5 @@
 {
-  "_note": "Hero 4 (docs/plans/rebuild-heroes.md section 8d; rebuild-phase8-heroes.md 8d-1). Haul's mana is the design's; Chain Fist's cooldown and the mana gains are first numbers. HP, ATK, and DEF (550, 26, 40, from the design's 380, 18, 22) bring his base team within 10 points of the old three's in Act 1 (build-tuning.md, section 4).",
+  "_note": "Hero 4 (docs/plans/design/rebuild-heroes.md section 8d; rebuild-phase8-heroes.md 8d-1). Haul's mana is the design's; Chain Fist's cooldown and the mana gains are first numbers. HP, ATK, and DEF (550, 26, 40, from the design's 380, 18, 22) bring his base team within 10 points of the old three's in Act 1 (build-tuning.md, section 4).",
   "id": "garrow",
   "name": "Garrow of the Chains",
   "title": "the anchor",

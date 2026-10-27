@@ -1,7 +1,7 @@
 extends GutTest
-## The run report (tools/run_report.gd, run by tools/run_runner.gd), run small.
+## The run report (tools/reports/run_report.gd, run by tools/runners/run_runner.gd), run small.
 
-const Report = preload("res://tools/run_report.gd")
+const Report = preload("res://tools/reports/run_report.gd")
 
 var _run: RunContent
 
@@ -98,7 +98,7 @@ func test_the_engine_report() -> void:
 
 
 func test_the_test_teams_and_by_team() -> void:
-	# easy-start.md ES-4: tools/test_teams.json's teams, their fixed vows, and
+	# easy-start.md ES-4: tools/teams/test_teams.json's teams, their fixed vows, and
 	# the shop lean that only the tools set (RunContent.test_lean).
 	var text: String = FileAccess.get_file_as_string(Report.TEST_TEAMS)
 	var errors: Array[String] = []

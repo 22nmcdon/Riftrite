@@ -1,5 +1,5 @@
 extends GutTest
-## FightPlayer and the fight on ArenaScreen (docs/plans/rebuild-phase3-fight-sandbox.md,
+## FightPlayer and the fight on ArenaScreen (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 4, Decision 2): live stepping at every speed replays the fight
 ## exactly; pause, skip, restart, and seek; smooth drawn positions; and the
 ## screen's controls and keys, with fake time.

@@ -1,6 +1,6 @@
 class_name TriggerDef
 extends RefCounted
-## What fires a signature (docs/plans/rebuild-phase1-arena-sim.md, section 5):
+## What fires a signature (docs/plans/phases/rebuild-phase1-arena-sim.md, section 5):
 ##   {"kind": "mana"}                                the bar is full (the unit needs "mana")
 ##   {"kind": "mana", "recover_ms": 4000}            and not within 4s of its last fire: a
 ##                                                   full bar waits (phase 8 part 6, Elixir:

@@ -1,5 +1,5 @@
 extends GutTest
-## Keywords and conditions (docs/plans/rebuild-phase5c-combos.md, step 3,
+## Keywords and conditions (docs/plans/phases/rebuild-phase5c-combos.md, step 3,
 ## sections 8.2 and 8.3): names for a unit's state, one shape for "a unit
 ## that is ...", and the auras that use it.
 

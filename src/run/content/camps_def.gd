@@ -1,9 +1,9 @@
 class_name CampsDef
 extends RefCounted
-## Camp's data (data/camps.json; docs/plans/rebuild-phase5-run.md, section 9,
+## Camp's data (data/camps.json; docs/plans/phases/rebuild-phase5-run.md, section 9,
 ## Decisions 8, 9, 13): the options' names and lines, the places and their
 ## menus, and camp's numbers; and the day's nodes (phase 5c step 8,
-## docs/plans/days-and-nodes.md): their names, lines, and icons, and when
+## docs/plans/design/days-and-nodes.md): their names, lines, and icons, and when
 ## the Magpie comes. What each option and node does is RunFlow's (one job
 ## each), so an id must be one of OPTIONS or NODES. A Rift Tear's depths
 ## and the rift modifiers (phase 5c step 8b) are data here too.

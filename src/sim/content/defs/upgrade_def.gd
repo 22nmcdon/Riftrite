@@ -1,9 +1,9 @@
 class_name UpgradeDef
 extends RefCounted
 ## One upgrade from the after-fight pick (data/upgrades.json;
-## docs/plans/upgrade-pools.md, built in phase 5c step 7): permanent, and a
+## docs/plans/design/upgrade-pools.md, built in phase 5c step 7): permanent, and a
 ## kit modifier written against the hero's slots, so it survives a
-## transformation. Three layers (docs/plans/rebuild-phase5c-combos.md,
+## transformation. Three layers (docs/plans/phases/rebuild-phase5c-combos.md,
 ## section 15.3):
 ##   {"id": "deep_mark", "name": "Deep Mark", "hero": "maren",
 ##    "text": "...", "mod": {...KitMod...}}                 her pool, always

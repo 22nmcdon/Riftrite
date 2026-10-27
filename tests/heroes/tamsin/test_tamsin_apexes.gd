@@ -1,5 +1,5 @@
 extends GutTest
-## Tamsin's six apexes (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md
+## Tamsin's six apexes (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md
 ## 8d-3c; apexes.md) in real fights: each loads on its path's transformed
 ## kit with its taste and deed, and its snowball grows at apex: Phantom's
 ## Stealth that attacks don't end, Veilmaster's veiled allies, Executioner's

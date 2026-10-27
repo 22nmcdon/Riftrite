@@ -1,0 +1,1051 @@
+extends RefCounted
+## The run report (docs/plans/phases/rebuild-phase5-run.md, section 12; phase 6
+## plays it with any bot, tools/bots/): a bot plays many runs, and this
+## measures pacing: runs won and where the
+## rest end, when each hero first transforms (the design: the first around
+## days 3-4, all three by the boss), picks per hero, shards earned and
+## spent, wounds taken, relics found, the nodes shown and taken (phase 5c
+## step 8), and how each encounter goes. A report,
+## not a gate. tools/runners/run_runner.gd prints it.
+## Each run's vows cycle through every combination of paths (seed n takes
+## combination n mod 27), so every path is measured.
+
+const Bot = preload("res://tools/bots/run_bot.gd")
+const RunPlayer = preload("res://tools/bots/run_player.gd")
+const BaseBot = preload("res://tools/bots/bot.gd")
+const RandomBot = preload("res://tools/bots/random_bot.gd")
+const GoodBot = preload("res://tools/bots/good_bot.gd")
+const ExpertBot = preload("res://tools/bots/expert_bot.gd")
+## Endless runs still standing on this floor are stopped and reported as
+## such (a report, not the game: the game has no last floor).
+const ENDLESS_STOP: int = 40
+## The bots by name (--bot): "simple-peek" is the report's bot before phase
+## 6 (the simple bot, trying the named formations in the real fight).
+const BOTS: Array[String] = ["simple", "simple-peek", "random", "good", "expert"]
+## `team` for play: the bot drafts its team (Bot.team; the runner's
+## --team=draft), and the vows still cycle by seed.
+const DRAFT: Array[String] = ["draft"]
+## How far a team's vows step each turn of the cycle (coprime to 27; 0, 13,
+## 26 in base 3 are 000, 111, 222).
+const VOW_STRIDE: int = 13
+## The test teams (easy-start.md ES-4, test-teams.md): fixed vows, a group,
+## and the items and relics their runs lean toward (testing only).
+const TEST_TEAMS: String = "res://tools/teams/test_teams.json"
+
+
+## One run, as measured.
+class RunLine:
+	var seed_value: int
+	var vows: Dictionary[String, String] = {}
+	## The bot drafted its team (--team=draft).
+	var drafted: bool = false
+	## A test team's run (--test-teams, ES-4): its name and group, and whether
+	## the shops leaned toward its items and relics.
+	var team_name: String = ""
+	var group: String = ""
+	var leaned: bool = false
+	var outcome: RunState.Outcome
+	## The act and day it ended (or the last boss's, won).
+	var act: int = 1
+	var day: int
+	## Hero id -> the day it first transformed (0: never), and its act.
+	var transformed_on: Dictionary[String, int] = {}
+	var transformed_act: Dictionary[String, int] = {}
+	var picks: Dictionary[String, int] = {}
+	## Picks taken by layer (UpgradeDef.Layer: hero, taste, path; phase 5c
+	## step 7), and the stacking cards' takes and what they locked in.
+	var layer_picks: Array[int] = [0, 0, 0, 0]
+	var stack_takes: int = 0
+	var stack_points: int = 0
+	var shards_earned: int = 0
+	var shards_spent: int = 0
+	var wounds: int = 0
+	var relics: int = 0
+	## Relics held at the end, by tier (RelicDef.Tier; phase 5c step 5a).
+	var relic_tiers: Array[int] = [0, 0, 0, 0, 0, 0]
+	## Items owned at the end, by rank (phase 5c step 6: I, II, III).
+	var item_ranks: Array[int] = [0, 0, 0]
+	## Node kind -> the days it was shown, and taken (phase 5c step 8).
+	var nodes_shown: Dictionary[String, int] = {}
+	var nodes_taken: Dictionary[String, int] = {}
+	## Rift Tear fights (phase 5c step 8b): fought, and won (each attempt).
+	var rift_fights: int = 0
+	var rift_wins: int = 0
+	## Event scenes taken (phase 5c step 8c): scene id -> times.
+	var scenes: Dictionary[String, int] = {}
+	## The heroes' engines over the day fights (phase 5c step 9b, --engines):
+	## engine name -> [fights it fired or added in, fires, fires from chains,
+	## deepest chain, what it added, its team's output in those fights], and
+	## each event passive held -> the fights it was held in.
+	var engines: Dictionary[String, Array] = {}
+	var held: Dictionary[String, int] = {}
+	var errors: Array[String] = []
+	## The bot that played it.
+	var bot: String = ""
+	## Every card, item, and relic offered in the run, and every one it held
+	## at some point ("card:", "item:", "relic:" ids; --choices, phase 6
+	## step 6d).
+	var offered: Dictionary[String, bool] = {}
+	var taken: Dictionary[String, bool] = {}
+	## [encounter id, won?] for each fight.
+	var fights: Array[Array] = []
+	## Path id -> what the run's fights put into it while its hero was vowed
+	## to it and not yet transformed, and how many fights that was.
+	var vowed_gain: Dictionary[String, int] = {}
+	var vowed_fights: Dictionary[String, int] = {}
+	## Growing upgrade id -> what it counted by the run's end, and the
+	## fights it was held for (phase 5c step 4).
+	var grown: Dictionary[String, int] = {}
+	var grown_fights: Dictionary[String, int] = {}
+	## Endless (phase 8 part 1, --endless): the floor the run reached (0: it
+	## didn't go deeper), the fight it fell to there, and the rift modifiers
+	## it had gathered.
+	var floor_reached: int = 0
+	var fell_to: String = ""
+	var endless_mods: Array[String] = []
+	## Apexes (phase 8 part 2): hero id -> the apex it earned, and the floor
+	## it earned it on.
+	var apexes: Dictionary[String, String] = {}
+	var apexed_on: Dictionary[String, int] = {}
+	## And the act and day it was earned in (phase 8 part 3).
+	var apexed_act: Dictionary[String, int] = {}
+	var apexed_day: Dictionary[String, int] = {}
+	## Each hero's apex vow at the run's end, and its deed's share filled
+	## then (percent), for sizing the apex deeds (phase 8 part 3).
+	var apex_vowed: Dictionary[String, String] = {}
+	var apex_filled: Dictionary[String, int] = {}
+	## And the fights it counted (from the vow's opening to the run's end or
+	## the fight that earned it), and what its deed held then (the
+	## threshold, once earned).
+	var apex_fights: Dictionary[String, int] = {}
+	var apex_amount: Dictionary[String, int] = {}
+	## The rift learns (phase 8 part 3, 8c-6c, for sizing each habit's
+	## per_fight): measure -> what each fight (Hunts aside) held of it, and
+	## habit id -> the boss fights that learned it.
+	var habits: Dictionary[String, Array] = {}
+	var learned: Dictionary[String, int] = {}
+
+	## Its measures as a Dictionary (what --jobs passes between processes,
+	## with FileAccess.store_var, so types survive).
+	func to_dict() -> Dictionary:
+		var data: Dictionary = {}
+		for property: Dictionary in get_property_list():
+			if property.usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
+				data[property.name] = get(property.name)
+		return data
+
+	static func from_dict(data: Dictionary) -> RunLine:
+		var line := RunLine.new()
+		for key: String in data:
+			line.set(key, data[key])
+		return line
+
+
+## Every team and every combination of one path per hero on it (phase 8
+## part 4: the teams of three the draft offers, in heroes.json's order, each
+## with its vows in paths.json's order), or only `team`'s vows. The teams
+## take turns (each team's first vows, then each one's next, ...), so a
+## report of any length covers every team about as often, and each team's
+## vows step VOW_STRIDE at a time through all 27 (8d-5). Team i starts i
+## steps in (8f-6), so one turn through the teams already holds every path
+## about equally (16 to 29 runs each of the thirteen's 39), not every hero
+## on their first.
+static func vow_combinations(content: ContentDb, team: Array[String] = []) -> Array[Dictionary]:
+	if not team.is_empty():
+		return _team_vows(content, team)
+	var by_team: Array[Array] = []
+	for drafted: Array[String] in teams(content):
+		by_team.append(_team_vows(content, drafted))
+	var combos: Array[Dictionary] = []
+	for turn: int in by_team[0].size():
+		for i: int in by_team.size():
+			var vows: Array = by_team[i]
+			combos.append(vows[(turn + i) * VOW_STRIDE % vows.size()])
+	return combos
+
+
+## Every team of three the draft offers (HeroTeam.draftable), in heroes.json's
+## order.
+static func teams(content: ContentDb) -> Array[Array]:
+	return BaseBot.draft_teams(content)
+
+
+## `team`'s vows for run `run_seed` (as the run's would cycle with the team
+## fixed).
+static func seed_vows(content: ContentDb, team: Array[String], run_seed: int) -> Dictionary[String, String]:
+	var combos: Array[Dictionary] = _team_vows(content, team)
+	var vows: Dictionary[String, String] = {}
+	vows.assign(combos[run_seed % combos.size()])
+	return vows
+
+
+static func _team_vows(content: ContentDb, team: Array[String]) -> Array[Dictionary]:
+	var combos: Array[Dictionary] = [{}]
+	for hero_id: String in HeroTeam.ordered(content, team):
+		var next: Array[Dictionary] = []
+		for combo: Dictionary in combos:
+			for path: PathDef in content.heroes[hero_id].paths:
+				var more: Dictionary = combo.duplicate()
+				more[hero_id] = path.id
+				next.append(more)
+		combos = next
+	return combos
+
+
+## A fresh bot by name (BOTS).
+static func make_bot(bot_name: String) -> BaseBot:
+	match bot_name:
+		"random":
+			return RandomBot.new()
+		"good":
+			return GoodBot.new()
+		"expert":
+			return ExpertBot.new()
+		"simple-peek":
+			var peeking: BaseBot = BaseBot.new()
+			peeking.label = "simple-peek"
+			peeking.peek = true
+			return peeking
+	return BaseBot.new()
+
+
+## Plays run `run_seed` to its end with the bot named `bot_name`, measuring
+## it.
+## `endless`: the bot goes deeper at the first endless choice (after Act 3,
+## 8c-6c); `testing`: a testing run, whose first choice is after Act 1.
+## `test_team` (one of read_test_teams's, ES-4) fixes the team and its vows,
+## and leans the run's shops toward its items and relics while it plays
+## (RunContent.test_lean, testing only; cleared after).
+static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = [], test_team: Dictionary = {}) -> RunLine:
+	if test_team.is_empty():
+		return _play(run, run_seed, bot_name, endless, testing, team, test_team)
+	run.test_lean.assign(test_team["lean"])
+	var line: RunLine = _play(run, run_seed, bot_name, endless, testing, team, test_team)
+	run.test_lean.clear()
+	return line
+
+
+static func _play(run: RunContent, run_seed: int, bot_name: String, endless: bool, testing: bool, team: Array[String], test_team: Dictionary) -> RunLine:
+	var line := RunLine.new()
+	line.seed_value = run_seed
+	line.bot = bot_name
+	var bot: BaseBot = make_bot(bot_name)
+	bot.deeper = endless
+	if not test_team.is_empty():
+		line.vows.assign(test_team["vows"])
+		line.team_name = test_team["name"]
+		line.group = test_team["group"]
+		line.leaned = not test_team["lean"].is_empty()
+	elif team == DRAFT:
+		var vows_of: Callable = func(drafted: Array[String]) -> Dictionary[String, String]: return seed_vows(run.content, drafted, run_seed)
+		line.vows = seed_vows(run.content, bot.team(run, run_seed, testing, vows_of), run_seed)
+		line.drafted = true
+	else:
+		var combos: Array[Dictionary] = vow_combinations(run.content, team)
+		line.vows.assign(combos[run_seed % combos.size()])
+	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors, testing)
+	if flow == null:
+		return line
+	var state: RunState = flow.state
+	bot.begin(flow)
+	var shards: int = state.shards
+	var wounds: int = 0
+	var fought: int = 0
+	var counted: FightResult = null
+	var before: Dictionary[String, int] = {}
+	for hero: RunState.Hero in state.heroes:
+		before[hero.id] = hero.deeds[hero.path]
+	# The phase a step started in, so the nodes are counted once as they're
+	# offered, not again each step taken while they wait (a pick, a relic, an
+	# apex vow first).
+	var last_phase: RunState.Phase = RunState.Phase.ENDED
+	# Each act's nodes taken, kept as they go: the next act starts its list
+	# afresh (RunFlow._next_act), so the end holds only the last act's.
+	var taken_by_act: Dictionary[int, Array] = {}
+	for step: int in RunPlayer.MAX_STEPS:
+		taken_by_act[state.act] = state.taken_nodes.duplicate()
+		var vowed_to: Dictionary[String, String] = {}
+		var was_transformed: Dictionary[String, bool] = {}
+		for hero: RunState.Hero in state.heroes:
+			vowed_to[hero.id] = hero.path
+			was_transformed[hero.id] = hero.transformed
+			before[hero.id] = hero.deeds[hero.path]
+		if state.phase == RunState.Phase.ENDED:
+			break
+		if state.phase == RunState.Phase.NODES and last_phase != RunState.Phase.NODES:
+			for node: String in state.nodes:
+				line.nodes_shown[node.get_slice(":", 0)] = line.nodes_shown.get(node.get_slice(":", 0), 0) + 1
+		last_phase = state.phase
+		for id: String in state.pick:
+			line.offered["card:" + id] = true
+		for id: String in state.relic_choice:
+			line.offered["relic:" + id] = true
+		if not state.shop.is_empty():
+			for id: String in state.wares:
+				if not id.is_empty():
+					line.offered["item:" + id] = true
+			for id: String in state.shop_relics:
+				if not id.is_empty():
+					line.offered["relic:" + id] = true
+		var torn: bool = not state.rift_depth.is_empty() and state.phase == RunState.Phase.LOADOUT
+		var refused: String = RunPlayer.step(flow, bot)
+		for hero: RunState.Hero in state.heroes:
+			for id: String in hero.upgrades:
+				line.taken["card:" + id] = true
+		for id: String in state.relics:
+			line.taken["relic:" + id] = true
+		for id: String in state.item_ranks:
+			line.taken["item:" + id] = true
+		if not refused.is_empty():
+			line.errors.append("day %d (%s): %s" % [state.day, RunState.PHASE_NAMES[state.phase], refused])
+			break
+		# A run still standing this deep is stopped (it's counted as such):
+		# without it, a run whose heroes have outgrown the rift never ends.
+		if state.endless and flow.floor_number() >= ENDLESS_STOP and state.phase != RunState.Phase.ENDED:
+			break
+		if state.shards > shards:
+			line.shards_earned += state.shards - shards
+		else:
+			line.shards_spent += shards - state.shards
+		shards = state.shards
+		var now: int = state.heroes.reduce(func(sum: int, hero: RunState.Hero) -> int: return sum + hero.wounds, 0)
+		line.wounds += maxi(now - wounds, 0)
+		wounds = now
+		if state.fought.size() > fought:
+			fought = state.fought.size()
+			var last: RunState.Fought = state.fought.back()
+			# A sealed fight (phase 5c step 8c) wasn't fought, so it has no new result.
+			if flow.last_result != null and flow.last_result != counted and run.content.encounters[last.encounter].tier != "hunt":
+				counted = flow.last_result
+				_count_engines(line, flow.last_setup, flow.last_result, run.content.tuning.chain_limit)
+			line.fights.append([last.encounter, last.outcome != FightResult.Outcome.DEFEAT])
+			if run.content.encounters[last.encounter].tier != "hunt":
+				for measure: String in RiftLearnsDef.MEASURES:
+					if not line.habits.has(measure):
+						line.habits[measure] = []
+					line.habits[measure].append(last.habits.get(measure, 0))
+			if run.content.encounters[last.encounter].tier == "boss":
+				var heard: Dictionary[String, bool] = {}
+				for option: Array in state.today_learned:
+					for pick: Dictionary in option:
+						heard[str(pick["habit"])] = true
+				for habit_id: String in heard:
+					line.learned[habit_id] = line.learned.get(habit_id, 0) + 1
+			for hero: RunState.Hero in state.heroes:
+				if state.apex_open and not hero.apex.is_empty() and not line.apexed_on.has(hero.id):
+					line.apex_fights[hero.id] = line.apex_fights.get(hero.id, 0) + 1
+			if torn:
+				line.rift_fights += 1
+				line.rift_wins += 1 if last.outcome != FightResult.Outcome.DEFEAT else 0
+			for hero: RunState.Hero in state.heroes:
+				for upgrade: UpgradeDef in run.held_upgrades(hero):
+					if upgrade.grows != null:
+						line.grown_fights[upgrade.id] = line.grown_fights.get(upgrade.id, 0) + 1
+			for hero: RunState.Hero in state.heroes:
+				var path_id: String = vowed_to[hero.id]
+				if not was_transformed[hero.id]:
+					line.vowed_gain[path_id] = line.vowed_gain.get(path_id, 0) + hero.deeds[path_id] - before[hero.id]
+					line.vowed_fights[path_id] = line.vowed_fights.get(path_id, 0) + 1
+			for hero_id: String in state.just_transformed:
+				if not line.transformed_on.has(hero_id):
+					line.transformed_on[hero_id] = last.day
+					line.transformed_act[hero_id] = last.act
+			for hero_id: String in state.just_apexed:
+				if not line.apexed_on.has(hero_id):
+					line.apexed_on[hero_id] = run.floor_of(state, last.day)
+					line.apexes[hero_id] = state.hero(hero_id).apex
+					line.apexed_act[hero_id] = last.act
+					line.apexed_day[hero_id] = last.day
+	line.outcome = state.outcome
+	line.act = state.act
+	line.day = state.day
+	if state.endless:
+		line.floor_reached = flow.floor_number()
+		line.endless_mods = state.endless_mods.duplicate()
+		var last: RunState.Fought = state.fought.back() if not state.fought.is_empty() else null
+		if last != null and last.outcome == FightResult.Outcome.DEFEAT and last.act == state.act and last.day == state.day:
+			line.fell_to = last.encounter
+	for hero: RunState.Hero in state.heroes:
+		if not hero.apex.is_empty():
+			line.apex_vowed[hero.id] = hero.apex
+			var threshold: int = run.content.apexes[hero.apex].deed.threshold
+			line.apex_filled[hero.id] = 100 if hero.apex_earned else mini(100, hero.deeds.get(hero.apex, 0) * 100 / maxi(threshold, 1))
+			line.apex_amount[hero.id] = threshold if hero.apex_earned else hero.deeds.get(hero.apex, 0)
+	for hero: RunState.Hero in state.heroes:
+		line.picks[hero.id] = hero.upgrades.size()
+		for id: String in hero.upgrades:
+			line.layer_picks[run.upgrades[id].layer] += 1
+		for id: String in hero.locked:
+			line.stack_takes += hero.locked[id].size()
+			for amount: Variant in hero.locked[id]:
+				line.stack_points += int(amount)
+		if not line.transformed_on.has(hero.id):
+			line.transformed_on[hero.id] = 0
+	taken_by_act[state.act] = state.taken_nodes.duplicate()
+	var taken_nodes: Array[String] = []
+	for act: int in taken_by_act:
+		taken_nodes.append_array(taken_by_act[act])
+	for node: String in taken_nodes:
+		if not node.is_empty():
+			var kind: String = node.get_slice(":", 0)
+			line.nodes_taken[kind] = line.nodes_taken.get(kind, 0) + 1
+			if kind == "event":
+				line.scenes[node.get_slice(":", 1)] = line.scenes.get(node.get_slice(":", 1), 0) + 1
+	line.relics = state.relics.size()
+	for id: String in state.relics:
+		line.relic_tiers[run.relics[id].tier] += 1
+	for id: String in state.item_ranks:
+		line.item_ranks[state.item_ranks[id] - 1] += 1
+	for hero: RunState.Hero in state.heroes:
+		for upgrade_id: String in hero.growth:
+			line.grown[upgrade_id] = hero.growth[upgrade_id]
+	return line
+
+
+## Adds a day fight's engines to `line` (ComboTally over its log), and the
+## event passives its heroes held.
+static func _count_engines(line: RunLine, setup: FightSetup, result: FightResult, chain_limit: int) -> void:
+	var hero_ids: Array[String] = []
+	for unit: UnitSetup in setup.heroes:
+		hero_ids.append(unit.id)
+		for part: PartDef in unit.def.passives:
+			if part.kind == PartDef.Kind.ABILITY:
+				var held_name: String = "%s · %s" % [unit.id, part.name]
+				line.held[held_name] = line.held.get(held_name, 0) + 1
+	var tally: ComboTally = ComboTally.of_log(result.combat_log, chain_limit, hero_ids)
+	var team: int = 0
+	var rows: Array[ComboTally.EngineRow] = tally.engines.filter(func(row: ComboTally.EngineRow) -> bool: return row.side == EffectSource.Team.HEROES)
+	for row: ComboTally.EngineRow in rows:
+		team += row.total()
+	for row: ComboTally.EngineRow in rows:
+		if row.fires == 0 and row.total() == 0:
+			continue
+		var stats: Array = line.engines.get(row.name, [0, 0, 0, 0, 0, 0])
+		stats[0] += 1
+		stats[1] += row.fires
+		stats[2] += row.from_chains
+		stats[3] = maxi(stats[3], row.deepest)
+		stats[4] += row.total()
+		stats[5] += team
+		line.engines[row.name] = stats
+
+
+## The engine report (phase 5c step 9b, `--engines`): every hero engine
+## over the runs' day fights, most of its team's output first (fights, fires
+## a fight, the share from chains, the deepest chain, its share of what its
+## team dealt, healed, and Shielded in those fights), then the event
+## passives held that never fired.
+static func engines_summary(lines: Array[RunLine], shown: int = 40) -> String:
+	var merged: Dictionary[String, Array] = {}
+	var held: Dictionary[String, int] = {}
+	for line: RunLine in lines:
+		for name: String in line.engines:
+			var stats: Array = merged.get(name, [0, 0, 0, 0, 0, 0])
+			var more: Array = line.engines[name]
+			for i: int in 6:
+				stats[i] = maxi(stats[i], more[i]) if i == 3 else stats[i] + more[i]
+			merged[name] = stats
+		for name: String in line.held:
+			held[name] = held.get(name, 0) + line.held[name]
+	var names: Array[String] = []
+	names.assign(merged.keys())
+	names.sort_custom(func(a: String, b: String) -> bool:
+		var share_a: int = _pct(merged[a][4], merged[a][5])
+		var share_b: int = _pct(merged[b][4], merged[b][5])
+		return share_a > share_b if share_a != share_b else a < b)
+	var out: PackedStringArray = PackedStringArray()
+	out.append("Engines (the heroes' sources over the bot's day fights: fights, fires a fight, from chains, deepest chain, share of the team's output in them):")
+	for i: int in mini(shown, names.size()):
+		var stats: Array = merged[names[i]]
+		out.append("  %-40s %4d fights, %5.1f fires, %3d%% chained, deepest %d, %3d%% of output" % [names[i], stats[0], float(stats[1]) / maxi(stats[0], 1),
+			_pct(stats[2], stats[1]), stats[3], _pct(stats[4], stats[5])])
+	var silent: Array[String] = []
+	for name: String in held:
+		if not merged.has(name) or merged[name][1] == 0:
+			silent.append("%s (%d)" % [name, held[name]])
+	silent.sort()
+	out.append("Held but never fired (fights held): %s" % (", ".join(silent) if not silent.is_empty() else "none"))
+	return "\n".join(out)
+
+
+## The bots side by side (--compare): runs won, the day lost runs end, and
+## the encounters that end them most.
+static func compare_summary(run: RunContent, by_bot: Dictionary[String, Array]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("Bots on the same seeds (runs won; lost runs by the day they end; the encounters that end the most):")
+	for bot_name: String in by_bot:
+		var lines: Array = by_bot[bot_name]
+		var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+		var days: PackedStringArray = PackedStringArray()
+		var ended: Dictionary[String, int] = {}
+		for day: int in range(1, run.acts[0].days.size() + 1):
+			days.append(str(lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.act == 1 and line.day == day).size()))
+		if run.acts.size() > 1:
+			days.append("later acts %d" % lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.act > 1).size())
+		for line: RunLine in lines:
+			if line.outcome == RunState.Outcome.LOST and not line.fights.is_empty():
+				var last: String = line.fights.back()[0]
+				ended[last] = ended.get(last, 0) + 1
+		var worst: Array = ended.keys()
+		worst.sort_custom(func(a: String, b: String) -> bool: return ended[a] > ended[b] if ended[a] != ended[b] else a < b)
+		var named: PackedStringArray = PackedStringArray()
+		for id: String in worst.slice(0, 3):
+			named.append("%s %d" % [run.content.encounters[id].name, ended[id]])
+		out.append("  %-12s won %3d%% (%d of %d); lost on days 1-7: %s; ended by %s" % [bot_name, _pct(won, lines.size()), won, lines.size(),
+			" ".join(days), ", ".join(named) if not named.is_empty() else "-"])
+	return "\n".join(out)
+
+
+## The choices report (--choices, phase 6 step 6d): each card, item, and
+## relic offered in at least `least` runs: how often it was offered and
+## taken, and the runs won when it was taken against when it was offered and
+## not. Flags what's never taken and what wins far above its kind.
+static func choices_summary(run: RunContent, lines: Array[RunLine], least: int = 5) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for kind: String in ["card", "item", "relic"]:
+		var rows: Array = []
+		var ids: Dictionary[String, bool] = {}
+		for line: RunLine in lines:
+			for key: String in line.offered:
+				if key.begins_with(kind + ":"):
+					ids[key] = true
+		var kind_won: int = 0
+		var kind_taken: int = 0
+		for key: String in ids:
+			var offered: int = 0
+			var taken: int = 0
+			var won_taken: int = 0
+			var passed: int = 0
+			var won_passed: int = 0
+			for line: RunLine in lines:
+				if not line.offered.has(key):
+					continue
+				offered += 1
+				var won: bool = line.outcome == RunState.Outcome.WON
+				if line.taken.has(key):
+					taken += 1
+					won_taken += 1 if won else 0
+				else:
+					passed += 1
+					won_passed += 1 if won else 0
+			kind_won += won_taken
+			kind_taken += taken
+			if offered >= least:
+				rows.append([key.get_slice(":", 1), offered, taken, won_taken, passed, won_passed])
+		var average: int = _pct(kind_won, kind_taken)
+		rows.sort_custom(func(a: Array, b: Array) -> bool: return _pct(a[3], a[2]) > _pct(b[3], b[2]) if _pct(a[3], a[2]) != _pct(b[3], b[2]) else a[0] < b[0])
+		out.append("%ss (offered in %d+ runs; won when taken against offered and passed; the kind's runs won when taken: %d%%):" % [kind.capitalize(), least, average])
+		var never: PackedStringArray = PackedStringArray()
+		for row: Array in rows:
+			if row[2] == 0:
+				never.append("%s (%d)" % [_choice_name(run, kind, row[0]), row[1]])
+				continue
+			var flag: String = "  << wins far above its kind" if _pct(row[3], row[2]) > average + 15 and row[2] >= least else ""
+			out.append("  %-26s offered %3d, taken %3d%%, won %3d%% taken / %s passed%s" % [_choice_name(run, kind, row[0]), row[1], _pct(row[2], row[1]),
+				_pct(row[3], row[2]), "%3d%%" % _pct(row[5], row[4]) if row[4] > 0 else "   -", flag])
+		out.append("  never taken when offered: %s" % (", ".join(never) if not never.is_empty() else "none"))
+	return "\n".join(out)
+
+
+static func _choice_name(run: RunContent, kind: String, id: String) -> String:
+	match kind:
+		"card":
+			return run.upgrades[id].name if run.upgrades.has(id) else id
+		"item":
+			return run.items[id].name if run.items.has(id) else id
+	return run.relics[id].name if run.relics.has(id) else id
+
+
+## Plays each seed. With `test_teams` (ES-4), seed n plays test team n mod
+## their count.
+static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = [], test_teams: Array[Dictionary] = []) -> Array[RunLine]:
+	var lines: Array[RunLine] = []
+	for run_seed: int in seeds:
+		var test_team: Dictionary = test_teams[run_seed % test_teams.size()] if not test_teams.is_empty() else {}
+		lines.append(play(run, run_seed, bot_name, endless, testing, team, test_team))
+	return lines
+
+
+## The test teams in `text` (tools/teams/test_teams.json's shape) named by `which`:
+## "all", a group ("plan", "bad"), or names joined by commas. Each is
+## {name, group, vows (hero id -> path id), lean (id -> weight)}; `lean`
+## false leaves every lean empty. Problems go in `errors` (an unknown hero,
+## path, item, relic, or name; a team the run can't start with).
+static func read_test_teams(run: RunContent, text: String, which: String, lean: bool, errors: Array[String]) -> Array[Dictionary]:
+	var data: Variant = JSON.parse_string(text)
+	if not data is Dictionary or not data.get("teams") is Array:
+		errors.append("test teams: not a {\"teams\": [...]} file")
+		return []
+	var weight: int = int(data.get("lean_weight", 1))
+	var found: Array[Dictionary] = []
+	var names: PackedStringArray = which.split(",")
+	for entry: Variant in data["teams"]:
+		if not entry is Dictionary:
+			errors.append("test teams: an entry isn't an object")
+			continue
+		var team_name: String = str(entry.get("name", ""))
+		var group: String = str(entry.get("group", ""))
+		if which != "all" and which != group and not names.has(team_name):
+			continue
+		var vows: Dictionary[String, String] = {}
+		for hero_id: Variant in entry.get("vows", {}):
+			var path_id: String = str(entry["vows"][hero_id])
+			if not run.content.heroes.has(hero_id) or not run.content.paths.has(path_id) or run.content.paths[path_id].hero != hero_id:
+				errors.append("test team %s: %s isn't a path of %s" % [team_name, path_id, hero_id])
+			vows[str(hero_id)] = path_id
+		var team: Array[String] = []
+		team.assign(vows.keys())
+		if not HeroTeam.problem(run.content, team).is_empty():
+			errors.append("test team %s: %s" % [team_name, HeroTeam.problem(run.content, team)])
+		var leaned: Dictionary[String, int] = {}
+		for id: Variant in entry.get("lean", []):
+			if not run.items.has(id) and not run.relics.has(id):
+				errors.append("test team %s: %s is no item or relic" % [team_name, id])
+			if lean:
+				leaned[str(id)] = weight
+		found.append({"name": team_name, "group": group, "vows": vows, "lean": leaned})
+	if found.is_empty():
+		errors.append("test teams: none named \"%s\"" % which)
+	return found
+
+
+## Endless's report (phase 8 part 1, --endless; Decision 5: a report, not
+## tuned): how deep the runs that won the act went, what floor kinds and
+## fights ended them, and the rift modifiers on at the end.
+static func endless_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	var deeper: Array[RunLine] = []
+	deeper.assign(lines.filter(func(line: RunLine) -> bool: return line.floor_reached > 0))
+	out.append("Endless: %d of %d runs won the act and went deeper" % [deeper.size(), lines.size()])
+	if deeper.is_empty():
+		return "\n".join(out)
+	var floors: Array[int] = []
+	for line: RunLine in deeper:
+		floors.append(line.floor_reached)
+	floors.sort()
+	@warning_ignore("integer_division")
+	out.append("  Floor reached: median %d, quartiles %d-%d, deepest %d, shallowest %d" % [floors[floors.size() / 2], floors[floors.size() / 4], floors[floors.size() * 3 / 4], floors.back(), floors.front()])
+	var buckets: Dictionary[int, int] = {}
+	for f: int in floors:
+		@warning_ignore("integer_division")
+		var bucket: int = (f - 1) / 5
+		buckets[bucket] = buckets.get(bucket, 0) + 1
+	var bucket_text: PackedStringArray = PackedStringArray()
+	for bucket: int in range(0, buckets.keys().max() + 1):
+		bucket_text.append("%d-%d: %d" % [bucket * 5 + 1, bucket * 5 + 5, buckets.get(bucket, 0)])
+	out.append("  Runs falling by floors: " + ", ".join(bucket_text))
+	var stopped: int = deeper.filter(func(line: RunLine) -> bool: return line.floor_reached >= ENDLESS_STOP and line.fell_to.is_empty()).size()
+	if stopped > 0:
+		out.append("  Stopped on floor %d, still standing: %d (their floor counts as %d above)" % [ENDLESS_STOP, stopped, ENDLESS_STOP])
+	var kinds: Dictionary[String, int] = {}
+	var fights: Dictionary[String, int] = {}
+	for line: RunLine in deeper:
+		if line.fell_to.is_empty():
+			continue
+		var floor_act: ActDef = run.acts[clampi(line.act, 1, run.acts.size()) - 1]
+		var kind: String = floor_act.endless.kind(line.floor_reached) if floor_act.endless != null else "?"
+		kinds[kind] = kinds.get(kind, 0) + 1
+		fights[line.fell_to] = fights.get(line.fell_to, 0) + 1
+	out.append("  Fell on a floor that was: normal %d, elite %d, boss %d" % [kinds.get("normal", 0), kinds.get("elite", 0), kinds.get("boss", 0)])
+	var worst: Array = fights.keys()
+	worst.sort_custom(func(a: String, b: String) -> bool: return fights[a] > fights[b] if fights[a] != fights[b] else a < b)
+	var named: PackedStringArray = PackedStringArray()
+	for id: String in worst:
+		named.append("%s %d" % [run.content.encounters[id].name, fights[id]])
+	out.append("  Fell to: " + ", ".join(named))
+	var mods: Dictionary[String, int] = {}
+	var mod_total: int = 0
+	for line: RunLine in deeper:
+		mod_total += line.endless_mods.size()
+		for id: String in line.endless_mods:
+			mods[id] = mods.get(id, 0) + 1
+	var mod_text: PackedStringArray = PackedStringArray()
+	for id: String in run.camps.modifier_ids:
+		if mods.has(id):
+			mod_text.append("%s %d" % [run.camps.modifiers[id].name, mods[id]])
+	out.append("  Rift modifiers on at the end: %.1f a run (%s)" % [float(mod_total) / deeper.size(), ", ".join(mod_text) if not mod_text.is_empty() else "none"])
+	var by_vow: Dictionary[String, Array] = {}
+	for line: RunLine in deeper:
+		for hero_id: String in line.vows:
+			var path_id: String = line.vows[hero_id]
+			if not by_vow.has(path_id):
+				by_vow[path_id] = []
+			by_vow[path_id].append(line.floor_reached)
+	var vow_text: PackedStringArray = PackedStringArray()
+	for path_id: String in run.content.path_ids:
+		if by_vow.has(path_id):
+			var values: Array[int] = []
+			values.assign(by_vow[path_id])
+			vow_text.append("%s %s" % [run.content.paths[path_id].name, _median(values)])
+	out.append("  Median floor by vow: " + ", ".join(vow_text))
+	# Apexes (phase 8 part 2): when each is earned, and how far runs get with
+	# and without one.
+	var earned: Dictionary[String, Array] = {}
+	var with_apex: Array[int] = []
+	var without: Array[int] = []
+	for line: RunLine in deeper:
+		(with_apex if not line.apexed_on.is_empty() else without).append(line.floor_reached)
+		for hero_id: String in line.apexed_on:
+			var apex_id: String = line.apexes[hero_id]
+			if not earned.has(apex_id):
+				earned[apex_id] = []
+			earned[apex_id].append(line.apexed_on[hero_id])
+	out.append("  Runs with an apex: %d (median floor %s), without: %d (median floor %s)" % [with_apex.size(), _median(with_apex) if not with_apex.is_empty() else "-",
+		without.size(), _median(without) if not without.is_empty() else "-"])
+	var apex_text: PackedStringArray = PackedStringArray()
+	for apex_id: String in run.content.apex_ids:
+		if earned.has(apex_id):
+			var values: Array[int] = []
+			values.assign(earned[apex_id])
+			apex_text.append("%s %d (floor %s)" % [run.content.apexes[apex_id].name, values.size(), _median(values)])
+	out.append("  Apexes earned (times, median floor): " + (", ".join(apex_text) if not apex_text.is_empty() else "none"))
+	return "\n".join(out)
+
+
+## The report's text.
+## Each act (phase 8 part 3): the runs that reached it, won it, and lost in
+## it (by day), and the apexes earned in it (median day).
+static func acts_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("By act (runs reaching it, winning it, losing in it by day; apexes earned in it):")
+	for act_def: ActDef in run.acts:
+		var number: int = act_def.act
+		var reached: Array[RunLine] = []
+		reached.assign(lines.filter(func(line: RunLine) -> bool: return line.act >= number))
+		var won: int = reached.filter(func(line: RunLine) -> bool: return line.act > number or line.outcome == RunState.Outcome.WON).size()
+		var lost_on: Array[int] = []
+		lost_on.resize(act_def.days.size() + 1)
+		for line: RunLine in reached:
+			if line.act == number and line.outcome == RunState.Outcome.LOST and line.day <= act_def.days.size():
+				lost_on[line.day] += 1
+		var where: PackedStringArray = PackedStringArray()
+		for day: int in range(1, lost_on.size()):
+			where.append("%d" % lost_on[day])
+		var apex_days: Array[int] = []
+		for line: RunLine in lines:
+			for hero_id: String in line.apexed_act:
+				if line.apexed_act[hero_id] == number and line.apexed_on.get(hero_id, 0) == 0:
+					apex_days.append(line.apexed_day[hero_id])
+		# Runs that reached the act's boss, and how many held an apex by then
+		# (Decision 2 of rebuild-phase8-acts.md: at least one before Act 2's).
+		var boss_day: int = act_def.days.size()
+		var at_boss: Array[RunLine] = []
+		at_boss.assign(reached.filter(func(line: RunLine) -> bool: return line.act > number or line.day >= boss_day))
+		var with_apex: int = at_boss.filter(func(line: RunLine) -> bool:
+			for hero_id: String in line.apexed_act:
+				var act_of: int = line.apexed_act[hero_id]
+				if act_of < number or (act_of == number and line.apexed_day.get(hero_id, 99) < boss_day):
+					return true
+			return false).size()
+		out.append("  Act %d: %d reached, %d won (%d%%); lost on days 1-%d: %s; apexes earned %d (median day %s); at its boss %d, %d with an apex" % [number, reached.size(), won, _pct(won, reached.size()),
+			act_def.days.size(), " ".join(where), apex_days.size(), _median(apex_days), at_boss.size(), with_apex])
+	return "\n".join(out)
+
+
+## Each apex vowed by a run's end (phase 8 part 3, for sizing the apex
+## deeds): how often, how often earned and its median act and day, and the
+## median share of the deed filled where it wasn't.
+static func apex_vows_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var vowed: Dictionary[String, int] = {}
+	var earned_on: Dictionary[String, Array] = {}
+	var short: Dictionary[String, Array] = {}
+	var rates: Dictionary[String, Array] = {}
+	for line: RunLine in lines:
+		for hero_id: String in line.apex_vowed:
+			var apex_id: String = line.apex_vowed[hero_id]
+			vowed[apex_id] = vowed.get(apex_id, 0) + 1
+			if line.apex_fights.get(hero_id, 0) > 0:
+				if not rates.has(apex_id):
+					rates[apex_id] = []
+				rates[apex_id].append(line.apex_amount.get(hero_id, 0) * 10 / line.apex_fights[hero_id])
+			if line.apexes.get(hero_id, "") == apex_id:
+				if not earned_on.has(apex_id):
+					earned_on[apex_id] = []
+				earned_on[apex_id].append(line.apexed_act[hero_id] * 100 + line.apexed_day[hero_id])
+			else:
+				if not short.has(apex_id):
+					short[apex_id] = []
+				short[apex_id].append(line.apex_filled.get(hero_id, 0))
+	var out: PackedStringArray = PackedStringArray()
+	out.append("Apex vows at the run's end (vowed, earned at median act-day, median share filled where not; its deed a fight, median, and the fights that fill it):")
+	for apex_id: String in run.content.apex_ids:
+		if not vowed.has(apex_id):
+			continue
+		var days: Array[int] = []
+		days.assign(earned_on.get(apex_id, []))
+		var shares: Array[int] = []
+		shares.assign(short.get(apex_id, []))
+		var at: String = "-"
+		if not days.is_empty():
+			var median: int = _median(days).to_int()
+			@warning_ignore("integer_division")
+			at = "%d-%d" % [median / 100, median % 100]
+		var per: Array[int] = []
+		per.assign(rates.get(apex_id, []))
+		var rate: float = _median(per).to_int() / 10.0 if not per.is_empty() else 0.0
+		var threshold: int = run.content.apexes[apex_id].deed.threshold
+		out.append("  %-18s vowed %3d, earned %3d (%s); short %3d at %s%%; %.1f a fight, %s fights (threshold %d)" % [run.content.apexes[apex_id].name, vowed[apex_id], days.size(), at, shares.size(),
+			_median(shares) if not shares.is_empty() else "-", rate, "%.1f" % (threshold / rate) if rate > 0.0 else "-", threshold])
+	return "\n".join(out)
+
+
+## The rift learns (phase 8 part 3, 8c-6c): each habit's measure over the
+## fights (Hunts aside): the share of fights holding any, and the median
+## and upper quartile of those that do, against its per_fight; and the
+## boss fights that learned it.
+static func learns_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("The rift learns (each habit's measure: fights holding any, median and upper quartile there, per_fight; boss fights that learned it):")
+	for habit: RiftLearnsDef.Habit in run.learns.habits:
+		var all: int = 0
+		var held: Array[int] = []
+		var learned: int = 0
+		for line: RunLine in lines:
+			for value: Variant in line.habits.get(habit.measure, []):
+				all += 1
+				if int(value) > 0:
+					held.append(int(value))
+			learned += line.learned.get(habit.id, 0)
+		held.sort()
+		@warning_ignore("integer_division")
+		var upper: String = str(held[held.size() * 3 / 4]) if not held.is_empty() else "-"
+		out.append("  %-24s %-9s %3d%% of %d fights, median %s, upper %s; per_fight %d; learned %d" % [habit.name, habit.measure, _pct(held.size(), all), all, _median(held) if not held.is_empty() else "-", upper, habit.per_fight, learned])
+	return "\n".join(out)
+
+
+## By hero (phase 8 part 4, rebuild-phase8-heroes.md section 8): the runs
+## each hero was on the team for (and, when the bot drafted, the share it
+## was drafted in), how many were won, how many it transformed and earned an
+## apex in, and the runs won by the path it was vowed to at the start.
+static func heroes_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var content: ContentDb = run.content
+	var out: PackedStringArray = PackedStringArray()
+	out.append("By hero (runs on the team%s, won; transformed, an apex; won by its first vow):" % (", drafted" if lines.any(func(line: RunLine) -> bool: return line.drafted) else ""))
+	for hero_id: String in HeroTeam.draftable(content):
+		var with_hero: Array[RunLine] = []
+		with_hero.assign(lines.filter(func(line: RunLine) -> bool: return line.vows.has(hero_id)))
+		if with_hero.is_empty():
+			continue
+		var won: int = with_hero.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+		var transformed: int = with_hero.filter(func(line: RunLine) -> bool: return line.transformed_on.get(hero_id, 0) > 0).size()
+		var apexed: int = with_hero.filter(func(line: RunLine) -> bool: return line.apexes.has(hero_id)).size()
+		var by_path: PackedStringArray = PackedStringArray()
+		for path: PathDef in content.heroes[hero_id].paths:
+			var vowed: Array[RunLine] = []
+			vowed.assign(with_hero.filter(func(line: RunLine) -> bool: return line.vows[hero_id] == path.id))
+			var path_won: int = vowed.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+			by_path.append("%s %d%% of %d" % [path.name, _pct(path_won, vowed.size()), vowed.size()])
+		out.append("  %-26s %3d runs (%2d%%), won %3d%%; transformed %3d%%, an apex %3d%%; %s" % [content.heroes[hero_id].name, with_hero.size(), _pct(with_hero.size(), lines.size()),
+			_pct(won, with_hero.size()), _pct(transformed, with_hero.size()), _pct(apexed, with_hero.size()), ", ".join(by_path)])
+	return "\n".join(out)
+
+
+## By team (easy-start.md ES-4): each team's runs (a test team by name, any
+## other by its heroes), how far they got (ended on day 1, reached Act 1's
+## boss, won Act 1, won Act 2), and won; then the same by group when there
+## are test teams (plan, bad).
+static func teams_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("By team (runs; ended on day 1, at Act 1's boss, Act 1 won, Act 2 won; won):")
+	var order: Array[String] = []
+	var by: Dictionary[String, Array] = {}
+	for line: RunLine in lines:
+		var key: String = _team_label(run, line)
+		if not by.has(key):
+			order.append(key)
+			by[key] = []
+		by[key].append(line)
+	for key: String in order:
+		out.append(_reach_row(run, key, by[key]))
+	if lines.any(func(line: RunLine) -> bool: return not line.group.is_empty()):
+		out.append("By group:")
+		var groups: Array[String] = []
+		for line: RunLine in lines:
+			if not groups.has(line.group):
+				groups.append(line.group)
+		for group: String in groups:
+			out.append(_reach_row(run, group if not group.is_empty() else "(none)", lines.filter(func(line: RunLine) -> bool: return line.group == group)))
+	return "\n".join(out)
+
+
+## A team's name in By team: a test team's name (and "leaned" when its shops
+## leaned), else its heroes' names in heroes.json's order.
+static func _team_label(run: RunContent, line: RunLine) -> String:
+	if not line.team_name.is_empty():
+		return "%s (%s%s)" % [line.team_name, line.group, ", leaned" if line.leaned else ""]
+	var names: PackedStringArray = PackedStringArray()
+	var team: Array[String] = []
+	team.assign(line.vows.keys())
+	for hero_id: String in HeroTeam.ordered(run.content, team):
+		names.append(run.content.heroes[hero_id].name.get_slice(" ", 0))
+	return ", ".join(names)
+
+
+static func _reach_row(run: RunContent, label: String, lines: Array) -> String:
+	var n: int = lines.size()
+	var boss_day: int = run.acts[0].days.size()
+	var day_one: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.act == 1 and line.day == 1).size()
+	var at_boss: int = lines.filter(func(line: RunLine) -> bool: return line.act > 1 or line.day >= boss_day).size()
+	var act_one: int = lines.filter(func(line: RunLine) -> bool: return line.act > 1 or line.outcome == RunState.Outcome.WON).size()
+	var act_two: int = lines.filter(func(line: RunLine) -> bool: return line.act > 2 or (line.outcome == RunState.Outcome.WON and run.acts.size() >= 2)).size()
+	var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+	return "  %-34s %3d runs; day 1 %3d%%, Act 1's boss %3d%%, Act 1 %3d%%, Act 2 %3d%%; won %3d%%" % [label, n, _pct(day_one, n), _pct(at_boss, n), _pct(act_one, n), _pct(act_two, n), _pct(won, n)]
+
+
+static func summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var content: ContentDb = run.content
+	var out: PackedStringArray = PackedStringArray()
+	var n: int = lines.size()
+	var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+	out.append("Runs: %d (the %s bot), won %d (%d%%)" % [n, lines[0].bot if n > 0 else "-", won, _pct(won, n)])
+	var ended: Array[int] = []
+	for day: int in run.acts[0].days.size() + 1:
+		ended.append(0)
+	for line: RunLine in lines:
+		if line.outcome == RunState.Outcome.LOST and line.act == 1:
+			ended[line.day] += 1
+	var where: PackedStringArray = PackedStringArray()
+	for day: int in range(1, ended.size()):
+		where.append("day %d: %d" % [day, ended[day]])
+	out.append("Lost runs end on %s%s" % [", ".join(where), " (in Act 1; the others by act below)" if run.acts.size() > 1 else ""])
+	if run.acts.size() > 1:
+		out.append(acts_summary(run, lines))
+		out.append(apex_vows_summary(run, lines))
+	if run.learns != null and run.acts.any(func(act_def: ActDef) -> bool: return act_def.rift_learns):
+		out.append(learns_summary(run, lines))
+	out.append("")
+	out.append("First transformation (a run's first hero; the design: around days 3-4):")
+	var firsts: Array[int] = []
+	for line: RunLine in lines:
+		var days: Array = line.transformed_on.values().filter(func(day: int) -> bool: return day > 0)
+		if not days.is_empty():
+			firsts.append(days.min())
+	out.append("  %d of %d runs have one; median day %s" % [firsts.size(), n, _median(firsts)])
+	out.append("By path (runs vowed to it: transformed at all, median day, by the boss among runs that reached it; its deed per fight while vowed, and the threshold):")
+	for path_id: String in content.path_ids:
+		var path: PathDef = content.paths[path_id]
+		var vowed: Array[RunLine] = lines.filter(func(line: RunLine) -> bool: return line.vows.get(path.hero, "") == path_id)
+		var days: Array[int] = []
+		var reached: int = 0
+		var by_boss: int = 0
+		for line: RunLine in vowed:
+			var day: int = line.transformed_on.get(path.hero, 0)
+			if day > 0:
+				days.append(day)
+			if line.act > 1 or line.day >= run.acts[0].days.size():
+				reached += 1
+				# A transformation on an endless floor, or in a later act, came
+				# after Act 1's boss.
+				by_boss += 1 if day > 0 and line.transformed_act.get(path.hero, 1) == 1 and day <= run.acts[0].days.size() else 0
+		var gain: int = 0
+		var fights: int = 0
+		for line: RunLine in lines:
+			gain += line.vowed_gain.get(path_id, 0)
+			fights += line.vowed_fights.get(path_id, 0)
+		out.append("  %-14s %3d runs: %3d%% transform, median day %s, by the boss %s; %s a fight (threshold %s)" % [path.name, vowed.size(), _pct(days.size(), vowed.size()),
+			_median(days), "%d%%" % _pct(by_boss, reached) if reached > 0 else "-",
+			_per_fight(path.deed, gain, fights), UnitInfo.deed_amount_text(path.deed, path.deed.threshold)])
+	out.append(heroes_summary(run, lines))
+	out.append(teams_summary(run, lines))
+	out.append("")
+	var per_hero: PackedStringArray = PackedStringArray()
+	for hero_id: String in content.hero_ids:
+		# Over the runs the hero was on the team for (phase 8 part 4).
+		var with_hero: Array[RunLine] = []
+		with_hero.assign(lines.filter(func(line: RunLine) -> bool: return line.vows.has(hero_id)))
+		if with_hero.is_empty():
+			continue
+		var total: int = with_hero.reduce(func(sum: int, line: RunLine) -> int: return sum + line.picks.get(hero_id, 0), 0)
+		per_hero.append("%s %.1f" % [hero_id.capitalize(), float(total) / with_hero.size()])
+	out.append("Picks taken per run: %s" % ", ".join(per_hero))
+	var by_layer: PackedStringArray = PackedStringArray()
+	for layer: int in UpgradeDef.LAYER_NAMES.size():
+		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.layer_picks[layer], 0)
+		by_layer.append("%s %.1f" % [UpgradeDef.LAYER_NAMES[layer], float(total) / maxi(n, 1)])
+	var takes: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.stack_takes, 0)
+	var points: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.stack_points, 0)
+	out.append("Picks per run by layer: %s; stacking cards taken %.1f a run, %.1f points each" % [", ".join(by_layer), float(takes) / maxi(n, 1), float(points) / maxi(takes, 1)])
+	out.append("Per run: %.1f shards earned, %.1f spent, %.1f wounds, %.1f relics" % [_mean(lines, "shards_earned"), _mean(lines, "shards_spent"), _mean(lines, "wounds"), _mean(lines, "relics")])
+	var by_tier: PackedStringArray = PackedStringArray()
+	for tier: int in RelicDef.TIER_NAMES.size():
+		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.relic_tiers[tier], 0)
+		by_tier.append("%s %.1f" % [RelicDef.TIER_NAMES[tier], float(total) / maxi(n, 1)])
+	out.append("Relics per run by tier: %s" % ", ".join(by_tier))
+	var by_rank: Array[String] = []
+	for rank: int in ItemDef.RANKS:
+		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.item_ranks[rank], 0)
+		by_rank.append("rank %s %.1f" % [ItemDef.RANK_NAMES[rank], float(total) / maxi(n, 1)])
+	out.append("Items held at the end per run: %s" % ", ".join(by_rank))
+	var by_node: Array[String] = []
+	for node: String in CampsDef.NODES:
+		var shown: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.nodes_shown.get(node, 0), 0)
+		var taken: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.nodes_taken.get(node, 0), 0)
+		by_node.append("%s shown %.1f, taken %.1f" % [run.camps.nodes[node].name, float(shown) / maxi(n, 1), float(taken) / maxi(n, 1)])
+	out.append("Nodes per run: %s" % ", ".join(by_node))
+	var rift_fights: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_fights, 0)
+	var rift_wins: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_wins, 0)
+	out.append("Rift Tear fights: %d of %d won (%d%%)" % [rift_wins, rift_fights, _pct(rift_wins, rift_fights)])
+	var by_scene: Array[String] = []
+	for scene: EventDef.Scene in run.events.scenes:
+		var taken: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.scenes.get(scene.id, 0), 0)
+		by_scene.append("%s %d" % [scene.name, taken])
+	out.append("Event scenes taken: %s" % ", ".join(by_scene))
+	out.append("")
+	out.append("Encounters (fights won of fought):")
+	for encounter_id: String in content.encounter_ids:
+		var fought: int = 0
+		var wins: int = 0
+		for line: RunLine in lines:
+			for fight: Array in line.fights:
+				if fight[0] == encounter_id:
+					fought += 1
+					wins += 1 if fight[1] else 0
+		if fought > 0:
+			out.append("  %-22s %3d of %3d (%d%%)" % [content.encounters[encounter_id].name, wins, fought, _pct(wins, fought)])
+	out.append("")
+	out.append("Growing upgrades (runs that took it: fights held, steps by the run's end, and what a fight counts):")
+	for upgrade_id: String in run.upgrade_ids:
+		var upgrade: UpgradeDef = run.upgrades[upgrade_id]
+		if upgrade.grows == null:
+			continue
+		var took: Array[RunLine] = lines.filter(func(line: RunLine) -> bool: return line.grown.has(upgrade_id))
+		var steps: Array[int] = []
+		var counted: int = 0
+		var held: int = 0
+		for line: RunLine in took:
+			steps.append(upgrade.grows.steps(line.grown[upgrade_id]))
+			counted += line.grown[upgrade_id]
+			held += line.grown_fights.get(upgrade_id, 0)
+		out.append("  %-16s %3d runs, %.1f fights held, steps: median %s, most %d; %.1f a fight (a step is %d)" % [upgrade.name, took.size(),
+			float(held) / maxi(took.size(), 1), _median(steps), steps.max() if not steps.is_empty() else 0, float(counted) / maxi(held, 1), upgrade.grows.per])
+	var errors: int = lines.filter(func(line: RunLine) -> bool: return not line.errors.is_empty()).size()
+	out.append("")
+	out.append("Runs with errors: %d" % errors)
+	return "\n".join(out)
+
+
+## A deed's average per fight, to a tenth ("2.1s" for time rooted).
+static func _per_fight(deed: DeedDef, gain: int, fights: int) -> String:
+	var mean: float = float(gain) / maxi(fights, 1)
+	return "%.1fs" % (mean / 1000.0) if deed.counts == DeedDef.Counts.ROOTED_MS or deed.counts == DeedDef.Counts.STATUS_MS else "%.1f" % mean
+
+
+static func _pct(part: int, whole: int) -> int:
+	@warning_ignore("integer_division")
+	return part * 100 / whole if whole > 0 else 0
+
+
+static func _median(values: Array[int]) -> String:
+	if values.is_empty():
+		return "-"
+	var sorted: Array[int] = values.duplicate()
+	sorted.sort()
+	@warning_ignore("integer_division")
+	return str(sorted[sorted.size() / 2])
+
+
+static func _mean(lines: Array[RunLine], key: String) -> float:
+	var total: int = 0
+	for line: RunLine in lines:
+		total += int(line.get(key))
+	return float(total) / maxi(lines.size(), 1)

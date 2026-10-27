@@ -1,9 +1,9 @@
 extends GutTest
-## The Shrine's offerings (docs/plans/rebuild-phase5c-combos.md, step 8b,
+## The Shrine's offerings (docs/plans/phases/rebuild-phase5c-combos.md, step 8b,
 ## section 16.6): shards or a wound for a rare relic, a relic for one a tier
 ## higher; nothing spent until the relic is taken.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

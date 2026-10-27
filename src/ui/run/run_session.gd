@@ -1,6 +1,6 @@
 class_name RunSession
 extends PracticeSession
-## A run on screen (docs/plans/rebuild-phase5-run.md, section 11): the run's
+## A run on screen (docs/plans/phases/rebuild-phase5-run.md, section 11): the run's
 ## RunFlow, seen through the same questions Practice's session answers, so
 ## ArenaScreen, HeroBar, and HeroPanel show the run's heroes (their paths,
 ## stages, upgrades, loadouts, relics, bonds, and wounds). Only RunFlow

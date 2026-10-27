@@ -2,7 +2,7 @@ class_name UnitState
 extends RefCounted
 ## One unit in a fight: where it stands on the plane, its health, its target,
 ## the route it's walking, and its abilities
-## (docs/plans/rebuild-phase1-arena-sim.md, sections 1 to 5).
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, sections 1 to 5).
 
 ## Where it is in the fight's order (heroes, then enemies, then summons).
 ## moved_at for a unit that hasn't moved yet.

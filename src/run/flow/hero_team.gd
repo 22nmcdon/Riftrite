@@ -1,6 +1,6 @@
 class_name HeroTeam
 extends RefCounted
-## A team (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md, 8d-1): the
+## A team (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md, 8d-1): the
 ## three heroes a run or a Practice fight takes, drafted from the roster in
 ## data/heroes.json. A hero can be drafted once all its paths are built
 ## (`ready`), since a run vows every hero to one.

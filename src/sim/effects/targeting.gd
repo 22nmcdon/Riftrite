@@ -1,6 +1,6 @@
 class_name Targeting
 extends RefCounted
-## Who a unit attacks, and so where it walks (docs/plans/rebuild-phase1-arena-sim.md,
+## Who a unit attacks, and so where it walks (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 4). A unit keeps its target until the target falls or it gives up
 ## on reaching it; then it picks again by its rule. Every pick is logged with
 ## its reason. Ties go to the earlier unit in the fight's order.

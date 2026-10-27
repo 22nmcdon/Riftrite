@@ -1,6 +1,6 @@
 class_name EncounterListScreen
 extends UiScreen
-## Practice's list of fights (docs/plans/rebuild-phase3-fight-sandbox.md,
+## Practice's list of fights (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 1): every encounter in encounters.json's order (Act 1's, then
 ## Act 2's since phase 8 part 3), a card each with its name, what it tests,
 ## its act (from Act 2) and days, and its enemies (how many, name,

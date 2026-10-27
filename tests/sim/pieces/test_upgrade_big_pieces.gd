@@ -1,12 +1,12 @@
 extends GutTest
-## The upgrade pools' six big pieces (docs/plans/rebuild-phase5c-combos.md,
+## The upgrade pools' six big pieces (docs/plans/phases/rebuild-phase5c-combos.md,
 ## step 7d, section 15.7), each on its real card: Chasing Storm (a zone that
 ## follows), Ricochet, Reflecting Wall, Snag, Guarded Ground (a snare under
 ## the front-most ally), and First Lantern (a lantern placed before the
 ## fight).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 
 var _run: RunContent
 

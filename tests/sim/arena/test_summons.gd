@@ -1,5 +1,5 @@
 extends GutTest
-## Summons (docs/plans/rebuild-phase1-arena-sim.md, section 10): placement in
+## Summons (docs/plans/phases/rebuild-phase1-arena-sim.md, section 10): placement in
 ## each mode, the fight's order and ids, the cap of units per side, auras,
 ## the log, and the setup's checks.
 

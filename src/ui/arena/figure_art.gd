@@ -2,7 +2,7 @@ class_name FigureArt
 extends RefCounted
 ## The figures the board draws for units (art/figures/; placeholder SVGs
 ## made by tools/art/hero_kit.py and tools/art/enemy_kit.py until the
-## commissioned PNGs replace them, docs/plans/asset-contract.md, section 3).
+## commissioned PNGs replace them, docs/plans/art/asset-contract.md, section 3).
 ## Every figure shares one canvas: CANVAS game units, facing right, its feet
 ## at FEET; a figure the manifest marks `"scale": 2` (a boss) has a canvas
 ## twice the size and is drawn twice as tall. A file may hold any number of

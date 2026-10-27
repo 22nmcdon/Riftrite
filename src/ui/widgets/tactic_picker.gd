@@ -1,6 +1,6 @@
 class_name TacticPicker
 extends VBoxContainer
-## A hero's tactic (docs/plans/rebuild-phase3b-tactics.md, section 4), in the
+## A hero's tactic (docs/plans/phases/rebuild-phase3b-tactics.md, section 4), in the
 ## hero panel's Loadout tab while placing and in the hero popup in a fight:
 ## while it can be changed, a button for no tactic and one for each the hero
 ## can take (a press asks for it: chosen); otherwise, the one it took. Either

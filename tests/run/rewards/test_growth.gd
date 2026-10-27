@@ -1,9 +1,9 @@
 extends GutTest
-## Growth in a run (docs/plans/rebuild-phase5-run.md, sections 4 and 5): deed
+## Growth in a run (docs/plans/phases/rebuild-phase5-run.md, sections 4 and 5): deed
 ## thresholds and transformations, Switch vow, the upgrades as data, and the
 ## after-fight pick.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

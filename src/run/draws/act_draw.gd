@@ -1,7 +1,7 @@
 class_name ActDraw
 extends RefCounted
 ## Every day's fight options, drawn when the act starts
-## (docs/plans/rebuild-phase5-run.md, section 2, Decision 5), from the run's
+## (docs/plans/phases/rebuild-phase5-run.md, section 2, Decision 5), from the run's
 ## seed alone, so the whole act is known from the start:
 ##   - a normal day: one easier and one harder fight allowed that day
 ##     (encounter `days`), neither of them one of the day before's if it can

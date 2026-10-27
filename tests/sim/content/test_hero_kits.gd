@@ -1,6 +1,6 @@
 extends GutTest
 ## The base kits in data/heroes.json do what their text says
-## (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; Garrow from
+## (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 3; Garrow from
 ## rebuild-phase8-heroes.md, 8d-1; Tamsin, 8d-3; Aldous, 8d-4; the last five, rebuild-phase8-last-heroes.md). Each test fights
 ## the real kits against still dummies; heroes that shouldn't walk are Rooted
 ## for the whole test.

@@ -1,5 +1,5 @@
 extends "res://tools/bots/good_bot.gd"
-## The expert (docs/plans/rebuild-phase6-bot-tuning.md, section 2.4): the
+## The expert (docs/plans/phases/rebuild-phase6-bot-tuning.md, section 2.4): the
 ## good bot, except that it tries its candidate formations in the real fight
 ## (the same setup and seed) and keeps the one worth most. The ceiling: what
 ## perfect knowledge of each fight would add.

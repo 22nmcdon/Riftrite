@@ -1,9 +1,9 @@
 extends GutTest
-## The team (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md, 8d-1):
+## The team (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md, 8d-1):
 ## who can be drafted, why a team can't be, the roles that place any team,
 ## and the run's team (RunFlow.start and fight_setup).
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 
 var _run: RunContent
 var _content: ContentDb

@@ -1,5 +1,5 @@
 extends GutTest
-## The sim pieces apexes added (docs/plans/rebuild-phase8-apexes.md, part
+## The sim pieces apexes added (docs/plans/phases/rebuild-phase8-apexes.md, part
 ## 8b-2), each in the fights of the apex that uses it: an execution
 ## (Eagle Eye), on_kill's "executed" and from_ability, a kills deed by an
 ## ability, an area's per_enemy_bp (Stormline), the hop effect, a patch's

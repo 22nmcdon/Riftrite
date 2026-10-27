@@ -1,6 +1,6 @@
 class_name ManaDef
 extends RefCounted
-## A unit's mana bar (docs/plans/rebuild-phase1-arena-sim.md, section 5). Only
+## A unit's mana bar (docs/plans/phases/rebuild-phase1-arena-sim.md, section 5). Only
 ## a unit whose signature fires on mana has one; the data gives whole mana:
 ##   "mana": {"max": 60, "start": 20, "per_attack": 12,
 ##            "per_10_damage_taken": 0, "regen_per_s": 2}

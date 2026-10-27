@@ -1,10 +1,10 @@
 extends GutTest
-## The sim runner's paths and deeds reports (tools/path_report.gd;
-## docs/plans/rebuild-phase4-paths.md, section 7): the variants, a small run,
+## The sim runner's paths and deeds reports (tools/reports/path_report.gd;
+## docs/plans/phases/rebuild-phase4-paths.md, section 7): the variants, a small run,
 ## where a hero stands, and the summaries' bars.
 
-const Report = preload("res://tools/sim_report.gd")
-const PathReport = preload("res://tools/path_report.gd")
+const Report = preload("res://tools/reports/sim_report.gd")
+const PathReport = preload("res://tools/reports/path_report.gd")
 
 var _content: ContentDb
 
@@ -15,7 +15,7 @@ func before_all() -> void:
 
 func _named() -> Dictionary[String, Dictionary]:
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/teams/sim_formations.json"), errors)
 	return Report.for_team(_content, named, HeroTeam.DEFAULT)
 
 

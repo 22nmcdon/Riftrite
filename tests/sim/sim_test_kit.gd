@@ -1,6 +1,6 @@
 extends RefCounted
 ## Helpers for building tiny arena fights in tests
-## (docs/plans/rebuild-phase1-arena-sim.md, section 13):
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, section 13):
 ##   K.kit("hound", {"stats": {"hp": 100, "atk": 10, "speed": 2}})
 ##   K.at(kit, col, row)             a hero on a hex
 ##   K.foe(kit, col, row)            an enemy on a hex

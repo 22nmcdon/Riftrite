@@ -1,6 +1,6 @@
 class_name Statuses
 extends RefCounted
-## Applies, ticks, and reads statuses (docs/plans/rebuild-phase1-arena-sim.md,
+## Applies, ticks, and reads statuses (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 8; the numbers are in data/statuses.json):
 ##   damage_over_time: every interval, each stack group deals
 ##       stacks x damage_per_stack (credited to whoever applied those stacks;

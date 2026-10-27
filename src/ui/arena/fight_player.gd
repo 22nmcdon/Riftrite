@@ -1,6 +1,6 @@
 class_name FightPlayer
 extends RefCounted
-## Plays a fight live (docs/plans/rebuild-phase3-fight-sandbox.md, section 4):
+## Plays a fight live (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 4):
 ## it owns a CombatSim built from the fight's setup and steps it as real time
 ## passes, 20 ticks a second at 1x. It's the only thing that steps the sim;
 ## the UI only reads it. (The old game's player, from git history, adapted.)

@@ -653,7 +653,7 @@ WHAT WE WANT TO KNOW ABOUT THE ART
   the item icons clear (each kind's frame says charm, tactic, sigil, graft,
   or relic; the glyph inside is shared until more are drawn)? Does the act
   map make the route clearer? Grafts' rose octagon frame is a stand-in.
-  The icons each item got are in docs/plans/rebuild-phase5b-art.md.
+  The icons each item got are in docs/plans/phases/rebuild-phase5b-art.md.
 
 WHAT WE WANT TO KNOW (playtest gate 3: a whole run)
   Can you play Act 1 start to finish? Does each day's choice (camp, the two

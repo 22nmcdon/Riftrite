@@ -1,6 +1,6 @@
 class_name UnitDef
 extends RefCounted
-## A unit's kit, shared by heroes and enemies (docs/plans/rebuild-phase1-arena-sim.md,
+## A unit's kit, shared by heroes and enemies (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 2). HeroDef (paths, phase 4) and EnemyDef (threat line, archetype,
 ## phases, phase 2) will each wrap one.
 ##   {"id": "rift_hound", "name": "Rift Hound",

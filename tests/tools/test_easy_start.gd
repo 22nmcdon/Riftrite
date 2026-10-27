@@ -1,5 +1,5 @@
 extends GutTest
-## The Glass check (docs/plans/easy-start.md, Decisions 1, 2, and 11): the
+## The Glass check (docs/plans/phases/easy-start.md, Decisions 1, 2, and 11): the
 ## weakest team, three back-liners with no front line, wins every day-1
 ## fight at least GLASS_FLOOR of the time, on every vow set it can take,
 ## with the good bot placing. It's the day-1 fights' gate, so a change to a
@@ -10,8 +10,8 @@ extends GutTest
 ## Decision 15) are held to the same.
 
 const Placement = preload("res://tools/bots/placement.gd")
-const SimReport = preload("res://tools/sim_report.gd")
-const Report = preload("res://tools/run_report.gd")
+const SimReport = preload("res://tools/reports/sim_report.gd")
+const Report = preload("res://tools/reports/run_report.gd")
 
 ## Stands in for test-teams.md's B1 Glass (Ilse, Ottilie, Lucan) until they're
 ## built: three back-liners, no melee.
@@ -105,7 +105,7 @@ func test_day_one_has_its_own_fights_and_no_flankers() -> void:
 
 func test_glass_wins_every_day_one_fight() -> void:
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = SimReport.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var named: Dictionary[String, Dictionary] = SimReport.read_formations(FileAccess.get_file_as_string("res://tools/teams/sim_formations.json"), errors)
 	for encounter_id: String in _day_one():
 		var percent: int = _glass_percent(encounter_id, named)
 		assert_gte(percent, GLASS_FLOOR, "%s: Glass wins %d%% of its vow sets (Decision 2: at least %d%%)" % [encounter_id, percent, GLASS_FLOOR])
@@ -113,7 +113,7 @@ func test_glass_wins_every_day_one_fight() -> void:
 
 func test_glass_holds_day_two_with_a_margin() -> void:
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = SimReport.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var named: Dictionary[String, Dictionary] = SimReport.read_formations(FileAccess.get_file_as_string("res://tools/teams/sim_formations.json"), errors)
 	var day_two: Array[String] = _day_two()
 	assert_eq(day_two.size(), 7, "five easier fights and two harder ones: %s" % [day_two])
 	for encounter_id: String in day_two:
@@ -125,7 +125,7 @@ func test_glass_holds_day_two_with_a_margin() -> void:
 
 func test_glass_holds_day_three_with_a_margin() -> void:
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = SimReport.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var named: Dictionary[String, Dictionary] = SimReport.read_formations(FileAccess.get_file_as_string("res://tools/teams/sim_formations.json"), errors)
 	var day_three: Array[String] = _day_three()
 	assert_eq(day_three, ["alphas_trail", "witchs_ward", "cairn_sentry"] as Array[String], "day 3's own elites")
 	for encounter_id: String in _content.encounter_ids:

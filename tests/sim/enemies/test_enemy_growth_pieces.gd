@@ -1,5 +1,5 @@
 extends GutTest
-## The sim pieces of Act 3's enemy growth (docs/plans/rebuild-phase8-act3.md,
+## The sim pieces of Act 3's enemy growth (docs/plans/phases/rebuild-phase8-act3.md,
 ## part 8c-5a): the upgrades' aura stats (Shieldbreaker's damage to Shields,
 ## Watchful's sight, Cinder-Skinned, Mark-Shy, Anchored's cap on Roots) and
 ## Festering's cut to healing, and Engage reaching farther (the Warden Sentinel), each in a small fight, with

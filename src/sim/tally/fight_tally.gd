@@ -1,7 +1,7 @@
 class_name FightTally
 extends RefCounted
 ## What each hero has done in a fight, added up from the combat log
-## (docs/plans/rebuild-phase3-fight-sandbox.md, section 6): the fight chart's
+## (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section 6): the fight chart's
 ## numbers and the sim runner's. Both count here, so they can't disagree, and
 ## since it only reads log entries, the chart can't disagree with the log
 ## either. It only reads; the sim never uses it.

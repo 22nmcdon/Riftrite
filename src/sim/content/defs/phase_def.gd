@@ -1,6 +1,6 @@
 class_name PhaseDef
 extends RefCounted
-## One phase of a unit's kit (docs/plans/rebuild-phase1-arena-sim.md,
+## One phase of a unit's kit (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 3; mostly for bosses): entered once, the first time the unit drops
 ## below `below_hp_bp` of its max HP while still standing (Phases). It
 ## changes the kit from then on:

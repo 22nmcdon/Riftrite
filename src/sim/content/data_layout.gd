@@ -1,6 +1,6 @@
 class_name DataLayout
 extends RefCounted
-## Where each kind of content lives under data/ (docs/plans/cleanup-and-layout.md,
+## Where each kind of content lives under data/ (docs/plans/phases/cleanup-and-layout.md,
 ## section 3), and the reading both loaders share (ContentDb, RunContent).
 ## A kind is named as its old single file was ("paths.json"), and the loaders
 ## and the tests that build content from text still speak those names; here

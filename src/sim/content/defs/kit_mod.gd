@@ -1,7 +1,7 @@
 class_name KitMod
 extends RefCounted
 ## A change to a unit's kit, written against its slots rather than an
-## ability's name (docs/plans/rebuild-phase5-run.md, section 7): the one shape
+## ability's name (docs/plans/phases/rebuild-phase5-run.md, section 7): the one shape
 ## for upgrades, charms, sigils, grafts, relics, duo bonds, and enemy
 ## upgrades (part 6's "one modifier shape"). Applied at setup, after a path's
 ## patch, so a fight is still a pure function of its setup; a kit with no

@@ -11,7 +11,7 @@ extends RefCounted
 ##   RANGE the basic attack's reach in hexes (1: melee)
 ## CRIT and ATSP are "rate" stats. Effects can scale only from the first six
 ## (SCALING_STATS); speed and range are positioning stats
-## (docs/plans/rebuild-phase1-arena-sim.md, section 2).
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, section 2).
 
 enum Stat { HP, ATK, MGK, DEF, CRIT, ATSP, SPEED, RANGE }
 

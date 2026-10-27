@@ -1,6 +1,6 @@
 class_name ComboTally
 extends RefCounted
-## The combo readout's counts (docs/plans/rebuild-phase5c-combos.md, step 9a,
+## The combo readout's counts (docs/plans/phases/rebuild-phase5c-combos.md, step 9a,
 ## section 17.4; part 7, section 7): what each engine did in a fight, read
 ## only from the combat log, like FightTally, so it can't disagree with it.
 ## The sim never uses it, and players never see it: it shows only behind

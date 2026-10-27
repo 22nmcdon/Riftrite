@@ -1,6 +1,6 @@
 class_name NavGrid
 extends RefCounted
-## Pathfinding on the plane (docs/plans/rebuild-phase1-arena-sim.md, section 4):
+## Pathfinding on the plane (docs/plans/phases/rebuild-phase1-arena-sim.md, section 4):
 ## a hidden grid of square cells (an eighth of a hex by default, fine enough
 ## to find a one-hex gap between two units) that nothing snaps to. A walker
 ## describes what blocks it (begin, then add_obstacle), then searches from

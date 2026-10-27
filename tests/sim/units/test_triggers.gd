@@ -1,5 +1,5 @@
 extends GutTest
-## Triggers and the chain guard (docs/plans/rebuild-phase5c-combos.md, step
+## Triggers and the chain guard (docs/plans/phases/rebuild-phase5c-combos.md, step
 ## 3, sections 8.4 and 8.5): the new events, the filters on the built ones,
 ## and chains of event effects that stop at the fight's chain_limit.
 

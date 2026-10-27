@@ -1,6 +1,6 @@
 class_name Links
 extends RefCounted
-## Linked Shields (phase 8 part 2, Loomwarden; docs/plans/rebuild-phase8-apexes.md,
+## Linked Shields (phase 8 part 2, Loomwarden; docs/plans/phases/rebuild-phase8-apexes.md,
 ## section 3): a unit with a link passive (PartDef kind "link") links every
 ## ally holding one of its Shields (UnitState.woven_by, set as the Shield is
 ## given). A hit on a linked unit while its Shield holds spreads `share_bp`

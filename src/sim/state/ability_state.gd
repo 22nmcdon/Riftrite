@@ -1,6 +1,6 @@
 class_name AbilityState
 extends RefCounted
-## An ability in a fight (docs/plans/rebuild-phase1-arena-sim.md, section 5).
+## An ability in a fight (docs/plans/phases/rebuild-phase1-arena-sim.md, section 5).
 ## A basic attack has a cooldown, which runs all the time and waits, full,
 ## until it can fire; progress is in basis points of a tick, so attack speed
 ## stays an integer. A signature has its trigger's state instead (Signatures).

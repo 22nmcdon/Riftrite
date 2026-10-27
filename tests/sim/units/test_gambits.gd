@@ -1,5 +1,5 @@
 extends GutTest
-## Gambits (docs/plans/rebuild-phase5c-combos.md, step 6d, section 14.7):
+## Gambits (docs/plans/phases/rebuild-phase5c-combos.md, step 6d, section 14.7):
 ## where a gambit lets a hero start, arriving late, swapping places, and the
 ## fight-start and arrival passives, with the gambits as the data has them.
 
@@ -130,7 +130,7 @@ func test_ambush_and_rear_guard_start_hidden() -> void:
 
 
 func test_the_run_shares_and_chooses() -> void:
-	const Bot = preload("res://tools/run_bot.gd")
+	const Bot = preload("res://tools/bots/run_bot.gd")
 	var errors: Array[String] = []
 	var flow: RunFlow = RunFlow.start(_run, 7, Bot.first_vows(_run.content), errors)
 	for id: String in ["stand_together", "switch_places"]:

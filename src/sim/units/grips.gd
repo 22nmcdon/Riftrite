@@ -1,7 +1,7 @@
 class_name Grips
 extends RefCounted
 ## A signature that grips its target (phase 8 part 4, Tamsin's Garrote;
-## docs/plans/rebuild-phase8-heroes.md section 5): AbilityDef's "grip".
+## docs/plans/phases/rebuild-phase8-heroes.md section 5): AbilityDef's "grip".
 ##   "grip": {"status": "garroted", "every_ms": 500,
 ##            "effects": [...effects at "target"...], "veil": "garroting"}
 ## When the signature fires, its unit grips its target (its on_fire effects

@@ -1,6 +1,6 @@
 class_name ItemIcon
 extends Control
-## The item language (docs/plans/rebuild-phase5b-art.md, section 5): a kind's
+## The item language (docs/plans/phases/rebuild-phase5b-art.md, section 5): a kind's
 ## frame (art/ui/items/frames/) with a glyph (art/ui/items/glyphs/, split
 ## from the uploaded icons by tools/art/item_glyphs.py) drawn on it in the
 ## kind's color. The frame always says the kind; the glyph is the thing's

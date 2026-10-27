@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Fits the good bot's placement weights (phase 6 step 6b,
-docs/plans/rebuild-phase6-bot-tuning.md, section 2.2) from
+docs/plans/phases/rebuild-phase6-bot-tuning.md, section 2.2) from
 tools/bots/placement_data.gd's CSV, in plain Python (no numpy).
 
 The model scores a formation as weights . terms, where each term is a

@@ -1,11 +1,11 @@
 extends GutTest
-## Enemy specializations (docs/plans/rebuild-phase8-act2.md, part 8c-3a):
+## Enemy specializations (docs/plans/phases/rebuild-phase8-act2.md, part 8c-3a):
 ## the data, the draw (half of a day fight's enemies from the act's day, fresh
 ## on each attempt), the fight's kits and names, the save, and the fight
 ## card's line. On stand-in acts (tests/run/days/test_acts.gd) whose Act 2
 ## specializes from day 3.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const ActsTest = preload("res://tests/run/days/test_acts.gd")
 const K = preload("res://tests/sim/sim_test_kit.gd")
 

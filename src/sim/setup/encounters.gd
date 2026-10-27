@@ -1,6 +1,6 @@
 class_name Encounters
 extends RefCounted
-## Builds a fight from content (docs/plans/rebuild-phase2-heroes-enemies.md,
+## Builds a fight from content (docs/plans/phases/rebuild-phase2-heroes-enemies.md,
 ## section 2): the heroes on a formation's hexes, and an encounter's enemies
 ## and rocks.
 ##   A formation is hero id -> (col, row), for example

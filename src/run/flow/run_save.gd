@@ -1,6 +1,6 @@
 class_name RunSave
 extends RefCounted
-## The run's save (docs/plans/rebuild-phase5-run.md, section 1): the
+## The run's save (docs/plans/phases/rebuild-phase5-run.md, section 1): the
 ## RunState as JSON, written after every action, read back by the title's
 ## Continue. A save from another version, or one that won't parse, loads as
 ## nothing.

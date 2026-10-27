@@ -1,7 +1,7 @@
 class_name FightSetup
 extends RefCounted
 ## Everything a fight starts from: both sides placed on the board, the rocks,
-## the seed, and the act (docs/plans/rebuild-phase1-arena-sim.md, section 1).
+## the seed, and the act (docs/plans/phases/rebuild-phase1-arena-sim.md, section 1).
 ## The fight's order is the heroes in this order, then the enemies, then
 ## summons as they join. The kits summons use are listed in summon_kits.
 

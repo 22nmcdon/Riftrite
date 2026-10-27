@@ -1,5 +1,5 @@
 extends GutTest
-## Tamsin's upgrade cards (phase 8 part 4, docs/plans/upgrade-pools.md Tamsin;
+## Tamsin's upgrade cards (phase 8 part 4, docs/plans/design/upgrade-pools.md Tamsin;
 ## rebuild-phase8-heroes.md 8d-3d) and her bond relic on her real kits: each
 ## changes the kit it's offered on, a card on Shadowstep reaches it as her
 ## signature or as her habit, and Hammer and Wire changes only Garrote.

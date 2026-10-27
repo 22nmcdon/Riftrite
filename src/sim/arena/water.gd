@@ -1,7 +1,7 @@
 class_name Water
 extends RefCounted
-## Shallow water, Act 2's board rule (docs/plans/rebuild-phase8-act2.md,
-## section 3; docs/plans/act2-glassmere.md, section 2). An encounter lists
+## Shallow water, Act 2's board rule (docs/plans/phases/rebuild-phase8-act2.md,
+## section 3; docs/plans/acts/act2-glassmere.md, section 2). An encounter lists
 ## its water hexes the way it lists rocks (FightSetup.water); a fight
 ## without any never makes one of these, so nothing below runs.
 ##

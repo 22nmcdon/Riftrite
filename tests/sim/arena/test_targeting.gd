@@ -1,5 +1,5 @@
 extends GutTest
-## Picking targets (docs/plans/rebuild-phase1-arena-sim.md, section 4).
+## Picking targets (docs/plans/phases/rebuild-phase1-arena-sim.md, section 4).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 

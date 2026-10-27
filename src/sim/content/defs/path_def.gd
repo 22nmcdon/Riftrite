@@ -1,7 +1,7 @@
 class_name PathDef
 extends RefCounted
 ## One of a hero's three paths, in data/paths.json
-## (docs/plans/rebuild-phase4-paths.md, section 1): what vowing to it does
+## (docs/plans/phases/rebuild-phase4-paths.md, section 1): what vowing to it does
 ## (the taste and its cost), what transforming into it does, and its deed.
 ##   {"id": "deadeye", "hero": "maren", "name": "Deadeye", "title": "the sniper",
 ##    "fantasy": "She plants her feet and makes one shot count.",
@@ -53,7 +53,7 @@ var transformed_shop: ShopRulesDef = null
 var transformed_text: String
 var transformed_cost: String
 var transformed_patch: KitPatch
-## The transformed kit's habit (phase 8 part 4, docs/plans/rebuild-heroes.md
+## The transformed kit's habit (phase 8 part 4, docs/plans/design/rebuild-heroes.md
 ## section 3): when its patch replaces the hero's signature, the old one
 ## stays as a passive on every Nth basic attack, with the old signature's id
 ## unless this names another (Wardweaver's Mend is Weave). ContentDb checks

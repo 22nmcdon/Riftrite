@@ -1,6 +1,6 @@
 class_name Copies
 extends RefCounted
-## Copying a signature (phase 8 part 3, docs/plans/rebuild-phase8-act3.md,
+## Copying a signature (phase 8 part 3, docs/plans/phases/rebuild-phase8-act3.md,
 ## section 4; the Mirrorwight, a copy passive: PartDef's header). A fight
 ## without a copier never reaches this.
 ##

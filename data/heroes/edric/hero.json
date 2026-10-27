@@ -1,5 +1,5 @@
 {
-  "_note": "Hero 8 (docs/plans/rebuild-heroes.md section 8h; rebuild-phase8-severine-edric.md 8e-1). Stats, mana, Ward, and Vigil are the design's; Seal's 1.2s cooldown is a first number. He can't be drafted until his paths come.",
+  "_note": "Hero 8 (docs/plans/design/rebuild-heroes.md section 8h; rebuild-phase8-severine-edric.md 8e-1). Stats, mana, Ward, and Vigil are the design's; Seal's 1.2s cooldown is a first number. He can't be drafted until his paths come.",
   "id": "edric",
   "name": "Edric Tithewell",
   "title": "the tithe-warden",

@@ -1,5 +1,5 @@
 extends GutTest
-## How a fight ends (docs/plans/rebuild-phase1-arena-sim.md, section 3).
+## How a fight ends (docs/plans/phases/rebuild-phase1-arena-sim.md, section 3).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 

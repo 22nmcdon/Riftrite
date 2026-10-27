@@ -1,5 +1,5 @@
 extends GutTest
-## Severine's paths (phase 8 part 5, docs/plans/rebuild-phase8-severine-edric.md
+## Severine's paths (phase 8 part 5, docs/plans/phases/rebuild-phase8-severine-edric.md
 ## 8e-2b; rebuild-heroes.md section 8g) in real fights: Bloodglut's Engorge
 ## (capped vowed, uncapped transformed) and Gorge, Plaguebearer's Blight,
 ## Plague Burst, and Plague Feast, Hemomancer's Blood Price and, transformed,

@@ -151,7 +151,7 @@ Some snowball is fine; it's part of what makes a build feel like it's "coming on
 
 ### How to measure it
 
-Add these to the run bot report (`tools/run_runner.gd`):
+Add these to the run bot report (`tools/runners/run_runner.gd`):
 
 - **Level spread:** the gap between each run's highest-level and lowest-level hero, at the end of each act.
 - **Win rate by level gap:** do runs with a big gap win more often? If so, "carry one hero" is the dominant strategy.

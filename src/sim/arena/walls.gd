@@ -1,6 +1,6 @@
 class_name Walls
 extends RefCounted
-## Walls that stop shots (docs/plans/rebuild-phase4-paths.md, section 5, P10;
+## Walls that stop shots (docs/plans/phases/rebuild-phase4-paths.md, section 5, P10;
 ## Hearthwall Brannoc's signature):
 ##   - A wall effect (EffectDef: width_hexes, ahead_hexes, duration_ms) puts
 ##     up a straight wall across the way from the unit to the ability's

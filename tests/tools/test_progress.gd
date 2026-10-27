@@ -141,7 +141,7 @@ func test_run_runner_reports_the_same_with_progress_on_and_off() -> void:
 
 
 func _run_runner(extra: Array[String]) -> String:
-	var args: PackedStringArray = ["--headless", "--path", ProjectSettings.globalize_path("res://"), "-s", "tools/run_runner.gd", "--", "--runs=3", "--bot=random"]
+	var args: PackedStringArray = ["--headless", "--path", ProjectSettings.globalize_path("res://"), "-s", "tools/runners/run_runner.gd", "--", "--runs=3", "--bot=random"]
 	args.append_array(extra)
 	var output: Array = []
 	OS.execute(OS.get_executable_path(), args, output)

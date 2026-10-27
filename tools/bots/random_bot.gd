@@ -1,5 +1,5 @@
 extends "res://tools/bots/bot.gd"
-## The random bot (docs/plans/rebuild-phase6-bot-tuning.md, section 2): a
+## The random bot (docs/plans/phases/rebuild-phase6-bot-tuning.md, section 2): a
 ## random legal answer to every decision, from its own SimRng seeded by the
 ## run's seed, so a run repeats. The floor of the bots: "a random bot clears
 ## far less". It never sells (a sale undoes a buy, and the floor shouldn't

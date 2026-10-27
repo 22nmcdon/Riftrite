@@ -1,6 +1,6 @@
 class_name RunState
 extends RefCounted
-## Everything a run is, between fights (docs/plans/rebuild-phase5-run.md,
+## Everything a run is, between fights (docs/plans/phases/rebuild-phase5-run.md,
 ## section 1). Only RunFlow changes it. Offers are drawn from the run's seed
 ## and where they happen (RunRandom), so the state holds what was chosen and
 ## what's waiting, never a random stream; a save is this state as JSON
@@ -18,7 +18,7 @@ extends RefCounted
 const VERSION: int = 10
 const OLDEST_VERSION: int = 4
 
-## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
+## Where the day is (phase 5c step 8, docs/plans/design/days-and-nodes.md):
 ## choosing the fight, the loadout (then placement and the fight), after the
 ## fight (a pick, a transformation, a relic waiting), the shop, choosing a
 ## node, in a node (camp's options, the Magpie's stall, ...), or the run is

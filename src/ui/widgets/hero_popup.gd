@@ -1,9 +1,9 @@
 class_name HeroPopup
 extends PanelContainer
 ## A hero's details in a fight, opened by clicking the hero while the fight
-## isn't playing: paused or over (docs/plans/rebuild-phase3-fight-sandbox.md,
+## isn't playing: paused or over (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 7, Decision 3; while placing, the hero panel opens instead:
-## docs/plans/rebuild-phase4-paths.md, section 6). Its name and title, role
+## docs/plans/phases/rebuild-phase4-paths.md, section 6). Its name and title, role
 ## (and path), stats, and a line per ability of the kit it fights with
 ## (UnitInfo); its numbers now and its last few log lines; and the tactic it
 ## took (TacticPicker). ArenaScreen opens it beside the hero and closes it on a

@@ -1,13 +1,13 @@
 extends GutTest
-## Acts 2 and 3's frame (docs/plans/rebuild-phase8-acts.md, part 8c-1), on a
+## Acts 2 and 3's frame (docs/plans/phases/rebuild-phase8-acts.md, part 8c-1), on a
 ## stand-in content set: Act 2 and Act 3 draw Act 1's fights (fights_act),
 ## and Act 3 has real endless. Moving on after the boss shop, what an act
 ## starts afresh and what carries (losses too), the apex vow after Act 1,
 ## the testing option, endless after the last act, the save, and the
 ## records by act.
 
-const Bot = preload("res://tools/run_bot.gd")
-const RunReport = preload("res://tools/run_report.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
+const RunReport = preload("res://tools/reports/run_report.gd")
 const RECORDS_PATH: String = "user://test_act_records.json"
 
 var _run: RunContent

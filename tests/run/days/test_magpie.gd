@@ -1,9 +1,9 @@
 extends GutTest
-## The Magpie's stall (docs/plans/rebuild-phase5c-combos.md, step 6e,
+## The Magpie's stall (docs/plans/phases/rebuild-phase5c-combos.md, step 6e,
 ## section 14.8; magpie.md): two charms at rank II, a relic at 25% off,
 ## buying relics, and one swap a visit.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

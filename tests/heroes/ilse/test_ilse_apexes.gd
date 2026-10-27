@@ -1,5 +1,5 @@
 extends GutTest
-## Ilse's six apexes (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Ilse's six apexes (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-1; apexes.md) in real fights: each loads on its path's transformed kit
 ## with its taste and deed, and what it does at apex: Blast Furnace's stokes
 ## that speed her up, Crucible's Immolate that keeps the Burn, Living Flame's

@@ -1,5 +1,5 @@
 extends GutTest
-## ArenaView and UnitToken (docs/plans/rebuild-phase3-fight-sandbox.md,
+## ArenaView and UnitToken (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 2): the plane-to-pixel mapping, the board, and a token per unit.
 
 const GUARDED: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}
@@ -118,7 +118,7 @@ func test_modes_switch() -> void:
 	assert_eq(view.mode, ArenaView.Mode.FIGHT)
 
 
-## The island (docs/plans/rebuild-phase5b-art.md, section 3): its frame's
+## The island (docs/plans/phases/rebuild-phase5b-art.md, section 3): its frame's
 ## inner square covers the board, and each rock is a ruin picked by its hex.
 func test_the_board_stands_on_the_island() -> void:
 	var view: ArenaView = _view()

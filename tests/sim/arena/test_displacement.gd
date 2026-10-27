@@ -1,5 +1,5 @@
 extends GutTest
-## Knockback, pull, leap, and charge (docs/plans/rebuild-phase1-arena-sim.md,
+## Knockback, pull, leap, and charge (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 6, decided): exact directions, collisions that stun, landing
 ## spots, and the log.
 

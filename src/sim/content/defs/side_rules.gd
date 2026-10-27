@@ -1,7 +1,7 @@
 class_name SideRules
 extends RefCounted
 ## Rules of the fight one side plays by (phase 5c step 5c,
-## docs/plans/rebuild-phase5c-combos.md, section 12.2): the heroes' relics
+## docs/plans/phases/rebuild-phase5c-combos.md, section 12.2): the heroes' relics
 ## rewrite them ("rules" in data/relics.json; RunContent merges the run's
 ## into FightSetup.hero_rules). Each rule is code (CLAUDE.md rule 3: said in
 ## the plan), with its numbers in the data. A fight with none never reaches
@@ -35,7 +35,7 @@ extends RefCounted
 ##   "long_watch": {"from_ms": 60000, "every_ms": 10000, "tie_ms": 300000}
 ##                              no 180s tie; heroes grow every 10s from 60s
 ##                              (The Long Watch)
-## The tuning phase (docs/plans/tuning-phase.md, T-1; the playtester's
+## The tuning phase (docs/plans/phases/tuning-phase.md, T-1; the playtester's
 ## control relics):
 ##   "holds": {"time_bp": 13000, "no_mana": true}   Roots and Stuns heroes
 ##                              put on enemies last that much longer, and a

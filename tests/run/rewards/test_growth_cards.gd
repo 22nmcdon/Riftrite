@@ -1,10 +1,10 @@
 extends GutTest
-## Growing cards (docs/plans/rebuild-phase5c-combos.md, step 4, section 9):
+## Growing cards (docs/plans/phases/rebuild-phase5c-combos.md, step 4, section 9):
 ## a step's mod times the steps, the cards as data, counting in the run from
 ## when a card is taken, a relic's team count, a quest's cap, the save, and
 ## the lines the cards show.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 
 var _run: RunContent
 

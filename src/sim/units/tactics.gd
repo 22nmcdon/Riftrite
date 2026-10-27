@@ -1,6 +1,6 @@
 class_name Tactics
 extends RefCounted
-## What a hero's tactic does in a fight (docs/plans/rebuild-phase3b-tactics.md,
+## What a hero's tactic does in a fight (docs/plans/phases/rebuild-phase3b-tactics.md,
 ## section 2; TacticDef is the data). A unit without one never reaches this
 ## code, so a fight without tactics is exactly what it was.
 ##   prefer_target        Targeting.update asks preferred() first: the

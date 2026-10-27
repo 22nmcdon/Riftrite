@@ -1,5 +1,5 @@
 extends GutTest
-## Garrow's six apexes (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md
+## Garrow's six apexes (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md
 ## 8d-2c; apexes.md) in real fights: each loads on its path's transformed
 ## kit, its taste and deed, and its snowball growing at apex: Endless
 ## Bulwark's layers, Shatterburst's echoes and kept Shield, Grinder's feed,

@@ -1,6 +1,6 @@
 class_name ArenaPlane
 extends RefCounted
-## Integer geometry on the arena's plane (docs/plans/rebuild-phase1-arena-sim.md,
+## Integer geometry on the arena's plane (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## sections 1, 6, and 7). Points are Vector2i in plane units (1 hex = 1000).
 ## No floats: distances use FixedMath.isqrt and are compared squared where
 ## possible, and a direction is a vector scaled to length DIR (1000).

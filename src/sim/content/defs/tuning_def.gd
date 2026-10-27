@@ -2,7 +2,7 @@ class_name TuningDef
 extends RefCounted
 ## Global tuning values from data/tuning.json. Durations are stored in ticks
 ## (the file gives milliseconds). Percentages are basis points. The rebuild's
-## arena sim (docs/plans/rebuild-phase1-arena-sim.md, section 12) adds the
+## arena sim (docs/plans/phases/rebuild-phase1-arena-sim.md, section 12) adds the
 ## grid, movement, and collapse-ring values.
 
 ## The placement board (HexGrid).

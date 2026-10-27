@@ -1,6 +1,6 @@
 class_name Events
 extends RefCounted
-## A unit's events, read from the combat log (docs/plans/rebuild-phase1-arena-sim.md,
+## A unit's events, read from the combat log (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 3, step 6; the trigger names are EffectDef's event triggers):
 ##   on_basic_attack  its basic attack fires
 ##   on_ability       its signature fires (for passives)
@@ -11,7 +11,7 @@ extends RefCounted
 ##   on_status        it applies a status
 ##   on_kill          an enemy it hit last falls
 ##   on_hop           it hops away (hop_away)
-## Phase 5c step 3 (docs/plans/rebuild-phase5c-combos.md, section 8.4):
+## Phase 5c step 3 (docs/plans/phases/rebuild-phase5c-combos.md, section 8.4):
 ##   on_holder_hit    one of its hits lands on an enemy
 ##   on_shield_broken a hit or damage over time takes the last of its Shield
 ##   on_ally_ability  an ally's signature fires

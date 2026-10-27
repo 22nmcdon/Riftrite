@@ -1,6 +1,6 @@
 class_name Phases
 extends RefCounted
-## Phases in a fight (docs/plans/rebuild-phase1-arena-sim.md, section 3; the
+## Phases in a fight (docs/plans/phases/rebuild-phase1-arena-sim.md, section 3; the
 ## data is PhaseDef). Checked in tick step 6, after events: a standing unit
 ## (HP above 0) below its next phase's threshold enters it, and one that fell
 ## past several enters each in turn. Entering is logged (PHASE), and the unit

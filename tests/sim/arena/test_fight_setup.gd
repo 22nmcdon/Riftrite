@@ -1,5 +1,5 @@
 extends GutTest
-## Kits (UnitDef, AbilityDef) and fight setups (docs/plans/rebuild-phase1-arena-sim.md,
+## Kits (UnitDef, AbilityDef) and fight setups (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## sections 1 and 2).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")

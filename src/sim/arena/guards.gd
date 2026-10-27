@@ -1,6 +1,6 @@
 class_name Guards
 extends RefCounted
-## Guard (docs/plans/rebuild-phase4-paths.md, section 5, P9; Hearthwall
+## Guard (docs/plans/phases/rebuild-phase4-paths.md, section 5, P9; Hearthwall
 ## Brannoc): a unit with a guard passive (PartDef) takes a share of the hits
 ## on its allies.
 ##   - Only an enemy's hit (EffectRunner.deal_hit), not damage over time or

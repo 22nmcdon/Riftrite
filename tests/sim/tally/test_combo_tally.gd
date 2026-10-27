@@ -1,5 +1,5 @@
 extends GutTest
-## The combo readout's pieces (docs/plans/rebuild-phase5c-combos.md, step
+## The combo readout's pieces (docs/plans/phases/rebuild-phase5c-combos.md, step
 ## 9a, section 17.3–17.4): the damage rule's notes on each number, kept out
 ## of the log's text; and ComboTally's fires, chains, and what each engine
 ## added, read from the chaos fight's log.

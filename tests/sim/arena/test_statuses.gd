@@ -1,5 +1,5 @@
 extends GutTest
-## Statuses (docs/plans/rebuild-phase1-arena-sim.md, section 8).
+## Statuses (docs/plans/phases/rebuild-phase1-arena-sim.md, section 8).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 

@@ -1,5 +1,5 @@
 {
-  "_note": "Act 2, the Glassmere (docs/plans/rebuild-phase8-acts.md, Decision 13: Act 1's shape and economy; docs/plans/rebuild-phase8-act2.md, 8c-4b): seven days, two elites offered on each elite day, specializations from day 3 on half of each day fight's enemies (rounded down), and no endless (it follows Act 3).",
+  "_note": "Act 2, the Glassmere (docs/plans/phases/rebuild-phase8-acts.md, Decision 13: Act 1's shape and economy; docs/plans/phases/rebuild-phase8-act2.md, 8c-4b): seven days, two elites offered on each elite day, specializations from day 3 on half of each day fight's enemies (rounded down), and no endless (it follows Act 3).",
   "act": 2,
   "specialized_from_day": 3,
   "specialized_share_pct": 50,

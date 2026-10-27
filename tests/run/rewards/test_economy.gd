@@ -1,10 +1,10 @@
 extends GutTest
-## The economy in a run (docs/plans/rebuild-phase5-run.md, section 6; the
+## The economy in a run (docs/plans/phases/rebuild-phase5-run.md, section 6; the
 ## loadout pool, phase 5c step 6): items as data, the loadout, the Pedlar and
 ## the Magpie, treating wounds, and items reaching the fight. Ranks and
 ## selling are test_loadout.gd's.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

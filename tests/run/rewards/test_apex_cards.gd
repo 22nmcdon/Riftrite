@@ -1,5 +1,5 @@
 extends GutTest
-## The apex cards (docs/plans/rebuild-phase8-apexes.md, part 8b-4; apexes.md's
+## The apex cards (docs/plans/phases/rebuild-phase8-apexes.md, part 8b-4; apexes.md's
 ## two upgrades for each apex): every apex has two; they're offered only once
 ## that apex is earned and count only on it; the knobs they needed change
 ## what they name; and on_rise sets off Dread Return in a fight.

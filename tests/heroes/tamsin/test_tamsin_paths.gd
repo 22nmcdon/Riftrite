@@ -1,5 +1,5 @@
 extends GutTest
-## Tamsin's paths (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md 8d-3b;
+## Tamsin's paths (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md 8d-3b;
 ## rebuild-heroes.md section 8c) in real fights: Nightblade's Fade and Shadow
 ## Dance, Headhunter's Scent and Sentence, Garrote's Choke and grip,
 ## Shadowstep as each one's habit, and each deed moving.

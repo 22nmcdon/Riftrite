@@ -1,5 +1,5 @@
 extends GutTest
-## Ottilie's paths (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Ottilie's paths (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-2; rebuild-heroes.md section 8i) in real fights: Brewing's vials,
 ## Catalyst's Reaction and Reaction Flask, Transmuter's Gilded Death and
 ## Philosopher's Flask, Apothecary's Tonic and Elixir, Volatile Flask as each

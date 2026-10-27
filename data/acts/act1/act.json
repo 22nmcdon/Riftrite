@@ -1,5 +1,5 @@
 {
-  "_note": "Act 1's shape (docs/plans/rebuild-phase5-run.md, sections 2 and 3, Decisions 5 and 11). Each day is normal (an easier and a harder fight), elite (two elites), or boss. Pay is shards for a win (a tie pays like a win), by the fight's tier. The pick: \"Take 3 shards instead\" pays pick_shards; wild_card_pct is how often one of its cards is for any hero instead of one each (part 6). All numbers are tuning values. Phase 5c step 5a (docs/plans/economy.md, relics/README.md): the economy's numbers, relics by tier, the shops' tier odds, rerolls that climb from reroll (boss_reroll in the boss shop, after the boss: Decision 48 of rebuild-phase5c-combos.md, which also made the boss pay 60), the Magpie's relics at magpie_relic_pct of the price, an elite's chance of an epic, and the boss relics offered. A Hunt's pay and pick_shards aren't set in economy.md (placeholders).",
+  "_note": "Act 1's shape (docs/plans/phases/rebuild-phase5-run.md, sections 2 and 3, Decisions 5 and 11). Each day is normal (an easier and a harder fight), elite (two elites), or boss. Pay is shards for a win (a tie pays like a win), by the fight's tier. The pick: \"Take 3 shards instead\" pays pick_shards; wild_card_pct is how often one of its cards is for any hero instead of one each (part 6). All numbers are tuning values. Phase 5c step 5a (docs/plans/design/economy.md, relics/README.md): the economy's numbers, relics by tier, the shops' tier odds, rerolls that climb from reroll (boss_reroll in the boss shop, after the boss: Decision 48 of rebuild-phase5c-combos.md, which also made the boss pay 60), the Magpie's relics at magpie_relic_pct of the price, an elite's chance of an epic, and the boss relics offered. A Hunt's pay and pick_shards aren't set in economy.md (placeholders).",
   "act": 1,
   "start_shards": 10,
   "pay": {
@@ -57,7 +57,7 @@
   "boss_relics": 3,
   "endless": {
     "testing": true,
-    "_note": "Endless after the boss (phase 8 part 1, docs/plans/rebuild-phase8-endless.md): a floor is a day; enemies x1.15 HP and ATK a floor, a rift modifier every 3 floors for good, Rift Collapse 1s earlier a floor (never before 10s) and crumbled ground x1.15 a floor, the boss every 10th floor and an elite every other 5th, fights from day 4 on (Decision 1), a legendary in the shops from floor 10.",
+    "_note": "Endless after the boss (phase 8 part 1, docs/plans/phases/rebuild-phase8-endless.md): a floor is a day; enemies x1.15 HP and ATK a floor, a rift modifier every 3 floors for good, Rift Collapse 1s earlier a floor (never before 10s) and crumbled ground x1.15 a floor, the boss every 10th floor and an elite every other 5th, fights from day 4 on (Decision 1), a legendary in the shops from floor 10.",
     "growth_bp": 11500, "modifier_every": 3, "collapse_step_ms": 1000, "collapse_floor_ms": 10000, "crumble_growth_bp": 11500,
     "elite_every": 5, "boss_every": 10, "from_day": 4, "legendary_from_floor": 10, "legendary_weight": 5
   }

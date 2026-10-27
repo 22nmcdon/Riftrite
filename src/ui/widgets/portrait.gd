@@ -3,7 +3,7 @@ extends Control
 ## A unit's portrait in a box, as the playtester's mock draws them
 ## (docs/mockups/hero-panel-layout.pdf): on a raised navy box, optionally
 ## with a soft circle behind. Its portrait (art/portraits/heroes/<hero>/<form>
-## or enemies/<enemy>; docs/plans/asset-contract.md, section 4) covers the box from the
+## or enemies/<enemy>; docs/plans/art/asset-contract.md, section 4) covers the box from the
 ## top where it's drawn; else its figure (FigureArt) is cropped to the top
 ## `shown` share (1.0: all of it; 0.6: head and shoulders), scaled to the
 ## box's height and centered across it. Nothing is drawn without art.

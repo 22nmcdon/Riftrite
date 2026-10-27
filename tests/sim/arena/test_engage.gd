@@ -1,5 +1,5 @@
 extends GutTest
-## The Engage trait (docs/plans/rebuild-phase1-arena-sim.md, section 4,
+## The Engage trait (docs/plans/phases/rebuild-phase1-arena-sim.md, section 4,
 ## decided): held 1s when trying to reach someone else, not when fighting the
 ## engager, free until contact ends, and caught again on coming back.
 

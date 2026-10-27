@@ -3,7 +3,7 @@ extends RefCounted
 ## One line of the combat log. Every effect names its source unit and
 ## ability (CLAUDE.md rule 4); Rift Collapse uses the source ability
 ## "rift_collapse". The arena sim adds move, push, shot, and area kinds
-## (docs/plans/rebuild-phase1-arena-sim.md, section 11).
+## (docs/plans/phases/rebuild-phase1-arena-sim.md, section 11).
 
 enum Kind {
 	FIGHT_START,

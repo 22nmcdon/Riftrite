@@ -1,5 +1,5 @@
 extends GutTest
-## Ottilie's upgrade cards (phase 8 part 6, docs/plans/upgrade-pools.md
+## Ottilie's upgrade cards (phase 8 part 6, docs/plans/design/upgrade-pools.md
 ## Ottilie; rebuild-phase8-last-heroes.md 8f-2) on her real kits: each
 ## changes the kit it's offered on, cards on Volatile Flask reach it as her
 ## signature and as her habit, the knobs her cards added (Reaction's count

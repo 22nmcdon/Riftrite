@@ -1,5 +1,5 @@
 extends GutTest
-## Flying and hop away (docs/plans/rebuild-phase1-arena-sim.md, section 6,
+## Flying and hop away (docs/plans/phases/rebuild-phase1-arena-sim.md, section 6,
 ## decided).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")

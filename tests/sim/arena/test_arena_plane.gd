@@ -1,5 +1,5 @@
 extends GutTest
-## Integer geometry on the arena's plane (docs/plans/rebuild-phase1-arena-sim.md,
+## Integer geometry on the arena's plane (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## sections 1, 6, and 7). 1 hex = 1000 units.
 
 const P = preload("res://src/sim/arena/arena_plane.gd")

@@ -1,5 +1,5 @@
 extends GutTest
-## The engines' pieces (docs/plans/rebuild-phase5c-combos.md, step 5c,
+## The engines' pieces (docs/plans/phases/rebuild-phase5c-combos.md, step 5c,
 ## section 12.1), each in a small fight: a share of Burn spread, overheal to
 ## Shield from an aura, lifesteal as healing, on_lifesteal, stacking boosts,
 ## Knife's Edge, planted steps and DEF points, auras per Shield, stacking

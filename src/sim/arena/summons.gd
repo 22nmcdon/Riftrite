@@ -1,6 +1,6 @@
 class_name Summons
 extends RefCounted
-## Summons (docs/plans/rebuild-phase1-arena-sim.md, section 10): the summon
+## Summons (docs/plans/phases/rebuild-phase1-arena-sim.md, section 10): the summon
 ## effect brings new units of a kit the fight's setup lists
 ## (FightSetup.summon_kits) onto the caster's side.
 ##

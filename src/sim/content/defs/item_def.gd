@@ -1,7 +1,7 @@
 class_name ItemDef
 extends RefCounted
 ## A thing for a hero's loadout slots (data/items.json; the loadout pool,
-## docs/plans/loadout/ and docs/plans/rebuild-phase5c-combos.md, section 14):
+## docs/plans/design/loadout/ and docs/plans/phases/rebuild-phase5c-combos.md, section 14):
 ##   {"id": "ember_tipped", "kind": "charm", "name": "Ember-Tipped",
 ##    "icon": "ember_heart", "text": "...", "ranks": [{...KitMod...}, {...}, {...}]}
 ##   {"id": "plant_feet_orders", "kind": "tactic", ..., "tactic": "plant_feet"}

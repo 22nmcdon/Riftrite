@@ -1,5 +1,5 @@
 {
-  "_note": "Hero 6 (docs/plans/rebuild-heroes.md section 8e; rebuild-phase8-heroes.md 8d-4). Stats, mana, Peal, and Resonance are the design's; Toll's 1.2s cooldown is a first number. He can't be drafted until his paths come.",
+  "_note": "Hero 6 (docs/plans/design/rebuild-heroes.md section 8e; rebuild-phase8-heroes.md 8d-4). Stats, mana, Peal, and Resonance are the design's; Toll's 1.2s cooldown is a first number. He can't be drafted until his paths come.",
   "id": "aldous",
   "name": "Aldous Vesper",
   "title": "the bell-ringer",

@@ -12,12 +12,12 @@ extends RefCounted
 ##
 ## The rebuild (docs/plans/rebuild-build-order.md) left only tuning and
 ## statuses after the gut; phase 2 adds heroes, enemies, and encounters
-## (docs/plans/rebuild-phase2-heroes-enemies.md, section 2), and later phases
+## (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 2), and later phases
 ## add theirs (paths in phase 4; relics, bonds, and the run's data in phase 5).
 ## Heroes and enemies share one space of ids, since a fight names its units by
-## them. Phase 3b adds tactics (docs/plans/rebuild-phase3b-tactics.md), each
+## them. Phase 3b adds tactics (docs/plans/phases/rebuild-phase3b-tactics.md), each
 ## naming the heroes who can take it. Phase 4 adds paths
-## (docs/plans/rebuild-phase4-paths.md): up to three per hero, each with its
+## (docs/plans/phases/rebuild-phase4-paths.md): up to three per hero, each with its
 ## vowed and transformed kits built from the hero's base kit.
 
 const TUNING_FILE: String = "tuning.json"
@@ -267,7 +267,7 @@ func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
 		_check_apex(apex, path, "%s: apex %s" % [where, apex.id], grid)
 
 
-## Old signatures become habits (phase 8 part 4, docs/plans/rebuild-heroes.md
+## Old signatures become habits (phase 8 part 4, docs/plans/design/rebuild-heroes.md
 ## section 3): a kit that replaced `old`'s signature must keep it as a
 ## passive, `habit` or the old signature's id.
 func _check_habit(old: UnitDef, kit: UnitDef, habit: String, where: String) -> void:

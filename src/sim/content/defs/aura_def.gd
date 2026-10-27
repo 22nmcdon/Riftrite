@@ -18,7 +18,7 @@ extends RefCounted
 ## A unit's aura stops when it falls; a relic's lasts all fight.
 ## "while": "taunting" keeps a unit's aura on only while at least one
 ## standing enemy's Taunt in effect is its own (Brannoc's Hold the Line;
-## docs/plans/rebuild-phase2-heroes-enemies.md, section 4). Phase 4 adds:
+## docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 4). Phase 4 adds:
 ##   "while": "planted", "after_ms": 2000   on once it hasn't moved for that
 ##                                          long (Steady; a unit starts
 ##                                          planted). A planted range aura
@@ -120,7 +120,7 @@ extends RefCounted
 ## RESISTED; Braced), dodge_every_ms (a hit on it misses, then not again
 ## until that long has passed; logged DODGED; Sidestep), and halved_hits
 ## (its first that many hits taken each fight deal half damage; Iron Skin).
-## Phase 8 part 3 (the enemy upgrades, docs/plans/rebuild-phase8-act3.md,
+## Phase 8 part 3 (the enemy upgrades, docs/plans/phases/rebuild-phase8-act3.md,
 ## section 2) adds more that add: shield_damage_bp (its hits take that much
 ## more off a Shield: +10000 is double; Shieldbreaker, the Unbinder),
 ## sees_stealth (above 0: it can pick and keep a Stealthed or Submerged
@@ -152,13 +152,13 @@ extends RefCounted
 ## multiplier; EffectRunner.deal_hit adds it per hit.
 ## Adding a target, stat, or condition is a code change; say so when you
 ## make one.
-## Phase 8 part 3 (Act 3's enemies, docs/plans/rebuild-phase8-act3.md
+## Phase 8 part 3 (Act 3's enemies, docs/plans/phases/rebuild-phase8-act3.md
 ## 8c-6a): "only": {...} (a UnitCondition) on an all_allies or allies_near
 ## aura gives it only to those that meet it now, read against its holder
 ## (the Spire Chanter: {"same_island": true}); "while": "ally_standing"
 ## without a "kit" is on while any other unit of its side stands (the Heart
 ## of the Rift's Ward while its host stands).
-## Phase 8 part 6 (Hob, docs/plans/rebuild-phase8-last-heroes.md 8f-5):
+## Phase 8 part 6 (Hob, docs/plans/phases/rebuild-phase8-last-heroes.md 8f-5):
 ## "per_shards": N (once for every N shards its holder holds,
 ## CombatSim.shards_held; "per_shards_max": at most that many times; Nest
 ## Egg), and two stats that add: atk (points of ATK; Golden Idol) and

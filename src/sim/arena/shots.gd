@@ -1,6 +1,6 @@
 class_name Shots
 extends RefCounted
-## Shots in flight (docs/plans/rebuild-phase1-arena-sim.md, section 5,
+## Shots in flight (docs/plans/phases/rebuild-phase1-arena-sim.md, section 5,
 ## decided): an attack from 2 or more hexes away flies for 1 tick per hex
 ## (rounded up, at least 1; faster with its shooter's shot_speed_bp, phase
 ## 8 part 4) and follows its target, so it can't miss. Its

@@ -1,5 +1,5 @@
 extends GutTest
-## Signatures and their triggers (docs/plans/rebuild-phase1-arena-sim.md,
+## Signatures and their triggers (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 5): mana, hp_below, fight_start, at_time, count, would_fall;
 ## Stun holding back only mana signatures; casts; picking a target.
 

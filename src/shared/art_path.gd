@@ -1,6 +1,6 @@
 class_name ArtPath
 extends RefCounted
-## Which file the game loads for an art path (docs/plans/asset-contract.md,
+## Which file the game loads for an art path (docs/plans/art/asset-contract.md,
 ## section 2): `<name>.png` if it exists, otherwise `<name>.svg`, so
 ## commissioned art replaces a placeholder by dropping in a PNG of the same
 ## name. A path may name either extension, or none. Shared by the UI

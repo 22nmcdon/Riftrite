@@ -1,7 +1,7 @@
 class_name KitPatch
 extends RefCounted
 ## Changes to a hero's base kit: what a path's vow (its taste and cost) or its
-## transformation does to it (docs/plans/rebuild-phase4-paths.md, section 1).
+## transformation does to it (docs/plans/phases/rebuild-phase4-paths.md, section 1).
 ## Every key is optional, but a patch changes something:
 ##   {"stats_bp": {"atk": 12000, "atsp": 8500},   multiplies HP, ATK, MGK,
 ##                                                 DEF, or ATSP (basis points)

@@ -1,5 +1,5 @@
 extends GutTest
-## Rift Collapse (docs/plans/rebuild-phase1-arena-sim.md, section 9): ring
+## Rift Collapse (docs/plans/phases/rebuild-phase1-arena-sim.md, section 9): ring
 ## timing and warnings, the safe rectangle shrinking, damage only on crumbled
 ## ground (flat, Shield first), and start_collapse. Crumbled ground is
 ## walkable (phase 5c, Decision 7): units fight and walk on it, and one with

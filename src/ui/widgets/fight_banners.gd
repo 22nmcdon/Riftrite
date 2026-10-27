@@ -1,7 +1,7 @@
 class_name FightBanners
 extends PanelContainer
 ## A banner over the board for the fight's big moments
-## (docs/plans/rebuild-phase3-fight-sandbox.md, sections 5 and 6): a unit
+## (docs/plans/phases/rebuild-phase3-fight-sandbox.md, sections 5 and 6): a unit
 ## entering a phase, the rift starting to collapse (the first ring
 ## crumbling, at 45s unless something starts it sooner), and the end. One at
 ## a time, queued; each stays about 1.5s of real time (less at 2x, so they

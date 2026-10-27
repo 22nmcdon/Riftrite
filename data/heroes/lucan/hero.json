@@ -1,5 +1,5 @@
 {
-  "_note": "Hero 12 (docs/plans/rebuild-heroes.md section 8j; rebuild-phase8-last-heroes.md 8f-4). Stats, mana, Mirror, and Unreal are the design's; Glimmer's 1.2s cooldown is a first number, as Ilse's and Ottilie's. He can't be drafted until his paths come.",
+  "_note": "Hero 12 (docs/plans/design/rebuild-heroes.md section 8j; rebuild-phase8-last-heroes.md 8f-4). Stats, mana, Mirror, and Unreal are the design's; Glimmer's 1.2s cooldown is a first number, as Ilse's and Ottilie's. He can't be drafted until his paths come.",
   "id": "lucan",
   "name": "Lucan Merrow",
   "title": "the illusionist",

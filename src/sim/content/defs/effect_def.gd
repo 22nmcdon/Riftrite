@@ -4,7 +4,7 @@ extends RefCounted
 ## affects (target). This is the shared vocabulary for abilities, relics, and
 ## duo bonds (CLAUDE.md rule 3). Adding a trigger, type, or target is a code
 ## change; say so when you make one. The arena sim
-## (docs/plans/rebuild-phase1-arena-sim.md) adds spatial targets and the
+## (docs/plans/phases/rebuild-phase1-arena-sim.md) adds spatial targets and the
 ## knockback, pull, leap, charge, area, summon, mana_drain, and
 ## start_collapse types.
 ##

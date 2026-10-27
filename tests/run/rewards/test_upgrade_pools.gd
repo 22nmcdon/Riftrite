@@ -1,10 +1,10 @@
 extends GutTest
-## The upgrade pools (docs/plans/upgrade-pools.md; phase 5c step 7,
-## docs/plans/rebuild-phase5c-combos.md, section 15): what each hero is
+## The upgrade pools (docs/plans/design/upgrade-pools.md; phase 5c step 7,
+## docs/plans/phases/rebuild-phase5c-combos.md, section 15): what each hero is
 ## offered by stage, cards that would change nothing, and stacking cards'
 ## lock-in.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 
 var _run: RunContent
 

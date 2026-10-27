@@ -1,6 +1,6 @@
 class_name Movement
 extends RefCounted
-## Walking on the plane (docs/plans/rebuild-phase1-arena-sim.md, section 4).
+## Walking on the plane (docs/plans/phases/rebuild-phase1-arena-sim.md, section 4).
 ##
 ## A unit that has a target out of reach walks toward it:
 ##   - straight at the target when nothing stands in the way (checked with a

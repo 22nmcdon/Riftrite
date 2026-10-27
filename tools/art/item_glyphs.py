@@ -1,4 +1,4 @@
-"""The item language's pieces (docs/plans/rebuild-phase5b-art.md, section 5).
+"""The item language's pieces (docs/plans/phases/rebuild-phase5b-art.md, section 5).
 
 Each uploaded icon in art/ui/items/ is its kind's frame (the first three
 paths) with a glyph drawn on it (the rest). This writes each glyph alone,

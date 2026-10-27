@@ -1,10 +1,10 @@
 extends GutTest
-## The Event node (docs/plans/rebuild-phase5c-combos.md, step 8c, section
+## The Event node (docs/plans/phases/rebuild-phase5c-combos.md, step 8c, section
 ## 16.7; events.md): the scenes and every choice's results, greyed choices,
 ## walking away, the Bloodied Oath and each oath's burden, reward, and end,
 ## the nodes a day shows, and the save.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

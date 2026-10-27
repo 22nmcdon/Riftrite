@@ -1,6 +1,6 @@
 extends GutTest
 ## The upgrade cards phase 5c step 7a writes from built pieces, in small
-## fights on the real kits (docs/plans/rebuild-phase5c-combos.md, section
+## fights on the real kits (docs/plans/phases/rebuild-phase5c-combos.md, section
 ## 15.7): the four statuses they add (Hobbled, Cowed, and the two next-hit
 ## boosts), and a taste card's transformed mod reaching its new piece.
 

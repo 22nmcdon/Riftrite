@@ -1,5 +1,5 @@
 extends GutTest
-## The log panel, the fight chart, and the banners (docs/plans/rebuild-phase3-fight-sandbox.md,
+## The log panel, the fight chart, and the banners (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 6): names instead of ids, lines colored by side, the chatter
 ## hidden, a unit's lines on a click, the chart's bars from FightTally, and
 ## banners for a phase, the collapse, and the end; then all of it on

@@ -1,6 +1,6 @@
 class_name LogPanel
 extends VBoxContainer
-## The combat log beside the board (docs/plans/rebuild-phase3-fight-sandbox.md,
+## The combat log beside the board (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 6): each LogEntry's line as it happens, with names instead of ids
 ## and colored by side (FightNames).
 ##   - The chatter (walking, stopping, and picking targets) is hidden unless

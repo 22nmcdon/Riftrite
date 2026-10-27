@@ -1,6 +1,6 @@
 class_name Displacement
 extends RefCounted
-## Knockback, pull, leap, and charge (docs/plans/rebuild-phase1-arena-sim.md,
+## Knockback, pull, leap, and charge (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 6, decided). Each moves a unit instantly in the sim and logs
 ## where from and where to (PUSH, LEAP, CHARGE); the UI animates it. A moved
 ## unit drops its path and plans again on the next tick, and an engagement

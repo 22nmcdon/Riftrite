@@ -1,11 +1,11 @@
 extends SceneTree
 ## Placement data for fitting the good bot's weights (phase 6 step 6b,
-## docs/plans/rebuild-phase6-bot-tuning.md, section 2.2): for each
+## docs/plans/phases/rebuild-phase6-bot-tuning.md, section 2.2): for each
 ## encounter of every act (Hunts aside), random legal formations of a random
 ## team (each hero vowed to a random path, transformed half the time in Act
 ## 1, always from Act 2 on, against enemies scaled down as the sim
 ## runner's gate scales them, so the fights can go either way:
-## tools/sim_report.gd's gate_scale_bp; phase 8 part 3), each fought on a
+## tools/reports/sim_report.gd's gate_scale_bp; phase 8 part 3), each fought on a
 ## practice seed. One CSV line a fight: the encounter, the features
 ## (tools/bots/placement.gd), whether it was won, and the heroes' HP left.
 ## tools/bots/fit_placement.py fits WEIGHTS from it.
@@ -16,7 +16,7 @@ extends SceneTree
 ## --progress-group=<name>); --no-progress turns that off.
 
 const Placement = preload("res://tools/bots/placement.gd")
-const SimReport = preload("res://tools/sim_report.gd")
+const SimReport = preload("res://tools/reports/sim_report.gd")
 const Progress = preload("res://tools/progress.gd")
 
 

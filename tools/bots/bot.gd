@@ -1,13 +1,13 @@
 extends RefCounted
-## A run bot (docs/plans/rebuild-phase6-bot-tuning.md, section 2.1): it
+## A run bot (docs/plans/phases/rebuild-phase6-bot-tuning.md, section 2.1): it
 ## answers each decision tools/bots/run_player.gd asks of it, and never
 ## changes the run itself (the player does what it answers, through
-## RunFlow). This base answers as the simple bot does (tools/run_bot.gd:
+## RunFlow). This base answers as the simple bot does (tools/bots/run_bot.gd:
 ## fixed orders, the "guarded" formation); the random and good bots
 ## override what they decide differently. Every answer is a pure function of
 ## the run's state (and a bot's own seeded RNG), so a run repeats.
 
-const Simple = preload("res://tools/run_bot.gd")
+const Simple = preload("res://tools/bots/run_bot.gd")
 const PracticeSession = preload("res://src/ui/practice/practice_session.gd")
 
 ## Its name in the run report ("simple", "simple-peek", "random", "good",

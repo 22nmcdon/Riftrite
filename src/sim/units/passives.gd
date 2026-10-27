@@ -1,6 +1,6 @@
 class_name Passives
 extends RefCounted
-## Passives (PartDef) in a fight (docs/plans/rebuild-phase1-arena-sim.md,
+## Passives (PartDef) in a fight (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 2):
 ##   aura            while its holder stands and its window is open, it
 ##                   boosts the holder or all its allies. Auras are folded
@@ -17,7 +17,7 @@ extends RefCounted
 ##                   (LogEntry.chain; phase 5c step 3), so it can set off
 ##                   more events, down to the chain limit. Three triggers
 ##                   aren't events
-##                   (docs/plans/rebuild-phase2-heroes-enemies.md, section 4):
+##                   (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 4):
 ##                   on_interval and on_ally_below_hp are checked after the
 ##                   events each tick (run_timed), and on_fall as the unit
 ##                   falls (on_fall).

@@ -1,5 +1,5 @@
 extends GutTest
-## The void, Act 3's board rule (docs/plans/rebuild-phase8-act3.md, part
+## The void, Act 3's board rule (docs/plans/phases/rebuild-phase8-act3.md, part
 ## 8c-5b; Islands): the setup's checks, walkers going over a bridge, fliers
 ## crossing, landing off it, charges and hops stopping short, falls and what
 ## they set off (and don't), and the islands with their condition.

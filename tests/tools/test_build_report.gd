@@ -1,10 +1,10 @@
 extends GutTest
-## The sim runner's builds report (tools/build_report.gd; docs/plans/
+## The sim runner's builds report (tools/reports/build_report.gd; docs/plans/
 ## build-tuning.md): its teams file reads, and a small run gives each
 ## lineup's fights and the gains.
 
-const Report = preload("res://tools/sim_report.gd")
-const BuildReport = preload("res://tools/build_report.gd")
+const Report = preload("res://tools/reports/sim_report.gd")
+const BuildReport = preload("res://tools/reports/build_report.gd")
 
 var _content: ContentDb
 var _run: RunContent
@@ -32,7 +32,7 @@ func test_the_teams_file_reads() -> void:
 
 func test_a_small_run() -> void:
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/teams/sim_formations.json"), errors)
 	named = Report.for_team(_content, named, HeroTeam.DEFAULT)
 	var build: BuildReport.Build = BuildReport.read_builds(_content, _run, errors)[1]
 	build.type = "enabler"
@@ -48,7 +48,7 @@ func test_a_small_run() -> void:
 
 func test_a_lift_against_its_hero_on_base() -> void:
 	var errors: Array[String] = []
-	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/teams/sim_formations.json"), errors)
 	named = Report.for_team(_content, named, HeroTeam.DEFAULT)
 	var build: BuildReport.Build = BuildReport.read_builds(_content, _run, errors).filter(func(b: BuildReport.Build) -> bool: return b.path == "bellwarden")[0]
 	assert_eq(build.swap, BuildReport.BASE, "Aldous has no self-sufficient path (Decision 17)")

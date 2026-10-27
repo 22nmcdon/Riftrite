@@ -1,6 +1,6 @@
 class_name RunDayScreen
 extends UiScreen
-## A day of the run between fights (docs/plans/rebuild-phase5-run.md,
+## A day of the run between fights (docs/plans/phases/rebuild-phase5-run.md,
 ## section 11; part 6, section 9, the playtester's mock): the top bar (the
 ## day, the act and place, shards, and relics), the day's step in the middle,
 ## and the hero bar along the bottom (a hero's card opens its panel, where

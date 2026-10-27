@@ -1,6 +1,6 @@
 extends GutTest
 ## Every Act 1 encounter plays to its end on ArenaScreen, with fake time
-## (docs/plans/rebuild-phase3-fight-sandbox.md, sections 10 and 11, step 9):
+## (docs/plans/phases/rebuild-phase3-fight-sandbox.md, sections 10 and 11, step 9):
 ## no errors, the same fight the sim runs on its own, every log line in the
 ## log panel, and every kind of log entry it produced shown on the board.
 ## This is the plan's own bar before the playtest.

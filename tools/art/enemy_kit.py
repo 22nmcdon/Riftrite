@@ -231,7 +231,7 @@ def old_mother_ash(uid):
     return _scaled(body, 1.22) + glow_dot(150, 330, 26, EMBER)
 
 
-# Act 2, the Glassmere (docs/plans/act2-glassmere.md): drowned teal and
+# Act 2, the Glassmere (docs/plans/acts/act2-glassmere.md): drowned teal and
 # glass, recolors and rescales of Act 1's shapes.
 GLASS, GLASS_DK = "#8fc9d2", "#5a8f9a"
 
@@ -304,7 +304,7 @@ def mournwater(uid):
     return _scaled(_drown(bog_lurker(uid)), 1.3) + glow_dot(150, 380, 24, AQUA, strong=True)
 
 
-# Act 3, the Shattered Crown (docs/plans/act3-shattered-crown.md): crag
+# Act 3, the Shattered Crown (docs/plans/acts/act3-shattered-crown.md): crag
 # stone and the crown's pale violet light, recolors and rescales again.
 CRAG, CRAG_DK = "#8a7a6a", "#5a4c40"
 CROWN, CROWN_DK = "#9c88d8", "#5e4c98"

@@ -1,6 +1,6 @@
 class_name RunRecords
 extends RefCounted
-## The player's records (docs/plans/rebuild-phase8-endless.md, section 1):
+## The player's records (docs/plans/phases/rebuild-phase8-endless.md, section 1):
 ## the deepest endless floor reached, with the run's seed and vows, in
 ## user://records.json beside the run's save, one for each act an endless
 ## follows (phase 8 part 3, Decision 15: the testing option after Act 1 and

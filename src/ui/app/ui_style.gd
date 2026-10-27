@@ -5,7 +5,7 @@ extends RefCounted
 ## teal accent for what's done or chosen, gold for the primary action and
 ## what's current, and cream text. Cinzel for names and headings, Alegreya
 ## for text (both OFL, in art/fonts; the uploaded art's fonts,
-## docs/plans/rebuild-phase5b-art.md, Decision 2). Panels and
+## docs/plans/phases/rebuild-phase5b-art.md, Decision 2). Panels and
 ## buttons are flat rounded boxes. Placeholder until the art rehaul (rebuild
 ## phase 7), but it follows the mock. The fight keeps its own colors for
 ## sides and statuses (rift violet for enemies, ember for Rift Collapse).

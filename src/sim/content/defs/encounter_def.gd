@@ -1,7 +1,7 @@
 class_name EncounterDef
 extends RefCounted
 ## A hand-placed fight in data/encounters.json
-## (docs/plans/rebuild-phase2-heroes-enemies.md, section 2): the enemies on
+## (docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 2): the enemies on
 ## their hexes, the rocks, and when it can come.
 ##   {"id": "the_pack", "name": "The Pack", "tests": "protecting the back line",
 ##    "act": 1, "days": [2, 3],
@@ -11,7 +11,7 @@ extends RefCounted
 ## `scale_bp` multiplies each enemy's HP and ATK (the small growth per day;
 ## 10000 = as the enemy is). ContentDb checks the enemies exist and stand in
 ## their zone, and that nothing shares a hex.
-## `tier` (phase 5, docs/plans/rebuild-phase5-run.md, section 2): where a run
+## `tier` (phase 5, docs/plans/phases/rebuild-phase5-run.md, section 2): where a run
 ## offers it: easier (the default) or harder on a normal day, elite, boss, or
 ## hunt (a camp's optional small fight).
 ## `water` (phase 8 part 3, Act 2's board rule): its shallow water's hexes,

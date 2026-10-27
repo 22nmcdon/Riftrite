@@ -1,5 +1,5 @@
 extends GutTest
-## Phases (PhaseDef, Phases; docs/plans/rebuild-phase1-arena-sim.md,
+## Phases (PhaseDef, Phases; docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 3): entered once each as HP drops, in order, changing the kit
 ## from the next update; and the checks on reading them.
 

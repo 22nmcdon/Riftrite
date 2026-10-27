@@ -1,5 +1,5 @@
 extends GutTest
-## Paths in Practice (docs/plans/rebuild-phase4-paths.md, section 6): the
+## Paths in Practice (docs/plans/phases/rebuild-phase4-paths.md, section 6): the
 ## session keeping each hero's path and stage, the hero panel (its tabs,
 ## track, cards, back and forward), choosing a path and stage, the board's
 ## figures and tags, placing a transformed Trapper's snares, the fight on

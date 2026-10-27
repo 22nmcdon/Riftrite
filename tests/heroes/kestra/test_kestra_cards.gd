@@ -1,5 +1,5 @@
 extends GutTest
-## Kestra's upgrade cards (phase 8 part 6, docs/plans/upgrade-pools.md
+## Kestra's upgrade cards (phase 8 part 6, docs/plans/design/upgrade-pools.md
 ## Kestra; rebuild-phase8-last-heroes.md 8f-3) on her real kits: each changes
 ## the kit it's offered on, cards on Sic 'Em reach it as her signature and as
 ## her habit, cards on her companions reach their kits, and the bond relics

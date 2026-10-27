@@ -1,5 +1,5 @@
 extends GutTest
-## Lucan's upgrade cards (phase 8 part 6, docs/plans/upgrade-pools.md Lucan;
+## Lucan's upgrade cards (phase 8 part 6, docs/plans/design/upgrade-pools.md Lucan;
 ## rebuild-phase8-last-heroes.md 8f-4) on his real kits: each changes the kit
 ## it's offered on, cards on Mirror reach it as his signature and as his
 ## habit, the copy cards reach a copy's share and time, and the growing ones

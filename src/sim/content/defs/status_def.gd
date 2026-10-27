@@ -1,6 +1,6 @@
 class_name StatusDef
 extends RefCounted
-## A status effect from data/statuses.json (docs/plans/rebuild-phase1-arena-sim.md,
+## A status effect from data/statuses.json (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 8). The kind decides how the sim runs it; the numbers come from
 ## data. Which fields a kind needs:
 ##   damage_over_time: interval_ms, damage_per_stack, and optionally

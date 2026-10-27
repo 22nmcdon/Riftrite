@@ -7,7 +7,7 @@ extends GutTest
 ## Debts' Tithe, Golden Aegis's max HP for every hero, Gold Leaf's), Ward
 ## Tax's shards needed, Ledger of Debts' steps, and the pay line.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const TEAM_VOWS: Dictionary[String, String] = {"brannoc": "hearthwall", "maren": "deadeye", "edric": "tithe_collector"}
 
 var _run: RunContent

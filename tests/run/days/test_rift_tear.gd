@@ -4,7 +4,7 @@ extends GutTest
 ## each modifier on tomorrow's fight, each depth's relics, and Early
 ## Collapse and Reinforcements in a fight.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
 var _run: RunContent

@@ -1,6 +1,6 @@
 class_name ArenaScreen
 extends UiScreen
-## Placement and the fight on one screen (docs/plans/rebuild-phase3-fight-sandbox.md,
+## Placement and the fight on one screen (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## sections 1, 3, and 4): placement (dragging heroes, the enemy panel on
 ## hover, Fight), then the fight played live by a FightPlayer on the same
 ## board.
@@ -31,11 +31,11 @@ extends UiScreen
 ##     while the fight isn't playing (placement, paused, or over) opens its
 ##     popup beside it, which a click elsewhere closes, and so does the fight
 ##     playing on.
-##   - Tactics (docs/plans/rebuild-phase3b-tactics.md, section 4): while
+##   - Tactics (docs/plans/phases/rebuild-phase3b-tactics.md, section 4): while
 ##     placing, the hero popup's Tactic row sets the hero's tactic in the
 ##     session (the board shows it under the hero's name); in a fight it
 ##     names the one taken, and so does the result.
-##   - Paths (docs/plans/rebuild-phase4-paths.md, section 6): clicking a hero
+##   - Paths (docs/plans/phases/rebuild-phase4-paths.md, section 6): clicking a hero
 ##     while placing opens the hero panel (HeroPanel) instead of the popup:
 ##     its Path tab vows or transforms the hero, its Loadout tab sets the
 ##     tactic, both kept in the session. A transformed Trapper's snares are

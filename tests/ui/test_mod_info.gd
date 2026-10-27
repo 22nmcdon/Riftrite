@@ -1,5 +1,5 @@
 extends GutTest
-## Every card's stat change says its amount (docs/plans/rebuild-phase5c-combos.md,
+## Every card's stat change says its amount (docs/plans/phases/rebuild-phase5c-combos.md,
 ## step 2): ModInfo's numbers line for kit mods, items, upgrades, relics, and
 ## duo bonds.
 

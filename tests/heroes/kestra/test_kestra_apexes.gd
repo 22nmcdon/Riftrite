@@ -1,5 +1,5 @@
 extends GutTest
-## Kestra's six apexes (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Kestra's six apexes (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-3; apexes.md) in real fights: each loads on its path's transformed kit
 ## with its taste and deed, and what it does at apex: Hellhound's fire round
 ## Grit, Firestarter's Burn on every summon's attacks, Brood Mother's nest

@@ -1,11 +1,11 @@
 extends GutTest
-## The loadout pool's frame (docs/plans/rebuild-phase5c-combos.md, step 6a,
+## The loadout pool's frame (docs/plans/phases/rebuild-phase5c-combos.md, step 6a,
 ## section 14): ranks and each kind's counter, a bought copy a rank up, rank
 ## III never in a shop, selling at half, prices by kind, one gambit per
 ## hero, ranks in the fight and in the save, and the tallies a real fight
 ## counts for a tactic and a sigil.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent

@@ -1,0 +1,181 @@
+{
+  "_note": "The run report's test teams (tools/reports/run_report.gd, run_runner.gd --test-teams; docs/plans/tuning/test-teams.md and easy-start.md, ES-4). Each has a group (synergy: test-teams.md section 1's seventeen, phase 8 part 6's 8f-6; plan: easy-start.md section 5's plan teams, with the old three as the tank plan; bad: test-teams.md section 2's, stood in for by built heroes), fixed vows, and the items and relics its runs lean toward: for testing only, the shops and relic choices draw them `lean_weight` times as often (RunContent.test_lean) and the good bot tries them first. Bad teams have no build, so no lean.",
+  "lean_weight": 3,
+  "teams": [
+    {
+      "name": "tank",
+      "group": "plan",
+      "vows": {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"},
+      "lean": ["iron_filings", "wardens_chain", "hearthstone_shard", "tithe_of_iron", "moth_eaten_banner", "mirror_of_ash", "the_hearth_woven_mail", "the_watchtower_stone", "iron_skin", "spiteful_blood", "warding_thread", "steady_stance", "hold_ground_orders"],
+      "note": "The old three: the tank plan (easy-start.md ES-3's reference)"
+    },
+    {
+      "name": "burst",
+      "group": "plan",
+      "vows": {"tamsin": "nightblade", "maren": "deadeye", "aldous": "windcaller"},
+      "lean": ["bone_dice", "keen_edge", "quickened_pulse", "whetstone_of_the_fallen", "headsmans_coin", "the_ninth_arrow", "knifes_edge", "crown_of_stars", "smoke_pouch", "veil_of_the_lost", "shadow_step", "armor_breaker", "headsmans_patience", "surge", "execution", "splinter_shot"],
+      "note": "Kill them before the damage lands (easy-start.md section 5)"
+    },
+    {
+      "name": "sustain",
+      "group": "plan",
+      "vows": {"vell": "lanternbearer", "aldous": "chorister", "maren": "volley"},
+      "lean": ["leech_tooth", "gluttons_chalice", "tithe_of_iron", "hearthstone_shard", "echoing_bell", "rift_candle", "overflow_chalice", "blood_communion", "sanguine_frenzy", "second_dawn", "leech_fang", "warding_thread", "purifying_light", "siphon", "bulwark", "wait_to_heal_orders", "soothing_salve", "thorned_bandage", "full_vigor", "unending_vigil"],
+      "note": "Spread the damage and undo it (easy-start.md section 5; Edric and Severine aren't built)"
+    },
+    {
+      "name": "control",
+      "group": "plan",
+      "vows": {"maren": "trapper", "tamsin": "garrote", "vell": "wardweaver"},
+      "lean": ["bramble_seed", "rusted_fetter", "thornwoven_cloak", "grasping_mire", "thicket_engine", "snaring_shot", "everflame", "bramble_knot", "opportunist", "grasping", "lingering", "spite_brand", "weighted_net", "snare_wire", "heavy_pommel", "dulled_shackles", "choking_hold", "shackle_engine", "iron_garden", "stillwater_seal"],
+      "note": "The damage never gets thrown (easy-start.md section 5)"
+    },
+    {
+      "name": "glass",
+      "group": "bad",
+      "vows": {"maren": "volley", "vell": "vigil_keeper", "aldous": "bellwarden"},
+      "lean": [],
+      "note": "B1 Glass: three back-liners, no front line (Ilse, Ottilie, and Lucan aren't built)"
+    },
+    {
+      "name": "no_damage",
+      "group": "bad",
+      "vows": {"brannoc": "hearthwall", "vell": "lanternbearer", "aldous": "chorister"},
+      "lean": [],
+      "note": "No damage (tuning-phase.md Decision 17): three defensive and support half-plans with nothing that ends fights; it should survive, then lose long fights to the Collapse. The purest check of the half-plan rule"
+    },
+    {
+      "name": "wrong_fuel",
+      "group": "bad",
+      "vows": {"tamsin": "garrote", "garrow": "aegisfang", "aldous": "windcaller"},
+      "lean": [],
+      "note": "B4 Wrong fuel (tuning-phase.md Decision 17): every path's fuel is missing: Garrote needs Roots and nobody makes them, Aegisfang needs outside Shields, and Windcaller quickens ranged allies on an all-melee team"
+    },
+    {
+      "name": "all_tanks",
+      "group": "bad",
+      "vows": {"brannoc": "hearthwall", "garrow": "spitemail", "vell": "wardweaver"},
+      "lean": [],
+      "note": "B5 All tanks: lots of survival, little damage (Edric isn't built; Vell's Wardweaver stands in)"
+    },
+    {
+      "name": "thicket",
+      "group": "synergy",
+      "vows": {"maren": "trapper", "tamsin": "garrote", "garrow": "chainwarden"},
+      "lean": ["thicket_engine", "thornwoven_cloak", "grasping_mire", "bramble_seed", "snare_wire", "heavy_pommel", "iron_garden", "bramble_knot", "opportunist", "grasping"],
+      "note": "test-teams.md section 1, team 1 Thicket: Root (Dragged to the Snare)"
+    },
+    {
+      "name": "hunt",
+      "group": "synergy",
+      "vows": {"aldous": "bellwarden", "tamsin": "headhunter", "vell": "vigil_keeper"},
+      "lean": ["hunters_engine", "executioners_mark", "hunters_ledger", "brand_of_guilt", "hunters_chalk", "tolling"],
+      "note": "test-teams.md section 1, team 2 Hunt: Mark (The Hunter's Bell; Toll and Judgment)"
+    },
+    {
+      "name": "pyre",
+      "group": "synergy",
+      "vows": {"ilse": "ember_choir", "maren": "volley", "kestra": "cinderhound"},
+      "lean": ["ashen_engine", "ember_heart", "ashen_censer", "pyre_ash", "ember_tipped", "flint_and_tinder", "kindled"],
+      "note": "test-teams.md section 1, team 3 Pyre: Burn from many sources (Burning Volley)"
+    },
+    {
+      "name": "furnace",
+      "group": "synergy",
+      "vows": {"ilse": "furnace", "aldous": "windcaller", "kestra": "cinderhound"},
+      "lean": ["ashen_engine", "ashen_censer", "quickened_pulse", "quickening", "ember_tipped"],
+      "note": "test-teams.md section 1, team 4 Furnace: Burn on one target (The Bellows)"
+    },
+    {
+      "name": "rot",
+      "group": "synergy",
+      "vows": {"ottilie": "catalyst", "severine": "plaguebearer", "ilse": "wildfire"},
+      "lean": ["ashen_engine", "pyre_ash", "kindled", "ember_tipped"],
+      "note": "test-teams.md section 1, team 5 Rot: Burn and Poison (Putrefaction)"
+    },
+    {
+      "name": "venom",
+      "group": "synergy",
+      "vows": {"severine": "plaguebearer", "kestra": "serpent_keeper", "edric": "aegis"},
+      "lean": ["leech_tooth", "shadow_engine", "tithe_of_iron", "shattered_aegis", "leech_fang"],
+      "note": "test-teams.md section 1, team 6 Venom: Poison (Nest of Rot)"
+    },
+    {
+      "name": "bulwark",
+      "group": "synergy",
+      "vows": {"edric": "aegis", "garrow": "aegisfang", "vell": "wardweaver"},
+      "lean": ["wardens_engine", "shattered_aegis", "tithe_of_iron", "overflow_chalice", "warding_thread", "kindling_ward", "bulwark"],
+      "note": "test-teams.md section 1, team 7 Bulwark: Shield (Woven Fang)"
+    },
+    {
+      "name": "whirlpool",
+      "group": "synergy",
+      "vows": {"garrow": "chainwarden", "ilse": "wildfire", "maren": "volley"},
+      "lean": ["splinter_shot", "wide", "grasping"],
+      "note": "test-teams.md section 1, team 8 Whirlpool: clump (The Firepit)"
+    },
+    {
+      "name": "last_stand",
+      "group": "synergy",
+      "vows": {"brannoc": "last_watch", "vell": "lanternbearer", "ilse": "wildfire"},
+      "lean": ["second_dawn", "soothing_salve", "thorned_bandage", "unending_vigil", "last_breath", "warding_thread"],
+      "note": "test-teams.md section 1, team 9 Last Stand: clump and sustain (Lantern Vigil)"
+    },
+    {
+      "name": "gallery",
+      "group": "synergy",
+      "vows": {"aldous": "windcaller", "maren": "deadeye", "brannoc": "hearthwall"},
+      "lean": ["the_ninth_arrow", "keen_edge", "bone_dice", "steady_stance", "fletched_for_wings", "hold_ground_orders"],
+      "note": "test-teams.md section 1, team 10 Gallery: rangers (Sentry and Sniper)"
+    },
+    {
+      "name": "blood_price",
+      "group": "synergy",
+      "vows": {"severine": "hemomancer", "vell": "lanternbearer", "garrow": "spitemail"},
+      "lean": ["leech_tooth", "gluttons_chalice", "blood_communion", "sanguine_frenzy", "soothing_salve", "leech_fang"],
+      "note": "test-teams.md section 1, team 11 Blood Price: sustain (Blood and Lamplight)"
+    },
+    {
+      "name": "shadow",
+      "group": "synergy",
+      "vows": {"tamsin": "nightblade", "lucan": "veilweaver", "maren": "deadeye"},
+      "lean": ["veil_of_the_lost", "shadow_engine", "smoke_pouch", "shadow_step", "veiled", "smoke_vial"],
+      "note": "test-teams.md section 1, team 12 Shadow: Stealth (Unseen Blade)"
+    },
+    {
+      "name": "host",
+      "group": "synergy",
+      "vows": {"lucan": "puppeteer", "kestra": "packleader", "severine": "plaguebearer"},
+      "lean": ["moth_eaten_banner", "last_breath"],
+      "note": "test-teams.md section 1, team 13 Host: summons (The Menagerie)"
+    },
+    {
+      "name": "mirror_volley",
+      "group": "synergy",
+      "vows": {"lucan": "mirrorwright", "maren": "volley", "ilse": "ember_choir"},
+      "lean": ["ember_heart", "ashen_engine", "echo"],
+      "note": "test-teams.md section 1, team 14 Mirror Volley: summons and Burn (Hall of Arrows; Burning Volley)"
+    },
+    {
+      "name": "choir",
+      "group": "synergy",
+      "vows": {"aldous": "chorister", "edric": "psalmist", "vell": "vigil_keeper"},
+      "lean": ["the_second_sun", "overcharge", "echo", "opener", "thrift"],
+      "note": "test-teams.md section 1, team 15 Choir: mana (Psalm and Chorus)"
+    },
+    {
+      "name": "bounty",
+      "group": "synergy",
+      "vows": {"hob": "bounty_hunter", "tamsin": "headhunter", "garrow": "aegisfang"},
+      "lean": ["bounty_hunters_tag", "bounty_board", "hunters_ledger", "brand_of_guilt", "executioners_mark", "loose_change"],
+      "note": "test-teams.md section 1, team 16 Bounty: economy and Mark (Price and Prey)"
+    },
+    {
+      "name": "full_greed",
+      "group": "synergy",
+      "vows": {"hob": "hoarder", "edric": "tithe_collector", "ottilie": "transmuter"},
+      "lean": ["loose_change", "misers_vault", "merchants_covenant", "hagglers_charm", "the_magpies_scale", "gilded_rift", "tinkers_purse", "menders_purse", "scavenger"],
+      "note": "test-teams.md section 1, team 17 Full Greed: economy stress test (Tithe and Hoard)"
+    }
+  ]
+}

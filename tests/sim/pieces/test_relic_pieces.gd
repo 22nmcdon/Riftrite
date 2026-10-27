@@ -1,5 +1,5 @@
 extends GutTest
-## The pieces relics share (docs/plans/rebuild-phase5c-combos.md, step 5b,
+## The pieces relics share (docs/plans/phases/rebuild-phase5c-combos.md, step 5b,
 ## section 11.1), each in a small fight: effects at the fight's start,
 ## lifesteal, crit bonuses, timed boosts, a status ending, lengthening and
 ## extending statuses, the targets around a unit, ally_near, Salt Circle, and

@@ -1,5 +1,5 @@
 extends GutTest
-## What the fight shows (docs/plans/rebuild-phase3-fight-sandbox.md, section
+## What the fight shows (docs/plans/phases/rebuild-phase3-fight-sandbox.md, section
 ## 5): tokens' bars and status tags from the sim's state, and FightFx's
 ## shots, swipes, numbers, and signature names from the log.
 

@@ -1,5 +1,5 @@
 extends GutTest
-## Kestra's paths (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Kestra's paths (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-3; rebuild-heroes.md section 8k) in real fights: Cinderhound's
 ## Smoldering Fangs, ember coat, and Firebrand Pounce, Serpent-Keeper's
 ## Venomed Jab, viper, and Nest, Packleader's Pack Call, two hounds, Pack

@@ -1,6 +1,6 @@
 class_name PartDef
 extends RefCounted
-## A passive: always on, part of a unit's kit (docs/plans/rebuild-phase1-arena-sim.md,
+## A passive: always on, part of a unit's kit (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 2). Every passive has an id and a name, which the log credits.
 ##   {"id": "war_cry", "name": "War Cry", "kind": "aura",
 ##    "aura": {"target": "all_allies", "stat": "atk_bp", "value": 12000, "window": {"until_ms": 5000}}}

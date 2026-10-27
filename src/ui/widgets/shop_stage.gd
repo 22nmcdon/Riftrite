@@ -1,6 +1,6 @@
 class_name ShopStage
 extends MarginContainer
-## A shop's stage at camp (docs/plans/rebuild-phase5b-art.md, section 6): the
+## A shop's stage at camp (docs/plans/phases/rebuild-phase5b-art.md, section 6): the
 ## Pedlar's or the Magpie's scene (art/ui/shops/) behind the wares, with the
 ## keeper (his own figure: the scenes are empty) standing in it as in the
 ## shops look test, and the wares over the scene's right side. The scene

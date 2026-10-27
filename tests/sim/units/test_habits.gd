@@ -1,5 +1,5 @@
 extends GutTest
-## Habits (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md section 3b;
+## Habits (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md section 3b;
 ## rebuild-heroes.md section 3): a transformation that replaces a hero's
 ## signature keeps the old one as a passive on every Nth basic attack, with
 ## the old signature's id. It isn't a signature: no mana, no FIRE of it.

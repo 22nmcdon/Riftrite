@@ -1,5 +1,5 @@
 extends GutTest
-## Passives (PartDef, Passives; docs/plans/rebuild-phase1-arena-sim.md,
+## Passives (PartDef, Passives; docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 2): auras, ability passives on events, and status swaps.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")

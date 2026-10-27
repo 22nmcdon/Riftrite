@@ -1,5 +1,5 @@
 extends RefCounted
-## The good bot's placement (docs/plans/rebuild-phase6-bot-tuning.md,
+## The good bot's placement (docs/plans/phases/rebuild-phase6-bot-tuning.md,
 ## section 2.2): it reads a fight's setup (the enemies' hexes and kits, the
 ## rocks, its heroes' kits) and scores a formation by features of it, never
 ## by fighting it. The weights (WEIGHTS) were fitted once, in step 6b, on

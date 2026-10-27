@@ -1,6 +1,6 @@
 class_name GrowthDef
 extends RefCounted
-## How a card grows for the rest of the run (docs/plans/rebuild-phase5c-combos.md,
+## How a card grows for the rest of the run (docs/plans/phases/rebuild-phase5c-combos.md,
 ## step 4, section 9.3; part 7, section 4): it counts something its holder
 ## does, the way a deed does, and every `per` of it is a step; the next fight
 ## gets the step's mod that many times over.

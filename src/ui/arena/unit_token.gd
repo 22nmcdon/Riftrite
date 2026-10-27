@@ -1,6 +1,6 @@
 class_name UnitToken
 extends Control
-## One unit on the board (docs/plans/rebuild-phase3-fight-sandbox.md, sections
+## One unit on the board (docs/plans/phases/rebuild-phase3-fight-sandbox.md, sections
 ## 2 and 8): its figure (FigureArt), standing where the unit is on the plane,
 ## over a small ring (gold for heroes, red for enemies; phase 5b), with its
 ## short name under it.
@@ -53,7 +53,7 @@ const STATUS_COLORS: Dictionary = {
 	StatusDef.Kind.STEALTH: Color("9aa7b8"), StatusDef.Kind.WARDED: Color("8fd0c8"), StatusDef.Kind.BOOST: Color("ffd27f"),
 	StatusDef.Kind.GROUNDED: Color("b08a5a"), StatusDef.Kind.CONFUSED: Color("e0a0e8"), StatusDef.Kind.CONTROLLED: Color("c890ff"),
 }
-## Status art (docs/plans/asset-contract.md, section 6): a status with a
+## Status art (docs/plans/art/asset-contract.md, section 6): a status with a
 ## file here, by its id, is drawn as its icon and its stacks, not its word.
 const STATUS_ART: String = "res://art/ui/statuses/%s"
 ## How see-through a stealthed unit is drawn.

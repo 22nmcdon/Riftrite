@@ -1,5 +1,5 @@
 extends GutTest
-## Garrow's paths' pieces (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md
+## Garrow's paths' pieces (phase 8 part 4, docs/plans/phases/rebuild-phase8-heroes.md
 ## section 4), each in a small fight: a Shield with a cap, damage worked out
 ## from the unit's own Shield and the Shield spent (SHIELD_SPENT), a
 ## signature that readies the basic attack, an aura per enemy near, and the

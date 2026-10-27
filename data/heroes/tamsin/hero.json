@@ -1,5 +1,5 @@
 {
-  "_note": "Hero 5 (docs/plans/rebuild-heroes.md section 8c; rebuild-phase8-heroes.md 8d-3). HP, DEF, CRIT, speed, and Shadowstep's mana are the design's; ATK 16 (the design's 24) and a 1s Knife with +10 attack speed bring her base team within 10 points of the old three's in Act 1 (30% against 22%; at 24 it won 53%: build-tuning.md, section 4). The mana gains and Shadowstep's 3-hex reach are first numbers. Hidden is her own Stealth: it ends as her next basic attack fires, and that attack is from Stealth.",
+  "_note": "Hero 5 (docs/plans/design/rebuild-heroes.md section 8c; rebuild-phase8-heroes.md 8d-3). HP, DEF, CRIT, speed, and Shadowstep's mana are the design's; ATK 16 (the design's 24) and a 1s Knife with +10 attack speed bring her base team within 10 points of the old three's in Act 1 (30% against 22%; at 24 it won 53%: build-tuning.md, section 4). The mana gains and Shadowstep's 3-hex reach are first numbers. Hidden is her own Stealth: it ends as her next basic attack fires, and that attack is from Stealth.",
   "id": "tamsin",
   "name": "Tamsin Gloamstep",
   "title": "the knife",

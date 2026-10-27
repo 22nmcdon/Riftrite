@@ -1,5 +1,5 @@
 extends GutTest
-## Tactics in Practice (docs/plans/rebuild-phase3b-tactics.md, section 4):
+## Tactics in Practice (docs/plans/phases/rebuild-phase3b-tactics.md, section 4):
 ## choosing one in the hero panel's Loadout tab while placing (phase 4), the board naming it,
 ## remembering it, the fight on screen being the sim's own fight with it,
 ## what a tactic did showing over the hero, and the result naming them.

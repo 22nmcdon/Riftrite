@@ -1,5 +1,5 @@
 extends GutTest
-## Apexes in the sim (docs/plans/rebuild-phase8-apexes.md, part 8b-1): a
+## Apexes in the sim (docs/plans/phases/rebuild-phase8-apexes.md, part 8b-1): a
 ## path's apexes load and build their kits on the transformed kit, a hero
 ## takes one through Encounters.setup at the apex vowed or apex stage, the
 ## setup's checks, a transformed hero counts its path's apexes' deeds, and

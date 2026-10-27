@@ -1,5 +1,5 @@
 extends GutTest
-## The loadout's tactics in a fight (docs/plans/rebuild-phase5c-combos.md,
+## The loadout's tactics in a fight (docs/plans/phases/rebuild-phase5c-combos.md,
 ## step 6c, section 14.6): each new order, the payoffs, and rank III's
 ## twists, in tiny fights, with the tactics as the data has them.
 

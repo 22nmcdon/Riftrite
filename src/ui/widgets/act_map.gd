@@ -1,6 +1,6 @@
 class_name ActMap
 extends Control
-## The act map (docs/plans/rebuild-phase5b-art.md, section 4, Decision 4):
+## The act map (docs/plans/phases/rebuild-phase5b-art.md, section 4, Decision 4):
 ## the route as the uploaded map (art/ui/map/act_map), one island a day
 ## and the boss's last. It only reads the run.
 ##   - Each day's island holds that day's fights as nodes by tier

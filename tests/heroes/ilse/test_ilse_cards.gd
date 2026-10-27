@@ -1,5 +1,5 @@
 extends GutTest
-## Ilse's upgrade cards (phase 8 part 6, docs/plans/upgrade-pools.md Ilse;
+## Ilse's upgrade cards (phase 8 part 6, docs/plans/design/upgrade-pools.md Ilse;
 ## rebuild-phase8-last-heroes.md 8f-1) on her real kits: each changes the kit
 ## it's offered on, a card on Flare reaches it as her signature or her habit,
 ## the knobs her cards added (Heat's reach, Stoke's share, the ground's

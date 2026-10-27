@@ -1,6 +1,6 @@
 class_name RunContent
 extends RefCounted
-## The run's data, apart from the sim's (docs/plans/rebuild-phase5-run.md):
+## The run's data, apart from the sim's (docs/plans/phases/rebuild-phase5-run.md):
 ## the acts (act1.json, then act2.json and act3.json where they exist; phase
 ## 8 part 3), the upgrades, the items, camp, the relics, and the duo bonds. It sits over the sim's ContentDb, which it cross-checks
 ## against: every encounter a day can draw, every path and hero named.
@@ -40,7 +40,7 @@ var events: EventDef = null
 ## The rift learns (phase 8 part 3; data/rift_learns.json), or null.
 var learns: RiftLearnsDef = null
 var errors: Array[String] = []
-## FOR TESTING ONLY (docs/plans/easy-start.md, ES-4): item and relic id ->
+## FOR TESTING ONLY (docs/plans/phases/easy-start.md, ES-4): item and relic id ->
 ## how many times as likely the shops and relic choices are to draw it
 ## (Offers). Only the tools set it (the run report's test teams, leaning
 ## toward their build's items and relics, test-teams.md); the game never
@@ -824,7 +824,7 @@ func _kits_for(relic: RelicDef, hero_kits: Array[UnitDef]) -> Array[UnitDef]:
 	return kits
 
 
-## An icon's glyph must be in the art (docs/plans/rebuild-phase5b-art.md,
+## An icon's glyph must be in the art (docs/plans/phases/rebuild-phase5b-art.md,
 ## section 5).
 func _check_icon(icon: String, where: String) -> void:
 	if not ArtPath.exists(GLYPHS % icon):

@@ -230,7 +230,7 @@ Rush/Stall behavior is per item, so step 7 adds building blocks instead of one f
 
 - **Draft content** (placeholders for the designer to replace): 4 heroes (Brannoc the Warden, Wren Ashfoot the Striker, Sister Vell the Mender, Odo Quillmire the Arcanist), 20 hero items plus 3 enemy-only items, 3 enemies (Rift Hound, Rift-Worn Sentinel, Gloam Witch), and 3 Act 1 encounters. Files: `data/items.json`, `heroes.json`, `enemies.json`, `encounters.json`.
 - **Heroes** get item slots from rank (4 at C, +1 per rank). **Enemies** have fixed layouts with infusions; encounter units are numbered in the log (`rift_hound_1`).
-- **Runner:** `tools/sim_runner.gd` runs the parties in `tools/sim_parties.json` against each encounter and reports win rate (ties count as wins), fight length, biggest hit, infusion level-ups, per-item damage/healing/shielding per fight with share of the party's output, and flags items under 3% of output.
+- **Runner:** `tools/runners/sim_runner.gd` runs the parties in `tools/sim_parties.json` against each encounter and reports win rate (ties count as wins), fight length, biggest hit, infusion level-ups, per-item damage/healing/shielding per fight with share of the party's output, and flags items under 3% of output.
 - `DamageMeter` builds per-item totals from the combat log.
 
 **Findings from the first runs** (these shaped the draft numbers):

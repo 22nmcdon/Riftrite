@@ -1,12 +1,12 @@
 extends GutTest
-## Apexes in the run (docs/plans/rebuild-phase8-apexes.md, section 4): the
+## Apexes in the run (docs/plans/phases/rebuild-phase8-apexes.md, section 4): the
 ## apex vow opens going deeper (not on ending the run), only for transformed
 ## heroes whose path has apexes, and later for a late transformer; switching
 ## is free until the apex is earned; the apex deed fills and raises the hero;
 ## the fight takes the apex's kit; and the save keeps it (a version 5 save
 ## still loads).
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 
 var _run: RunContent
 

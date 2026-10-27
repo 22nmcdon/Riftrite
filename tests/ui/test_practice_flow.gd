@@ -1,5 +1,5 @@
 extends GutTest
-## Practice from the title (docs/plans/rebuild-phase3-fight-sandbox.md,
+## Practice from the title (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 1), driven headless through a real Main: title -> encounter list ->
 ## placement -> fight -> result -> place again, rematch, watch again, and
 ## back.

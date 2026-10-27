@@ -1,6 +1,6 @@
 class_name Snares
 extends RefCounted
-## Snares (docs/plans/rebuild-phase4-paths.md, section 5, P8; Trapper Maren):
+## Snares (docs/plans/phases/rebuild-phase4-paths.md, section 5, P8; Trapper Maren):
 ## a snare lies on the plane until the first enemy of its owner walks into it.
 ##   - Set by a snare effect (EffectDef: max_standing, and its own effects),
 ##     "in the path" of the ability's target: ahead of it toward whatever

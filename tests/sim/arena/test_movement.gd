@@ -1,5 +1,5 @@
 extends GutTest
-## Walking on the plane (docs/plans/rebuild-phase1-arena-sim.md, section 4).
+## Walking on the plane (docs/plans/phases/rebuild-phase1-arena-sim.md, section 4).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 

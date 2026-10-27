@@ -1,7 +1,7 @@
 class_name ArenaDebug
 extends RefCounted
 ## A plain-text picture of the arena, one character per nav cell (a quarter
-## hex), for tests and debugging (docs/plans/rebuild-phase1-arena-sim.md,
+## hex), for tests and debugging (docs/plans/phases/rebuild-phase1-arena-sim.md,
 ## section 11). It only reads; it never touches a fight.
 ##   .  open ground        ~  crumbled ground (outside the safe rectangle)
 ##   #  rock               !  a warned area

@@ -1,10 +1,10 @@
 extends GutTest
-## The shop lean (docs/plans/easy-start.md, ES-4): RunContent.test_lean weights
+## The shop lean (docs/plans/phases/easy-start.md, ES-4): RunContent.test_lean weights
 ## some items and relics up in the shops' and relic choices' draws, for the
 ## run report's test teams only. Empty, every draw is as it always was; and
 ## nothing in the game (src/) ever sets it.
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 
 var _run: RunContent
 

@@ -1,5 +1,5 @@
 extends GutTest
-## Lucan's six apexes (phase 8 part 6, docs/plans/rebuild-phase8-last-heroes.md
+## Lucan's six apexes (phase 8 part 6, docs/plans/phases/rebuild-phase8-last-heroes.md
 ## 8f-4; apexes.md) in real fights: each loads on its path's transformed kit
 ## with its taste and deed, and what it does at apex: Thousand Faces' growing
 ## crowd of copies that burst, True Reflection's copies that cast, Unseen

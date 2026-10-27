@@ -1,5 +1,5 @@
 extends RefCounted
-## The chaos fight (docs/plans/rebuild-phase1-arena-sim.md, section 13): one
+## The chaos fight (docs/plans/phases/rebuild-phase1-arena-sim.md, section 13): one
 ## seeded fight that uses every piece of the arena sim, for the determinism
 ## tests and the log audit. test_determinism checks it uses them all.
 ##

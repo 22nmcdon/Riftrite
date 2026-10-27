@@ -1,6 +1,6 @@
 class_name AbilityDef
 extends RefCounted
-## One of a unit's abilities (docs/plans/rebuild-phase1-arena-sim.md, sections
+## One of a unit's abilities (docs/plans/phases/rebuild-phase1-arena-sim.md, sections
 ## 2 and 5): its basic attack, or its signature.
 ##   basic attack: {"id": "bite", "name": "Bite", "cooldown_ms": 1200,
 ##                  "effects": [{"type": "damage", "amount": 4, "target": "target", "scaling": {"atk": 6000}}]}
@@ -17,7 +17,7 @@ extends RefCounted
 ## nearest is by straight line, since it fires from where the unit stands),
 ## among units within max_range hexes (default: the unit's own reach, half a
 ## hex for a melee unit).
-## An optional "text" is the player's sentence for it (docs/plans/rebuild-phase3-fight-sandbox.md,
+## An optional "text" is the player's sentence for it (docs/plans/phases/rebuild-phase3-fight-sandbox.md,
 ## section 7); the sim never reads it.
 ## "hp_cost_bp" (phase 8 part 5, Severine): each fire also costs that share of
 ## the unit's max HP, logged as HP_SPENT before its effects (which may read it:

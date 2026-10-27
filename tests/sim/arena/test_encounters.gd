@@ -1,8 +1,8 @@
 extends GutTest
 ## Building fights from encounters and formations (Encounters;
-## docs/plans/rebuild-phase2-heroes-enemies.md, section 2).
+## docs/plans/phases/rebuild-phase2-heroes-enemies.md, section 2).
 
-const Bot = preload("res://tools/run_bot.gd")
+const Bot = preload("res://tools/bots/run_bot.gd")
 
 const Units = preload("res://tests/sim/content/test_units_content.gd")
 
@@ -144,7 +144,7 @@ const ROSTERS: Dictionary = {
 ## Phase 2's nine, tuned by their enemies' numbers rather than a scale.
 ## Phase 2's nine (the easier tier since phase 5; scaled since playtest
 ## gate 3, rebuild-phase5-run.md).
-## The day-1 fights (docs/plans/easy-start.md, Decisions 9 and 10).
+## The day-1 fights (docs/plans/phases/easy-start.md, Decisions 9 and 10).
 const DAY_ONE: Array[String] = ["warren_mouth", "smouldering_den"]
 const BASIC: Array[String] = ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle"]
 
@@ -152,7 +152,7 @@ const BASIC: Array[String] = ["pup_warren", "ash_nest", "the_pack", "moth_cloud"
 func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
 	var act_1: Array[String] = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).act == 1)
-	# The day-1 fights (docs/plans/easy-start.md, Decision 9) come after Ash Nest.
+	# The day-1 fights (docs/plans/phases/easy-start.md, Decision 9) come after Ash Nest.
 	# Day 2's copies of Hollow Line and Lurker's Kindling follow them (ES-2),
 	# and day 3's elites follow theirs (Decision 15).
 	assert_eq(act_1, BASIC.slice(0, 2) + DAY_ONE + BASIC.slice(2, 5) + ["hollow_watch"] + BASIC.slice(5) + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "lurkers_spark", "sentinel_and_moths", "witch_and_pups",
@@ -171,7 +171,7 @@ func test_the_act_1_encounters_are_the_plans() -> void:
 	assert_eq((content.encounters["hollow_line"] as EncounterDef).rocks.size(), 2, "archers behind 2 rocks")
 
 
-## Act 2's fights (docs/plans/act2-glassmere.md, sections 6 to 8;
+## Act 2's fights (docs/plans/acts/act2-glassmere.md, sections 6 to 8;
 ## rebuild-phase8-act2.md, 8c-4b): eleven day fights, two Hunts, two
 ## elites, and the Mournwater, each with its water.
 const ACT_2_ROSTERS: Dictionary = {
@@ -213,7 +213,7 @@ func test_the_act_2_encounters_are_the_plans() -> void:
 	assert_eq((content.encounters["tide_choir"] as EncounterDef).rocks.size(), 2, "rocks anchor the dry middle")
 
 
-## Act 3's fights (docs/plans/act3-shattered-crown.md, section 8;
+## Act 3's fights (docs/plans/acts/act3-shattered-crown.md, section 8;
 ## rebuild-phase8-act3.md, 8c-6b): eleven day fights, two Hunts, two elites,
 ## and the Heart, each over the void but Stray Hounds.
 const ACT_3_ROSTERS: Dictionary = {

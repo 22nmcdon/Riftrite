@@ -1,6 +1,6 @@
 class_name HexGrid
 extends RefCounted
-## The placement board (docs/plans/rebuild-phase1-arena-sim.md, section 1):
+## The placement board (docs/plans/phases/rebuild-phase1-arena-sim.md, section 1):
 ## flat-topped hexes in columns, odd columns shifted half a hex toward the
 ## enemy ("odd-q"). Hexes are only for placing units before the fight; the
 ## fight happens on the plane, where every hex has a center.

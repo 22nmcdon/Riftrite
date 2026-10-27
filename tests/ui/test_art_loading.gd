@@ -1,5 +1,5 @@
 extends GutTest
-## How the game loads art (docs/plans/rebuild-phase7a-asset-loading.md),
+## How the game loads art (docs/plans/phases/rebuild-phase7a-asset-loading.md),
 ## against the small files in tests/fixtures/art/: a PNG wins over its SVG,
 ## a figure draws at its canvas size whatever its resolution, a boss's canvas
 ## is twice the size, the manifest's points place the bars and the shots,
