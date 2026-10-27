@@ -1,0 +1,27 @@
+{
+  "id": "maren",
+  "name": "Maren Thistledown",
+  "title": "the ranger",
+  "role": "damage",
+  "kit": {
+    "_note": "Keep Your Distance is the hop_away trait: when an enemy comes within a hex, she hops a hex away, once every 6s.",
+    "stats": {"hp": 270, "atk": 24, "def": 8, "crit": 8, "atsp": 10, "speed": 2, "range": 4},
+    "traits": ["hop_away"],
+    "hop_cooldown_ms": 6000,
+    "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},
+    "basic_attack": {
+      "id": "longshot", "name": "Longshot", "text": "Shoots her target from up to 4 hexes away.", "cooldown_ms": 1000,
+      "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+    },
+    "signature": {
+      "_note": "Marked for its own 4s: +15% damage taken from everyone.",
+      "id": "marking_shot", "name": "Marking Shot", "text": "Marks the nearest enemy within 4 hexes, so it takes more damage from everyone for a while.", "trigger": {"kind": "mana"}, "targeting": "nearest",
+      "effects": [{"type": "apply_status", "status": "marked", "duration_ms": 4000, "target": "target"}]
+    },
+    "passives": [
+      {"id": "slip_away", "name": "Slip Away", "kind": "ability",
+        "text": "Each time she hops away, she slips from sight for a moment: no enemy can target her.",
+        "effects": [{"trigger": "on_hop", "type": "apply_status", "status": "stealth", "duration_ms": 1000, "target": "self"}]}
+    ]
+  }
+}

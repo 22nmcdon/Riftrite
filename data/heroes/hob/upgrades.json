@@ -1,0 +1,848 @@
+[
+  {
+    "id": "lean_muscle",
+    "name": "Lean Muscle",
+    "hero": "hob",
+    "text": "His ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_sling",
+    "name": "Quick Sling",
+    "hero": "hob",
+    "text": "He attacks faster by a tenth of his attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "patched_coat",
+    "name": "Patched Coat",
+    "hero": "hob",
+    "text": "His max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "lucky_charm",
+    "name": "Lucky Charm",
+    "hero": "hob",
+    "text": "His crit chance rises by a quarter of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "crit",
+      "pct": 25
+    }
+  },
+  {
+    "id": "wider_pickings",
+    "name": "Wider Pickings",
+    "hero": "hob",
+    "text": "Pickings counts enemies dying a hex farther from him.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:pickings",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_grab",
+    "name": "Long Grab",
+    "hero": "hob",
+    "text": "Grab reaches a hex farther (once it's a habit, its dart reaches farther too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "grab",
+          "reach_add": 1
+        },
+        {
+          "slot": "abilities",
+          "ability": "grab",
+          "types": [
+            "leap"
+          ],
+          "amount_bp": 13334
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_grab",
+    "name": "Hard Grab",
+    "hero": "hob",
+    "text": "Grab hits harder (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "grab",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 13333
+        }
+      ]
+    }
+  },
+  {
+    "id": "slippery_exit",
+    "name": "Slippery Exit",
+    "hero": "hob",
+    "text": "He moves faster for a few seconds after Grab (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "grab",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "slippery_exit",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "scavengers_nose",
+    "name": "Scavenger's Nose",
+    "hero": "hob",
+    "text": "Grab reaches farther and goes first for an enemy low on HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "grab",
+          "prefer": {
+            "below_hp_pct": 30
+          },
+          "reach_add": 2
+        },
+        {
+          "slot": "abilities",
+          "ability": "grab",
+          "types": [
+            "leap"
+          ],
+          "amount_bp": 16667
+        }
+      ]
+    }
+  },
+  {
+    "id": "lucky_find",
+    "name": "Lucky Find",
+    "hero": "hob",
+    "text": "Once an act, a won fight pays extra shards.",
+    "tithe": {
+      "once_per_act": 5
+    }
+  },
+  {
+    "id": "pocket_sand",
+    "name": "Pocket Sand",
+    "hero": "hob",
+    "text": "His crits Slow their target for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "pocket_sand",
+          "name": "Pocket Sand",
+          "kind": "ability",
+          "text": "His crits Slow their target for a moment.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "type": "apply_status",
+              "status": "hobbled",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "well_worn_sling",
+    "name": "Well-Worn Sling",
+    "hero": "hob",
+    "text": "A sling worn smooth: his ATK rises with every 20 shards Pickings finds, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "shards",
+        "from_ability": [
+          "pickings"
+        ]
+      },
+      "per": 20,
+      "each": {
+        "stats_bp": {
+          "atk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "deep_pockets",
+    "name": "Deep Pockets",
+    "path": "hoarder",
+    "taste": true,
+    "text": "Nest Egg can grow higher (once transformed, each step of it is a little bigger).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:nest_egg",
+          "per_shards_max_add": 5
+        },
+        {
+          "slot": "passive:nest_egg_guard",
+          "per_shards_max_add": 5
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:nest_egg",
+          "value_add": 20
+        },
+        {
+          "slot": "passive:nest_egg_guard",
+          "value_add": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "penny_wise",
+    "name": "Penny Wise",
+    "path": "hoarder",
+    "taste": true,
+    "text": "Nest Egg counts fewer shards a step (once transformed, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:nest_egg",
+          "per_shards_add": -2
+        },
+        {
+          "slot": "passive:nest_egg_guard",
+          "per_shards_add": -2
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:nest_egg",
+          "per_shards_add": -1
+        },
+        {
+          "slot": "passive:nest_egg_guard",
+          "per_shards_add": -1
+        },
+        {
+          "slot": "passive:nest_egg_shared",
+          "per_shards_add": -1
+        },
+        {
+          "slot": "passive:nest_egg_shared_guard",
+          "per_shards_add": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "second_haggle",
+    "name": "Second Haggle",
+    "path": "fence",
+    "taste": true,
+    "text": "The second reroll in each shop costs 1 shard (once transformed, too).",
+    "shop": {
+      "cheap_rerolls": 1
+    }
+  },
+  {
+    "id": "quick_count",
+    "name": "Quick Count",
+    "path": "fence",
+    "taste": true,
+    "text": "His signature costs less mana: Grab now, Cut Purse once transformed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "grab",
+          "mana_max_add": -10
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "cut_purse",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "wanted_poster",
+    "name": "Wanted Poster",
+    "path": "bounty_hunter",
+    "taste": true,
+    "text": "The Bounty's Mark lasts longer (once transformed, it is stronger instead).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:bounty",
+          "statuses": [
+            "bounty"
+          ],
+          "duration_add_ms": 4000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:bounty",
+          "statuses": [
+            "bounty"
+          ],
+          "strength_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "clear_sight",
+    "name": "Clear Sight",
+    "path": "bounty_hunter",
+    "taste": true,
+    "text": "He deals more damage to the Bounty (once transformed, too).",
+    "mod": {
+      "passives": [
+        {
+          "id": "clear_sight",
+          "name": "Clear Sight",
+          "kind": "aura",
+          "text": "His hits on the Bounty land harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11500,
+            "vs": {
+              "statuses": [
+                "bounty"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "stunning_purse",
+    "name": "Stunning Purse",
+    "path": "hoarder",
+    "text": "Heavy Purse Stuns its target for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "stun",
+              "duration_ms": 500,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "guarded_gold",
+    "name": "Guarded Gold",
+    "path": "hoarder",
+    "text": "His DEF rises while the run holds 30 shards or more.",
+    "mod": {
+      "passives": [
+        {
+          "id": "guarded_gold",
+          "name": "Guarded Gold",
+          "kind": "aura",
+          "text": "His DEF rises while the run holds 30 shards or more.",
+          "aura": {
+            "target": "holder",
+            "stat": "def",
+            "value": 10,
+            "per_shards": 30,
+            "per_shards_max": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "misers_grip",
+    "name": "Miser's Grip",
+    "path": "hoarder",
+    "text": "Heavy Purse costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "heavy_purse",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "shared_wealth",
+    "name": "Shared Wealth",
+    "path": "hoarder",
+    "text": "His allies get more of Nest Egg.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:nest_egg_shared",
+          "value_add": 25
+        },
+        {
+          "slot": "passive:nest_egg_shared_guard",
+          "value_add": 25
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_coins",
+    "name": "Old Coins",
+    "path": "hoarder",
+    "text": "Old coins, long kept: his hits land harder with every 5 fights won holding 30 shards or more, for the rest of the run.",
+    "grows": {
+      "run_counts": "won_holding",
+      "per": 5,
+      "each": {
+        "passives": [
+          {
+            "id": "old_coins",
+            "name": "Old Coins",
+            "kind": "aura",
+            "text": "Grows with the fights won holding 30 shards or more.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "vs": {
+                "others": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "wholesale",
+    "name": "Wholesale",
+    "path": "fence",
+    "text": "Loadout items cost 1 shard less at the Pedlar.",
+    "shop": {
+      "item_less": 1
+    }
+  },
+  {
+    "id": "fair_trade",
+    "name": "Fair Trade",
+    "path": "fence",
+    "text": "Cut Purse makes elites and bosses drop another shard.",
+    "mod": {
+      "passives": [
+        {
+          "id": "fair_trade",
+          "name": "Fair Trade",
+          "kind": "ability",
+          "text": "Each elite or boss Cut Purse hits drops another shard, once.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "cut_purse"
+              ],
+              "once_per_enemy": true,
+              "vs": {
+                "ranks": [
+                  "elite",
+                  "boss"
+                ]
+              },
+              "type": "shards",
+              "amount": 1,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "insider",
+    "name": "Insider",
+    "path": "fence",
+    "text": "Each time the Pedlar lays out his wares, one charm comes already at rank II.",
+    "shop": {
+      "rank_ii_charms": 1
+    }
+  },
+  {
+    "id": "big_spender",
+    "name": "Big Spender",
+    "path": "fence",
+    "text": "The team's bonus for shards spent in shops is half again as big: +0.15% a shard, not +0.1%.",
+    "snowball_bp": 5000
+  },
+  {
+    "id": "old_contacts",
+    "name": "Old Contacts",
+    "path": "fence",
+    "text": "Old contacts: a won fight pays 1 more shard for every 5 shops visited from now, up to 5 more.",
+    "tithe": {
+      "per_step": 1
+    },
+    "grows": {
+      "run_counts": "shops",
+      "per": 5,
+      "max_steps": 5
+    }
+  },
+  {
+    "id": "long_arm",
+    "name": "Long Arm",
+    "path": "bounty_hunter",
+    "text": "Collect reaches 2 hexes farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "collect",
+          "reach_add": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_rest",
+    "name": "Hunter's Rest",
+    "path": "bounty_hunter",
+    "text": "Each Bounty that dies heals him.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hunters_rest",
+          "name": "Hunter's Rest",
+          "kind": "ability",
+          "text": "Each Bounty that dies heals him.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "heal",
+              "amount_bp_of_max_hp": 1500,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "tracker",
+    "name": "Tracker",
+    "path": "bounty_hunter",
+    "text": "The whole team deals more damage to the Bounty.",
+    "mod": {
+      "passives": [
+        {
+          "id": "tracker",
+          "name": "Tracker",
+          "kind": "aura",
+          "text": "The team's hits on the Bounty land harder.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "damage_bp",
+            "value": 11000,
+            "vs": {
+              "statuses": [
+                "bounty"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "fast_collect",
+    "name": "Fast Collect",
+    "path": "bounty_hunter",
+    "text": "Collect costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "collect",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "seasoned_hunter",
+    "name": "Seasoned Hunter",
+    "path": "bounty_hunter",
+    "text": "A seasoned hunter: he attacks faster with every 3 Bounties collected, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "kills",
+        "by_allies": true,
+        "statuses": [
+          "bounty"
+        ]
+      },
+      "per": 3,
+      "each": {
+        "stats_bp": {
+          "atsp": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "deep_vault",
+    "name": "Deep Vault",
+    "apex": "dragons_hoard",
+    "text": "Each fight won holding enough shards counts half again toward the hoard's run bonus.",
+    "snowball_bp": 5000
+  },
+  {
+    "id": "low_bar",
+    "name": "Low Bar",
+    "apex": "dragons_hoard",
+    "text": "A fight won holding 25 or more shards counts toward the hoard (and his cards), not 30.",
+    "holding_less": 5
+  },
+  {
+    "id": "compound_interest",
+    "name": "Compound Interest",
+    "apex": "golden_idol",
+    "text": "Each Recast makes his held shards count more still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "compounding_more",
+              "stacks": 1,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "idols_gaze",
+    "name": "Idol's Gaze",
+    "apex": "golden_idol",
+    "text": "While he's Shielded, enemies within 2 hexes of him hit softer.",
+    "mod": {
+      "passives": [
+        {
+          "id": "idols_gaze",
+          "name": "Idol's Gaze",
+          "kind": "ability",
+          "text": "While he's Shielded, enemies within 2 hexes of him hit softer.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "holder": {
+                "shielded": true
+              },
+              "type": "apply_status",
+              "status": "idol_gaze",
+              "target": "enemies_near_self",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "volume_discount",
+    "name": "Volume Discount",
+    "apex": "black_market",
+    "text": "Each relic bought makes relics 1 shard cheaper still.",
+    "shop": {
+      "relic_less_per_bought": 1
+    }
+  },
+  {
+    "id": "smugglers_route",
+    "name": "Smuggler's Route",
+    "apex": "black_market",
+    "text": "The black-market relic rerolls free once a shop.",
+    "shop": {
+      "black_market_rerolls": 1
+    }
+  },
+  {
+    "id": "deft_touch",
+    "name": "Deft Touch",
+    "apex": "silver_tongue",
+    "text": "Each enemy whose purse he cuts makes Cut Purse cheaper still (8 mana, not 5, down to 15).",
+    "mod": {
+      "passives": [
+        {
+          "id": "deft_touch",
+          "name": "Deft Touch",
+          "kind": "ability",
+          "text": "Each enemy whose purse he cuts makes Cut Purse cheaper still.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "cut_purse"
+              ],
+              "once_per_enemy": true,
+              "type": "apply_status",
+              "status": "silver_tongue",
+              "stacks": 3,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "light_fingers",
+    "name": "Light Fingers",
+    "apex": "silver_tongue",
+    "text": "His shards a fight can go 3 higher.",
+    "mod": {
+      "shard_cap_add": 3
+    }
+  },
+  {
+    "id": "hunting_party",
+    "name": "Hunting Party",
+    "apex": "manhunter",
+    "text": "Each Bounty collected counts twice toward the team's bonus against Bounties.",
+    "snowball_bp": 10000
+  },
+  {
+    "id": "dead_or_alive",
+    "name": "Dead or Alive",
+    "apex": "manhunter",
+    "text": "Bounties are Slowed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "dead_or_alive",
+          "name": "Dead or Alive",
+          "kind": "ability",
+          "text": "Each Bounty is Slowed while it's a Bounty.",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "apply_status",
+              "status": "bounty_slow",
+              "target": "toughest_enemies",
+              "count": 2
+            },
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "apply_status",
+              "status": "bounty_slow",
+              "target": "toughest_enemies",
+              "only": {
+                "without": [
+                  "bounty_slow"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_money",
+    "name": "Blood Money",
+    "apex": "price_on_their_heads",
+    "text": "Each Bounty collected counts twice toward the toughest's pay (up to 15).",
+    "snowball_bp": 10000
+  },
+  {
+    "id": "reward_poster",
+    "name": "Reward Poster",
+    "apex": "price_on_their_heads",
+    "text": "Whoever on his side kills a Bounty gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "reward_poster",
+          "name": "Reward Poster",
+          "kind": "ability",
+          "text": "Whoever on his side kills a Bounty gains mana.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty",
+                  "bounty_lesser"
+                ]
+              },
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

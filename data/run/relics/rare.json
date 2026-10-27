@@ -1,0 +1,624 @@
+[
+  {
+    "id": "ember_heart",
+    "name": "Ember Heart",
+    "tier": "rare",
+    "icon": "ember_heart",
+    "flavor": "It still beats, and it still burns.",
+    "text": "Every hero's basic attack sets its target Burning.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ashen_censer",
+    "name": "Ashen Censer",
+    "tier": "rare",
+    "icon": "ember_heart",
+    "flavor": "The smoke never thins.",
+    "text": "Every hit on a Burning enemy adds Burn.",
+    "mod": {
+      "passives": [
+        {
+          "id": "ashen_censer",
+          "name": "Ashen Censer",
+          "kind": "ability",
+          "text": "Its hits on Burning enemies add Burn.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thornwoven_cloak",
+    "name": "Thornwoven Cloak",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "Woven from what grows over the fallen.",
+    "text": "Heroes deal more damage to Rooted enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thornwoven_cloak",
+          "name": "Thornwoven Cloak",
+          "kind": "aura",
+          "text": "More damage to Rooted enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12500,
+            "vs": {
+              "keywords": [
+                "rooted"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "echoing_bell",
+    "name": "Echoing Bell",
+    "tier": "rare",
+    "icon": "echo",
+    "flavor": "One rings, and the rest answer.",
+    "text": "When a hero fires a signature, the others gain mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "echoing_bell",
+          "name": "Echoing Bell",
+          "kind": "ability",
+          "text": "When an ally fires a signature, it gains mana.",
+          "effects": [
+            {
+              "trigger": "on_ally_ability",
+              "type": "gain_mana",
+              "amount": 6,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "collectors_chain",
+    "name": "Collector's Chain",
+    "tier": "rare",
+    "icon": "hollow_crown",
+    "flavor": "A link for every fallen foe.",
+    "text": "Heroes grow stronger with every enemy the team kills this run.",
+    "grows": {
+      "counts": {
+        "counts": "kills"
+      },
+      "per": 10,
+      "each": {
+        "stats_add": {
+          "atk": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "tally_of_the_dead",
+    "name": "Tally of the Dead",
+    "tier": "rare",
+    "icon": "pilgrims_lantern",
+    "flavor": "The marks run down the haft.",
+    "text": "Heroes grow hardier with every elite the team beats this run.",
+    "grows": {
+      "run_counts": "elite_wins",
+      "per": 1,
+      "each": {
+        "stats_bp": {
+          "hp": 10200
+        }
+      }
+    }
+  },
+  {
+    "id": "chalk_ledger",
+    "name": "Chalk Ledger",
+    "tier": "rare",
+    "icon": "casters_first",
+    "flavor": "Every mark a debt.",
+    "text": "Quest: Mark enough enemies, and Marked enemies take more damage for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "keywords": [
+          "marked"
+        ]
+      },
+      "per": 40,
+      "max_steps": 1,
+      "each": {
+        "passives": [
+          {
+            "id": "chalk_ledger",
+            "name": "Chalk Ledger",
+            "kind": "aura",
+            "text": "More damage to Marked enemies.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 11000,
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "bounty_board",
+    "name": "Bounty Board",
+    "tier": "rare",
+    "icon": "the_tank_first",
+    "flavor": "Names, crossed out.",
+    "text": "Quest: win fights in a row with no hero falling, for shards.",
+    "streak": {
+      "wins": 3,
+      "shards": 25
+    }
+  },
+  {
+    "id": "bloodied_coin",
+    "name": "Bloodied Coin",
+    "tier": "rare",
+    "icon": "cheaper",
+    "flavor": "Taken from the hands that held it.",
+    "text": "A shard for every enemy the team kills.",
+    "grows": {
+      "counts": {
+        "counts": "kills"
+      },
+      "per": 1,
+      "each_shards": 1
+    }
+  },
+  {
+    "id": "the_magpies_scale",
+    "name": "The Magpie's Scale",
+    "tier": "rare",
+    "icon": "cheaper",
+    "flavor": "He'd want it back.",
+    "text": "Every shop shows one more ware and one more relic.",
+    "shop_relics_add": 1,
+    "wares_add": 1
+  },
+  {
+    "id": "rift_glass_eye",
+    "name": "Rift-Glass Eye",
+    "tier": "rare",
+    "icon": "rift_glass_eye",
+    "flavor": "Look through it and the rift looks back.",
+    "text": "Every fight is Scouted: you see where its enemies stand.",
+    "always_scout": true
+  },
+  {
+    "id": "hagglers_charm",
+    "name": "Haggler's Charm",
+    "tier": "rare",
+    "icon": "cheaper",
+    "flavor": "It never pays full price.",
+    "text": "Everything at the Pedlar costs less.",
+    "price_add": -1
+  },
+  {
+    "id": "lucky_strike",
+    "name": "Lucky Strike",
+    "tier": "rare",
+    "icon": "fletched_for_wings",
+    "flavor": "Heads, you win.",
+    "text": "Shards for the team's crits, up to a few a fight.",
+    "grows": {
+      "counts": {
+        "counts": "crits"
+      },
+      "per": 15,
+      "each_shards": 1,
+      "max_steps_per_fight": 5
+    }
+  },
+  {
+    "id": "executioners_mark",
+    "name": "Executioner's Mark",
+    "tier": "rare",
+    "icon": "casters_first",
+    "flavor": "The axe knows the neck.",
+    "text": "Hits on Marked enemies near death always crit.",
+    "mod": {
+      "passives": [
+        {
+          "id": "executioners_mark",
+          "name": "Executioner's Mark",
+          "kind": "aura",
+          "text": "Its hits on Marked enemies near death always crit.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_chance_bp",
+            "value": 10000,
+            "vs": {
+              "keywords": [
+                "marked"
+              ],
+              "below_hp_pct": 30
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_ledger",
+    "name": "Hunter's Ledger",
+    "tier": "rare",
+    "icon": "rift_glass_eye",
+    "flavor": "Every name crossed out in red.",
+    "text": "Crits on Marked enemies make their Mark last longer.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hunters_ledger",
+          "name": "Hunter's Ledger",
+          "kind": "ability",
+          "text": "A crit on a Marked enemy makes its Mark last longer.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "extend_status",
+              "status": "marked",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "pyre_ash",
+    "name": "Pyre Ash",
+    "tier": "rare",
+    "icon": "ember_heart",
+    "flavor": "Some of it is still burning.",
+    "text": "When a Burning enemy a hero fells dies, its Burn spreads to the enemies around it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "pyre_ash",
+          "name": "Pyre Ash",
+          "kind": "ability",
+          "text": "When a Burning enemy it fells dies, its Burn spreads to the enemies within 1 hex of it.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "grasping_mire",
+    "name": "Grasping Mire",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "The ground remembers who it held.",
+    "text": "When a Rooted enemy a hero fells dies, the enemy nearest it is Rooted.",
+    "mod": {
+      "passives": [
+        {
+          "id": "grasping_mire",
+          "name": "Grasping Mire",
+          "kind": "ability",
+          "text": "When a Rooted enemy it fells dies, the enemy nearest it is Rooted.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              },
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1000,
+              "target": "enemy_near_named"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shattered_aegis",
+    "name": "Shattered Aegis",
+    "tier": "rare",
+    "icon": "unbroken_wall",
+    "flavor": "The pieces are sharper than the shield ever was.",
+    "text": "When a hero's Shield breaks, the enemies around it take the Shield the blow broke as damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shattered_aegis",
+          "name": "Shattered Aegis",
+          "kind": "ability",
+          "text": "When its Shield breaks, the enemies within 1 hex take the Shield the blow broke as damage.",
+          "effects": [
+            {
+              "trigger": "on_shield_broken",
+              "type": "damage",
+              "amount_bp_of_damage": 10000,
+              "target": "enemies_near_self",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "veil_of_the_lost",
+    "name": "Veil of the Lost",
+    "tier": "rare",
+    "icon": "light_feet",
+    "flavor": "Stitched from the cloaks of those who never came back.",
+    "text": "Heroes' Stealth lasts longer, and a hero leaving Stealth attacks faster for a while.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "statuses": [
+            "stealth"
+          ],
+          "duration_add_ms": 1000
+        }
+      ],
+      "passives": [
+        {
+          "id": "veil_of_the_lost",
+          "name": "Veil of the Lost",
+          "kind": "ability",
+          "text": "Leaving Stealth, it attacks faster for a while.",
+          "effects": [
+            {
+              "trigger": "on_status_ended",
+              "statuses": [
+                "stealth"
+              ],
+              "type": "apply_status",
+              "status": "veiled_haste",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "keen_edge",
+    "name": "Keen Edge",
+    "tier": "rare",
+    "icon": "steady_hands",
+    "flavor": "Sharpened on bone.",
+    "text": "Heroes' crits deal more damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "keen_edge",
+          "name": "Keen Edge",
+          "kind": "aura",
+          "text": "Its crits deal more damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 3000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gluttons_chalice",
+    "name": "Glutton's Chalice",
+    "tier": "rare",
+    "icon": "deep_mend",
+    "flavor": "Never empty. Never enough.",
+    "text": "Heroes heal a share of the damage their hits deal.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gluttons_chalice",
+          "name": "Glutton's Chalice",
+          "kind": "aura",
+          "text": "Heals a share of the damage its hits deal.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "thorned_bandage",
+    "name": "Thorned Bandage",
+    "tier": "rare",
+    "icon": "deep_mend",
+    "flavor": "It closes the wound and opens another.",
+    "text": "When a hero heals someone, the enemy nearest them takes part of the heal as damage. It never crits and never lifesteals.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thorned_bandage",
+          "name": "Thorned Bandage",
+          "kind": "ability",
+          "text": "When it heals an ally, the enemy nearest that ally takes part of the heal as damage.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "type": "damage",
+              "amount_bp_of_damage": 2500,
+              "plain": true,
+              "target": "enemy_near_named"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_pommel",
+    "name": "Heavy Pommel",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "The first blow is the one they remember.",
+    "text": "The first hit on each enemy Stuns it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "heavy_pommel",
+          "name": "Heavy Pommel",
+          "kind": "ability",
+          "text": "The first hit any hero lands on each enemy Stuns it.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "once_per_enemy": true,
+              "type": "apply_status",
+              "status": "stun",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "dulled_shackles",
+    "name": "Dulled Shackles",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "The chain bites; the bite lingers.",
+    "text": "Rooted or Stunned enemies deal less damage, and keep dealing less for a while after the hold ends.",
+    "rules": {
+      "held_weak": {
+        "power_bp": 2500,
+        "linger_ms": 2000
+      }
+    }
+  },
+  {
+    "id": "choking_hold",
+    "name": "Choking Hold",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "No breath, no spell.",
+    "text": "Hits on Rooted or Stunned enemies drain their mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "choking_hold",
+          "name": "Choking Hold",
+          "kind": "ability",
+          "text": "Its hits on Rooted or Stunned enemies drain their mana.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              },
+              "type": "mana_drain",
+              "amount": 5,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "splinter_shot",
+    "name": "Splinter Shot",
+    "tier": "rare",
+    "icon": "fletched_for_wings",
+    "flavor": "Nothing breaks clean in the rift.",
+    "text": "Crits also hit one enemy within 1 hex of the target for part of their damage. That hit never crits.",
+    "mod": {
+      "passives": [
+        {
+          "id": "splinter_shot",
+          "name": "Splinter Shot",
+          "kind": "ability",
+          "text": "Its crits also hit one enemy within 1 hex of the target for part of their damage.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "type": "damage",
+              "amount_bp_of_damage": 5000,
+              "plain": true,
+              "target": "enemy_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

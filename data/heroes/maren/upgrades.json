@@ -1,0 +1,970 @@
+[
+  {
+    "_note": "The after-fight pick's upgrades (docs/plans/upgrade-pools.md; built in phase 5c step 7, docs/plans/rebuild-phase5c-combos.md, section 15). Three layers: a hero's own cards (\"hero\"), always offered; a path's taste cards (\"path\" with \"taste\": true), offered while vowed to it until the hero transforms, and carried on after with their \"transformed_mod\" (Decision 35); and a path's cards (\"path\"), offered once transformed. Each is a kit modifier (KitMod) on the hero's slots; a stacking card (\"stacks\") locks in a share of the hero's stat when taken and can be taken again; a growing card (\"grows\") grows all run. The pick never offers a card that changes nothing on the hero's kit now (Decision 37). Numbers are placeholders.",
+    "id": "honed_tips",
+    "name": "Honed Tips",
+    "hero": "maren",
+    "text": "Her ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "keen_eye",
+    "name": "Keen Eye",
+    "hero": "maren",
+    "text": "Her CRIT rises by a quarter of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "crit",
+      "pct": 25
+    }
+  },
+  {
+    "id": "quick_draw",
+    "name": "Quick Draw",
+    "hero": "maren",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "fletchers_leathers",
+    "name": "Fletcher's Leathers",
+    "hero": "maren",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "deep_mark",
+    "name": "Deep Mark",
+    "hero": "maren",
+    "text": "Her Marks last longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "statuses": [
+            "marked"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "light_step",
+    "name": "Light Step",
+    "hero": "maren",
+    "text": "She can hop away again sooner.",
+    "mod": {
+      "hop": {
+        "cooldown_add_ms": -2000
+      }
+    }
+  },
+  {
+    "id": "long_vanish",
+    "name": "Long Vanish",
+    "hero": "maren",
+    "text": "Her hop hides her for longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:slip_away",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "parting_shot",
+    "name": "Parting Shot",
+    "hero": "maren",
+    "text": "Her first attack after a hop is a crit.",
+    "mod": {
+      "passives": [
+        {
+          "id": "parting_shot",
+          "name": "Parting Shot",
+          "kind": "ability",
+          "text": "Her first attack after a hop is a crit.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "apply_status",
+              "status": "parting_shot",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_blood",
+    "name": "First Blood",
+    "hero": "maren",
+    "text": "Her first attack each fight hits twice as hard.",
+    "mod": {
+      "passives": [
+        {
+          "id": "first_blood",
+          "name": "First Blood",
+          "kind": "ability",
+          "text": "Her first attack each fight hits twice as hard.",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "apply_status",
+              "status": "first_blood",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_mark",
+    "name": "Heavy Mark",
+    "hero": "maren",
+    "text": "Enemies she Marks take more damage than others' Marks give.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "statuses": [
+            "marked"
+          ],
+          "strength_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "close_quarters",
+    "name": "Close Quarters",
+    "hero": "maren",
+    "text": "She hits enemies right next to her harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "close_quarters",
+          "name": "Close Quarters",
+          "kind": "aura",
+          "text": "She hits enemies within 1 hex of her harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "vs_within_hexes": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "notched_bow",
+    "name": "Notched Bow",
+    "hero": "maren",
+    "text": "Every enemy she Marks notches her bow: her ATK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "keywords": [
+          "marked"
+        ]
+      },
+      "per": 3,
+      "each": {
+        "stats_bp": {
+          "atk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "steady_hands",
+    "name": "Steady Hands",
+    "path": "deadeye",
+    "taste": true,
+    "text": "She steadies sooner: Steady holds after less time standing still (once transformed, Planted and Sure Aim).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:steady",
+          "after_add_ms": -500
+        },
+        {
+          "slot": "passive:steady_aim",
+          "after_add_ms": -500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:planted",
+          "after_add_ms": -500
+        },
+        {
+          "slot": "passive:sure_aim",
+          "after_add_ms": -500
+        }
+      ]
+    }
+  },
+  {
+    "id": "eyes_up",
+    "name": "Eyes Up",
+    "path": "deadeye",
+    "taste": true,
+    "text": "She crits more often while Steady (once transformed, while planted).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:steady_aim",
+          "value_add": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:sure_aim",
+          "value_add": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "hearts_refund",
+    "name": "Heart's Refund",
+    "path": "deadeye",
+    "text": "A kill with Heartseeker gives back mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hearts_refund",
+          "name": "Heart's Refund",
+          "kind": "ability",
+          "text": "A kill with Heartseeker gives back mana.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "from_signature": true,
+              "type": "gain_mana",
+              "amount_bp_of_max_mana": 5000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_plant",
+    "name": "Quick Plant",
+    "path": "deadeye",
+    "text": "She plants sooner after she moves.",
+    "mod": {
+      "plant_add_ms": -750
+    }
+  },
+  {
+    "id": "seekers_mark",
+    "name": "Seeker's Mark",
+    "path": "deadeye",
+    "text": "Heartseeker Marks everything it pierces.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 4000,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bleeding_shot",
+    "name": "Bleeding Shot",
+    "path": "deadeye",
+    "text": "Her crits from the far edge of her reach make the target Bleed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bleeding_shot",
+          "name": "Bleeding Shot",
+          "kind": "ability",
+          "text": "Her crits from more than 5 hexes away make the target Bleed.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "beyond_hexes": 5,
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 3,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_tally",
+    "name": "Hunter's Tally",
+    "path": "deadeye",
+    "text": "Every shot from far off adds to her tally: her damage grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "damage",
+        "beyond_hexes": 4
+      },
+      "per": 300,
+      "each": {
+        "passives": [
+          {
+            "id": "hunters_tally",
+            "name": "Hunter's Tally",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "tight_weave",
+    "name": "Tight Weave",
+    "path": "trapper",
+    "taste": true,
+    "text": "Her snares root for longer (once transformed, Bramble Field's).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:snare",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "root"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "second_snare",
+    "name": "Second Snare",
+    "path": "trapper",
+    "taste": true,
+    "text": "Her Snare comes twice a fight (once transformed, Bramble Field keeps one more standing).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:snare",
+          "times_add": 1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "max_standing_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "tangle",
+    "name": "Tangle",
+    "path": "trapper",
+    "text": "Enemies next to one she roots are Slowed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "tangle",
+          "name": "Tangle",
+          "kind": "ability",
+          "text": "Enemies within 1 hex of one she roots are Slowed.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "root"
+              ],
+              "type": "apply_status",
+              "status": "slow",
+              "duration_ms": 2000,
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_opening",
+    "name": "Hunter's Opening",
+    "path": "trapper",
+    "text": "She hits Rooted enemies harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hunters_opening",
+          "name": "Hunter's Opening",
+          "kind": "aura",
+          "text": "She hits Rooted enemies harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "vs": {
+              "keywords": [
+                "rooted"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "snag",
+    "name": "Snag",
+    "path": "trapper",
+    "text": "Her snares catch enemies that leap or charge over them.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "snare"
+          ],
+          "snags": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "guarded_ground",
+    "name": "Guarded Ground",
+    "path": "trapper",
+    "text": "As the fight starts, a snare waits under your front-most ally.",
+    "mod": {
+      "passives": [
+        {
+          "id": "guarded_ground",
+          "name": "Guarded Ground",
+          "kind": "ability",
+          "text": "As the fight starts, she sets one of her snares under your front-most ally (it counts toward Bramble Field's).",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "snare",
+              "under": "front_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "patient_hunter",
+    "name": "Patient Hunter",
+    "path": "trapper",
+    "text": "Every moment an enemy spends in her snares teaches her: her damage to Rooted enemies grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "rooted_ms"
+      },
+      "per": 15000,
+      "each": {
+        "passives": [
+          {
+            "id": "patient_hunter",
+            "name": "Patient Hunter",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "quick_split",
+    "name": "Quick Split",
+    "path": "volley",
+    "taste": true,
+    "text": "Split Shot comes sooner (once transformed, every shot splits already, so the split arrow hits harder).",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "at": [
+            "enemy_near_target"
+          ],
+          "every_add": -1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemy_near_target"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "restless",
+    "name": "Restless",
+    "path": "volley",
+    "taste": true,
+    "text": "She shoots faster for a moment after she moves.",
+    "mod": {
+      "passives": [
+        {
+          "id": "restless",
+          "name": "Restless",
+          "kind": "aura",
+          "text": "For 2s after she moves, she shoots faster.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp",
+            "value": 10,
+            "while": "moved",
+            "within_ms": 2000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "harrying_storm",
+    "name": "Harrying Storm",
+    "path": "volley",
+    "text": "Arrow Storm Hobbles what it rains on.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gluttons_quiver",
+    "name": "Glutton's Quiver",
+    "path": "volley",
+    "text": "A kill by a split arrow gives her mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gluttons_quiver",
+          "name": "Glutton's Quiver",
+          "kind": "ability",
+          "text": "A kill by a split arrow (an enemy she wasn't aiming at) gives her mana.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "off_target": true,
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "chasing_storm",
+    "name": "Chasing Storm",
+    "path": "volley",
+    "text": "Arrow Storm drifts toward the biggest group of enemies.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "follows": "largest_group"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ricochet",
+    "name": "Ricochet",
+    "path": "volley",
+    "text": "A split arrow splits once more, to the enemy nearest the one it hit.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemy_near_target"
+          ],
+          "ricochet_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "arrow_glut",
+    "name": "Arrow Glut",
+    "path": "volley",
+    "text": "Every extra enemy her arrows find quickens her draw: her attacks speed up for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "extra_hits",
+        "from_ability": [
+          "longshot"
+        ]
+      },
+      "per": 15,
+      "each": {
+        "stats_add": {
+          "atsp": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "keen_talons",
+    "name": "Keen Talons",
+    "apex": "eagle_eye",
+    "text": "Heartseeker finishes enemies it leaves below 25% HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "keen_talons",
+          "name": "Keen Talons",
+          "kind": "ability",
+          "text": "Heartseeker finishes enemies it leaves a little higher.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "heartseeker"
+              ],
+              "type": "damage",
+              "amount": 1,
+              "execute_below_pct": 25,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deaths_eye",
+    "name": "Death's Eye",
+    "apex": "eagle_eye",
+    "text": "Each enemy Heartseeker finishes Marks every enemy within 2 hexes of it for 3s.",
+    "mod": {
+      "passives": [
+        {
+          "id": "deaths_eye",
+          "name": "Death's Eye",
+          "kind": "ability",
+          "text": "An execution Marks the enemies within 2 hexes of the fallen.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "from_signature": true,
+              "executed": true,
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 3000,
+              "target": "enemies_near_named",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gathering_line",
+    "name": "Gathering Line",
+    "apex": "stormline",
+    "text": "Each enemy Heartseeker passes through makes it hit the next harder still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "per_enemy_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "thunderline",
+    "name": "Thunderline",
+    "apex": "stormline",
+    "text": "Enemies Heartseeker hits are slowed for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "endless_hail",
+    "name": "Endless Hail",
+    "apex": "hailstorm",
+    "text": "Each enemy Arrow Storm hits makes her grow twice as fast.",
+    "mod": {
+      "passives": [
+        {
+          "id": "endless_hail",
+          "name": "Endless Hail",
+          "kind": "ability",
+          "text": "Each enemy Arrow Storm hits gives her another stack of Hailstorm.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "arrow_storm"
+              ],
+              "type": "apply_status",
+              "status": "hailstorm",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "pinning_hail",
+    "name": "Pinning Hail",
+    "apex": "hailstorm",
+    "text": "Arrow Storm roots the enemies it hits for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 500,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gale",
+    "name": "Gale",
+    "apex": "windrunner",
+    "text": "Each hop makes her attack faster still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gale",
+          "name": "Gale",
+          "kind": "ability",
+          "text": "Each hop makes her attack a little faster for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "apply_status",
+              "status": "gale",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "vanishing_step",
+    "name": "Vanishing Step",
+    "apex": "windrunner",
+    "text": "Each hop hides her for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "vanishing_step",
+          "name": "Vanishing Step",
+          "kind": "ability",
+          "text": "Each hop hides her for a moment.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "apply_status",
+              "status": "stealth",
+              "duration_ms": 500,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thicket",
+    "name": "Thicket",
+    "apex": "warden_of_thorns",
+    "text": "More of her briars can stand at once.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "max_standing_add": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": "barbed_walls",
+    "name": "Barbed Walls",
+    "apex": "warden_of_thorns",
+    "text": "Her briars stand longer, tearing at whoever touches them.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "pack_snares",
+    "name": "Pack Snares",
+    "apex": "huntmaster",
+    "text": "A Rooted enemy that falls leaves two snares, not one.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:pack_snares",
+          "add_effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              },
+              "type": "snare",
+              "at": "named",
+              "max_standing": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "target": "target",
+                  "duration_ms": 2500
+                },
+                {
+                  "type": "apply_status",
+                  "status": "bleed",
+                  "stacks": 6,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "called_quarry",
+    "name": "Called Quarry",
+    "apex": "huntmaster",
+    "text": "Her allies hit Rooted enemies harder still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:quarry",
+          "value_add": 1000
+        }
+      ]
+    }
+  }
+]

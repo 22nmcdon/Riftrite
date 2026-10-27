@@ -52,7 +52,7 @@ func test_the_data() -> void:
 func test_a_specialization_must_change_something() -> void:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in ContentDb.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	var enemies: Array = JSON.parse_string(texts[ContentDb.ENEMIES_FILE])
 	for entry: Variant in enemies:
 		if entry is Dictionary and (entry as Dictionary).get("id", "") == "rift_pup":

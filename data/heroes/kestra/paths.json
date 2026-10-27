@@ -1,0 +1,1907 @@
+[
+  {
+    "_note": "Burn: maker (rebuild-heroes.md, section 8k, path 1; phase 8 part 6, 8f-3). Self-sufficient (build-tuning.md). Grit's Burn is read from her ATK (an effect's scaling_of owner). Tuned by build: the design's numbers were +19 over base; a lift of her ATK and HP (Grit's with them) makes it +29.",
+    "id": "cinderhound",
+    "hero": "kestra",
+    "name": "Cinderhound",
+    "title": "the one whose hound runs hot",
+    "fantasy": "Her hound runs hot, and everything it bites catches.",
+    "placement": "Where Grit reaches the enemies her allies want Burning, with her spear in reach behind him.",
+    "vowed": {
+      "taste": "Smoldering Fangs: every 3rd bite from Grit sets its target Burning, 20% of her ATK.",
+      "cost": "10% less ATK.",
+      "patch": {
+        "stats_bp": {
+          "atk": 9000
+        },
+        "companions": [
+          {
+            "kit": {
+              "id": "grit",
+              "name": "Grit",
+              "stats": {
+                "hp": 1,
+                "atk": 1,
+                "def": 8,
+                "speed": 3,
+                "range": 1
+              },
+              "basic_attack": {
+                "id": "bite",
+                "name": "Bite",
+                "text": "A fast bite at the enemy in front of him. Every 3rd sets it Burning, from her ATK.",
+                "cooldown_ms": 800,
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 10000
+                    }
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "atk": 2000
+                    },
+                    "scaling_of": "owner",
+                    "target": "target",
+                    "every": 3
+                  }
+                ]
+              },
+              "passives": [
+                {
+                  "id": "bond",
+                  "name": "Bond",
+                  "kind": "aura",
+                  "text": "Beside Kestra, he attacks faster.",
+                  "aura": {
+                    "target": "holder",
+                    "stat": "atsp",
+                    "value": 10
+                  }
+                }
+              ]
+            },
+            "hp_pct": 40,
+            "atk_pct": 60,
+            "return_ms": 10000
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Grit is ember-wreathed: every bite sets its target Burning, 15% of her ATK, and every enemy that hits him catches Burn of 10% of her ATK. Firebrand Pounce replaces Sic 'Em (50 mana): Grit leaps on her target and bursts, setting every enemy within 1 hex of it Burning, 60% of her ATK. Sic 'Em becomes a habit, every 8th Spear Jab. She gains 10% ATK and max HP (and Grit with her).",
+      "cost": "Grit has 20% less HP.",
+      "patch": {
+        "stats_bp": {
+          "atk": 11000,
+          "hp": 11000
+        },
+        "signature": {
+          "id": "firebrand_pounce",
+          "name": "Firebrand Pounce",
+          "text": "Grit leaps on her target within 2 hexes and bursts into flame: every enemy within 1 hex of it is set Burning, from her ATK.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "by": "companion",
+          "effects": [
+            {
+              "type": "leap",
+              "max_hexes": 6,
+              "target": "target"
+            },
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "atk": 6000
+                  },
+                  "scaling_of": "owner",
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "sic_em",
+            "name": "Sic 'Em",
+            "kind": "ability",
+            "by": "companion",
+            "text": "A habit: every 8th Spear Jab, Grit leaps on her target and bites it hard.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "leap",
+                "max_hexes": 6,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 20000
+                }
+              }
+            ]
+          }
+        ],
+        "companions": [
+          {
+            "kit": {
+              "id": "grit",
+              "name": "Grit",
+              "stats": {
+                "hp": 1,
+                "atk": 1,
+                "def": 8,
+                "speed": 3,
+                "range": 1
+              },
+              "basic_attack": {
+                "id": "bite",
+                "name": "Bite",
+                "text": "A fast bite at the enemy in front of him that sets it Burning, from her ATK.",
+                "cooldown_ms": 800,
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 10000
+                    }
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "atk": 1500
+                    },
+                    "scaling_of": "owner",
+                    "target": "target"
+                  }
+                ]
+              },
+              "passives": [
+                {
+                  "id": "bond",
+                  "name": "Bond",
+                  "kind": "aura",
+                  "text": "Beside Kestra, he attacks faster.",
+                  "aura": {
+                    "target": "holder",
+                    "stat": "atsp",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "ember_coat",
+                  "name": "Ember Coat",
+                  "kind": "ability",
+                  "text": "Every enemy that hits him catches Burn, from her ATK.",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 0,
+                      "scaling": {
+                        "atk": 1000
+                      },
+                      "scaling_of": "owner",
+                      "target": "hit_target",
+                      "trigger": "on_hit_taken"
+                    }
+                  ]
+                }
+              ]
+            },
+            "hp_pct": 32,
+            "atk_pct": 60,
+            "return_ms": 10000
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Burn applied by Grit's bites",
+      "counts": "applied",
+      "statuses": [
+        "burn"
+      ],
+      "from_ability": [
+        "bite"
+      ],
+      "by_stacks": true,
+      "threshold": 88
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-3; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "hellhound",
+        "name": "Hellhound",
+        "title": "the hound wreathed in fire",
+        "fantasy": "Grit burns, and everything near him burns, and every enemy that falls burning makes the fire hungrier.",
+        "vowed": {
+          "taste": "Smoldering Fangs returns: every 2nd bite of Grit's also sets Burn of 20% of her ATK.",
+          "patch": {
+            "companions": [
+              {
+                "kit": {
+                  "id": "grit",
+                  "name": "Grit",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 8,
+                    "speed": 3,
+                    "range": 1
+                  },
+                  "basic_attack": {
+                    "id": "bite",
+                    "name": "Bite",
+                    "text": "A fast bite at the enemy in front of him that sets it Burning, from her ATK, and every 2nd sets more.",
+                    "cooldown_ms": 800,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 1500
+                        },
+                        "scaling_of": "owner",
+                        "target": "target"
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 2000
+                        },
+                        "scaling_of": "owner",
+                        "target": "target",
+                        "every": 2
+                      }
+                    ]
+                  },
+                  "passives": [
+                    {
+                      "id": "bond",
+                      "name": "Bond",
+                      "kind": "aura",
+                      "text": "Beside Kestra, he attacks faster.",
+                      "aura": {
+                        "target": "holder",
+                        "stat": "atsp",
+                        "value": 10
+                      }
+                    },
+                    {
+                      "id": "ember_coat",
+                      "name": "Ember Coat",
+                      "kind": "ability",
+                      "text": "Every enemy that hits him catches Burn, from her ATK.",
+                      "effects": [
+                        {
+                          "type": "apply_status",
+                          "status": "burn",
+                          "stacks": 0,
+                          "scaling": {
+                            "atk": 1000
+                          },
+                          "scaling_of": "owner",
+                          "target": "hit_target",
+                          "trigger": "on_hit_taken"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "hp_pct": 32,
+                "atk_pct": 60,
+                "return_ms": 10000
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Smoldering Fangs every 2nd bite. Grit is wreathed in fire: every enemy within 1 hex of him catches Burn of 10% of her ATK every second, and he shrugs off 30% of each hit from a Burning enemy. Each enemy that falls Burning within 2 hexes of him gives him +15% ATK for the rest of the fight. The apex also gives +15% HP and ATK (and her companions with them).",
+          "patch": {
+            "companions": [
+              {
+                "kit": {
+                  "id": "grit",
+                  "name": "Grit",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 8,
+                    "speed": 3,
+                    "range": 1
+                  },
+                  "basic_attack": {
+                    "id": "bite",
+                    "name": "Bite",
+                    "text": "A fast bite at the enemy in front of him that sets it Burning, from her ATK, and every 2nd sets more.",
+                    "cooldown_ms": 800,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 1500
+                        },
+                        "scaling_of": "owner",
+                        "target": "target"
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 2000
+                        },
+                        "scaling_of": "owner",
+                        "target": "target",
+                        "every": 2
+                      }
+                    ]
+                  },
+                  "passives": [
+                    {
+                      "id": "bond",
+                      "name": "Bond",
+                      "kind": "aura",
+                      "text": "Beside Kestra, he attacks faster.",
+                      "aura": {
+                        "target": "holder",
+                        "stat": "atsp",
+                        "value": 10
+                      }
+                    },
+                    {
+                      "id": "ember_coat",
+                      "name": "Ember Coat",
+                      "kind": "ability",
+                      "text": "Every enemy that hits him catches Burn, from her ATK.",
+                      "effects": [
+                        {
+                          "type": "apply_status",
+                          "status": "burn",
+                          "stacks": 0,
+                          "scaling": {
+                            "atk": 1000
+                          },
+                          "scaling_of": "owner",
+                          "target": "hit_target",
+                          "trigger": "on_hit_taken"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "hellfire",
+                      "name": "Hellfire",
+                      "kind": "ability",
+                      "text": "Every second, every enemy within 1 hex of him catches Burn, from her ATK.",
+                      "effects": [
+                        {
+                          "type": "apply_status",
+                          "status": "burn",
+                          "stacks": 0,
+                          "scaling": {
+                            "atk": 1000
+                          },
+                          "scaling_of": "owner",
+                          "target": "enemies_near_self",
+                          "trigger": "on_interval",
+                          "interval_ms": 1000,
+                          "within_hexes": 1
+                        }
+                      ]
+                    },
+                    {
+                      "id": "hell_hide",
+                      "name": "Hell Hide",
+                      "kind": "ability",
+                      "text": "He shrugs off nearly a third of each hit from a Burning enemy.",
+                      "effects": [
+                        {
+                          "trigger": "on_hit_taken",
+                          "vs": {
+                            "statuses": [
+                              "burn"
+                            ]
+                          },
+                          "type": "heal",
+                          "amount_bp_of_damage": 3000,
+                          "target": "self"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "hellhound",
+                      "name": "Hellhound",
+                      "kind": "ability",
+                      "text": "Each enemy that falls Burning within 2 hexes of him makes him hit harder for the rest of the fight.",
+                      "effects": [
+                        {
+                          "trigger": "on_enemy_fell",
+                          "vs": {
+                            "statuses": [
+                              "burn"
+                            ]
+                          },
+                          "fell_within_hexes": 2,
+                          "type": "apply_status",
+                          "status": "hellhound",
+                          "target": "self"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "hp_pct": 32,
+                "atk_pct": 60,
+                "return_ms": 10000
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Burn applied by Grit",
+          "counts": "applied",
+          "statuses": [
+            "burn"
+          ],
+          "from_ability": [
+            "bite",
+            "ember_coat",
+            "hellfire",
+            "firebrand_pounce"
+          ],
+          "by_stacks": true,
+          "threshold": 1000
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-3; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "firestarter",
+        "name": "Firestarter",
+        "title": "the one whose whole pack burns",
+        "fantasy": "Every beast on her side carries her fire, whoever called it.",
+        "vowed": {
+          "taste": "Firebrand Pounce also sets Burn on the next enemy nearest its target.",
+          "patch": {
+            "signature": {
+              "id": "firebrand_pounce",
+              "name": "Firebrand Pounce",
+              "text": "Grit leaps on her target within 2 hexes and bursts into flame: every enemy within 1 hex of it is set Burning, from her ATK, and so is the next enemy nearest it.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "by": "companion",
+              "effects": [
+                {
+                  "type": "leap",
+                  "max_hexes": 6,
+                  "target": "target"
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 0,
+                      "scaling": {
+                        "atk": 6000
+                      },
+                      "scaling_of": "owner",
+                      "target": "target"
+                    }
+                  ]
+                },
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "atk": 6000
+                  },
+                  "scaling_of": "owner",
+                  "target": "enemy_near_target"
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Firebrand Pounce also burns the next enemy nearest its target. Every allied summon's attacks set Burn of 10% of her ATK: her hounds, Lucan's copies, Severine's thralls, all of them. The apex also gives +35% HP and +25% ATK (and her companions with them).",
+          "patch": {
+            "signature": {
+              "id": "firebrand_pounce",
+              "name": "Firebrand Pounce",
+              "text": "Grit leaps on her target within 2 hexes and bursts into flame: every enemy within 1 hex of it is set Burning, from her ATK, and so is the next enemy nearest it.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "by": "companion",
+              "effects": [
+                {
+                  "type": "leap",
+                  "max_hexes": 6,
+                  "target": "target"
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 0,
+                      "scaling": {
+                        "atk": 6000
+                      },
+                      "scaling_of": "owner",
+                      "target": "target"
+                    }
+                  ]
+                },
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "atk": 6000
+                  },
+                  "scaling_of": "owner",
+                  "target": "enemy_near_target"
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "firestarter",
+                "name": "Firestarter",
+                "kind": "ability",
+                "text": "Every allied summon's attacks set the enemy hit Burning, from her ATK.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "summon": true
+                    },
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "atk": 1000
+                    },
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 13500,
+              "atk": 12500
+            }
+          }
+        },
+        "deed": {
+          "text": "Burn applied by allied summons",
+          "counts": "applied",
+          "statuses": [
+            "burn"
+          ],
+          "from_ability": [
+            "bite",
+            "ember_coat",
+            "firebrand_pounce",
+            "firestarter"
+          ],
+          "by_stacks": true,
+          "threshold": 950
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Poison: maker (rebuild-heroes.md, section 8k, path 2; phase 8 part 6, 8f-3). Self-sufficient (build-tuning.md). The viper takes Grit's place (a patch's companions), and Bond follows it; Nest's nestlings are a companion kit that doesn't start (10% of her max HP and 20% of her ATK). Tuned by build: the design's numbers were +41 over base (the band is +25 to +35); the viper's Poison at 15% (the design's 20%), her jab's every 2nd, and the smaller nestlings make it +34.",
+    "id": "serpent_keeper",
+    "hero": "kestra",
+    "name": "Serpent-Keeper",
+    "title": "the one the rift's vipers answer to",
+    "fantasy": "The rift's vipers answer to her.",
+    "placement": "Behind the line, where her spear and her viper both reach the enemies in front.",
+    "vowed": {
+      "taste": "Venomed Jab: every 3rd Spear Jab Poisons its target, 15% of her ATK.",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "basic_attack": {
+          "id": "spear_jab",
+          "name": "Spear Jab",
+          "text": "A thrust at the nearest enemy within 2 hexes. Every 3rd Poisons it. Her main source of mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "apply_status",
+              "status": "poison",
+              "stacks": 0,
+              "scaling": {
+                "atk": 1500
+              },
+              "target": "target",
+              "every": 3
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "A rift viper takes Grit's place: it spits from up to 3 hexes, Poisoning for 15% of her ATK, and every 2nd Spear Jab Poisons for 10% of her ATK. Nest replaces Sic 'Em (50 mana): 3 nestlings hatch beside her for 6s, each nip Poisoning for 10% of her ATK. Sic 'Em becomes a habit, every 8th Spear Jab: the viper spits hard at her target.",
+      "cost": "The viper has 20% less HP than Grit.",
+      "patch": {
+        "basic_attack": {
+          "id": "spear_jab",
+          "name": "Spear Jab",
+          "text": "A thrust at the nearest enemy within 2 hexes. Every 2nd Poisons it. Her main source of mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "apply_status",
+              "status": "poison",
+              "stacks": 0,
+              "scaling": {
+                "atk": 1000
+              },
+              "target": "target",
+              "every": 2
+            }
+          ]
+        },
+        "signature": {
+          "id": "nest",
+          "name": "Nest",
+          "text": "Three nestlings hatch beside her for a few seconds; each nip Poisons, from her ATK.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "summon",
+              "kit": "nestling",
+              "count": 3,
+              "placement": "adjacent",
+              "lasts_ms": 6000
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "bond",
+            "name": "Bond",
+            "kind": "aura",
+            "text": "While her viper stands, she attacks faster.",
+            "aura": {
+              "target": "holder",
+              "stat": "atsp",
+              "value": 10,
+              "while": "ally_standing",
+              "kit": "viper"
+            }
+          },
+          {
+            "id": "sic_em",
+            "name": "Sic 'Em",
+            "kind": "ability",
+            "by": "companion",
+            "text": "A habit: every 8th Spear Jab, her viper spits hard at her target.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 20000
+                }
+              }
+            ]
+          }
+        ],
+        "companions": [
+          {
+            "kit": {
+              "id": "viper",
+              "name": "Viper",
+              "stats": {
+                "hp": 1,
+                "atk": 1,
+                "def": 6,
+                "speed": 2,
+                "range": 3
+              },
+              "basic_attack": {
+                "id": "spit",
+                "name": "Spit",
+                "text": "Venom spat at the nearest enemy within 3 hexes, Poisoning it from her ATK.",
+                "cooldown_ms": 1000,
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 10000
+                    }
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "poison",
+                    "stacks": 0,
+                    "scaling": {
+                      "atk": 1500
+                    },
+                    "scaling_of": "owner",
+                    "target": "target"
+                  }
+                ]
+              },
+              "passives": [
+                {
+                  "id": "bond",
+                  "name": "Bond",
+                  "kind": "aura",
+                  "text": "Beside Kestra, it attacks faster.",
+                  "aura": {
+                    "target": "holder",
+                    "stat": "atsp",
+                    "value": 10
+                  }
+                }
+              ]
+            },
+            "hp_pct": 32,
+            "atk_pct": 60,
+            "return_ms": 10000
+          },
+          {
+            "kit": {
+              "id": "nestling",
+              "name": "Nestling",
+              "stats": {
+                "hp": 1,
+                "atk": 1,
+                "def": 0,
+                "speed": 3,
+                "range": 1
+              },
+              "basic_attack": {
+                "id": "nip",
+                "name": "Nip",
+                "text": "A quick nip at the enemy in front of it, Poisoning it from her ATK.",
+                "cooldown_ms": 800,
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 10000
+                    }
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "poison",
+                    "stacks": 0,
+                    "scaling": {
+                      "atk": 1000
+                    },
+                    "scaling_of": "owner",
+                    "target": "target"
+                  }
+                ]
+              },
+              "passives": []
+            },
+            "hp_pct": 10,
+            "atk_pct": 20,
+            "starts": false
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Poison applied by her Spear Jab",
+      "counts": "applied",
+      "statuses": [
+        "poison"
+      ],
+      "from_ability": [
+        "spear_jab"
+      ],
+      "by_stacks": true,
+      "threshold": 40
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-3; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "brood_mother",
+        "name": "Brood Mother",
+        "title": "the mother of the nest",
+        "fantasy": "The brood never leaves her, and it never stops growing.",
+        "vowed": {
+          "taste": "Nest hatches 4 nestlings, not 3.",
+          "patch": {
+            "signature": {
+              "id": "nest",
+              "name": "Nest",
+              "text": "Four nestlings hatch beside her for a few seconds; each nip Poisons, from her ATK.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "summon",
+                  "kit": "nestling",
+                  "count": 4,
+                  "placement": "adjacent",
+                  "lasts_ms": 6000
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Nest's nestlings stay all fight, up to 6 at once, and each cast hatches 3 more. The apex also gives +15% HP and ATK (and her companions with them).",
+          "patch": {
+            "signature": {
+              "id": "nest",
+              "name": "Nest",
+              "text": "Three more nestlings hatch beside her, and stay (up to 6 at once); each nip Poisons, from her ATK.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "summon",
+                  "kit": "nestling",
+                  "count": 3,
+                  "placement": "adjacent",
+                  "lasts_ms": 180000,
+                  "max_standing": 6
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Poison applied by Nest's nestlings",
+          "counts": "applied",
+          "statuses": [
+            "poison"
+          ],
+          "from_ability": [
+            "nip"
+          ],
+          "by_stacks": true,
+          "threshold": 900
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-3; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "viper_queen",
+        "name": "Viper Queen",
+        "title": "the one whose viper grows on the dead",
+        "fantasy": "Her viper feeds on every poisoned death until it rules the field.",
+        "vowed": {
+          "taste": "Her viper's spit Slows its target by 10% for 1s.",
+          "patch": {
+            "companions": [
+              {
+                "kit": {
+                  "id": "viper",
+                  "name": "Viper",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 6,
+                    "speed": 2,
+                    "range": 3
+                  },
+                  "basic_attack": {
+                    "id": "spit",
+                    "name": "Spit",
+                    "text": "Venom spat at the nearest enemy within 3 hexes, Poisoning it from her ATK and Slowing it for a moment.",
+                    "cooldown_ms": 1000,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "poison",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 1500
+                        },
+                        "scaling_of": "owner",
+                        "target": "target"
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "numbed",
+                        "target": "target"
+                      }
+                    ]
+                  },
+                  "passives": [
+                    {
+                      "id": "bond",
+                      "name": "Bond",
+                      "kind": "aura",
+                      "text": "Beside Kestra, it attacks faster.",
+                      "aura": {
+                        "target": "holder",
+                        "stat": "atsp",
+                        "value": 10
+                      }
+                    }
+                  ]
+                },
+                "hp_pct": 32,
+                "atk_pct": 60,
+                "return_ms": 10000
+              },
+              {
+                "kit": {
+                  "id": "nestling",
+                  "name": "Nestling",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 0,
+                    "speed": 3,
+                    "range": 1
+                  },
+                  "basic_attack": {
+                    "id": "nip",
+                    "name": "Nip",
+                    "text": "A quick nip at the enemy in front of it, Poisoning it from her ATK.",
+                    "cooldown_ms": 800,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "poison",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 1000
+                        },
+                        "scaling_of": "owner",
+                        "target": "target"
+                      }
+                    ]
+                  },
+                  "passives": []
+                },
+                "hp_pct": 10,
+                "atk_pct": 20,
+                "starts": false
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Her viper's Poison is 35% of her ATK and its spit Slows by 20% for 1s. Each enemy that falls Poisoned gives the viper +15% ATK and max HP for the rest of the fight. The apex also gives +15% HP and ATK (and her companions with them).",
+          "patch": {
+            "companions": [
+              {
+                "kit": {
+                  "id": "viper",
+                  "name": "Viper",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 6,
+                    "speed": 2,
+                    "range": 3
+                  },
+                  "basic_attack": {
+                    "id": "spit",
+                    "name": "Spit",
+                    "text": "Venom spat at the nearest enemy within 3 hexes, Poisoning it heavily from her ATK and Slowing it.",
+                    "cooldown_ms": 1000,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "poison",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 3500
+                        },
+                        "scaling_of": "owner",
+                        "target": "target"
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "viper_slow",
+                        "target": "target"
+                      }
+                    ]
+                  },
+                  "passives": [
+                    {
+                      "id": "bond",
+                      "name": "Bond",
+                      "kind": "aura",
+                      "text": "Beside Kestra, it attacks faster.",
+                      "aura": {
+                        "target": "holder",
+                        "stat": "atsp",
+                        "value": 10
+                      }
+                    },
+                    {
+                      "id": "queen_feed",
+                      "name": "Viper Queen",
+                      "kind": "ability",
+                      "text": "Each enemy that falls Poisoned makes the viper hit harder and stand longer for the rest of the fight.",
+                      "effects": [
+                        {
+                          "trigger": "on_enemy_fell",
+                          "vs": {
+                            "statuses": [
+                              "poison"
+                            ]
+                          },
+                          "type": "apply_status",
+                          "status": "viper_queen",
+                          "target": "self"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "hp_pct": 32,
+                "atk_pct": 60,
+                "return_ms": 10000
+              },
+              {
+                "kit": {
+                  "id": "nestling",
+                  "name": "Nestling",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 0,
+                    "speed": 3,
+                    "range": 1
+                  },
+                  "basic_attack": {
+                    "id": "nip",
+                    "name": "Nip",
+                    "text": "A quick nip at the enemy in front of it, Poisoning it from her ATK.",
+                    "cooldown_ms": 800,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "poison",
+                        "stacks": 0,
+                        "scaling": {
+                          "atk": 1000
+                        },
+                        "scaling_of": "owner",
+                        "target": "target"
+                      }
+                    ]
+                  },
+                  "passives": []
+                },
+                "hp_pct": 10,
+                "atk_pct": 20,
+                "starts": false
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Poison applied by her viper",
+          "counts": "applied",
+          "statuses": [
+            "poison"
+          ],
+          "from_ability": [
+            "spit"
+          ],
+          "by_stacks": true,
+          "threshold": 400
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Summons: payoff (rebuild-heroes.md, section 8k, path 3; phase 8 part 6, 8f-3). Engine (build-tuning.md). Pack Call's bonus is power on the summons' basic attacks (from_basic), not ATK, so its deed can count what it adds (bonus_damage). Tuned by build: the design's numbers were +20 over base (the engine's band is +5 to +15); transformed Pack Call's 3% (the design's 5%) and a smaller second hound, Brindle, make it +13.",
+    "id": "packleader",
+    "hero": "kestra",
+    "name": "Packleader",
+    "title": "the one who runs the pack",
+    "fantasy": "The pack is the weapon, and she runs it.",
+    "placement": "Close behind the pack, where every summon fights within her spear's reach.",
+    "vowed": {
+      "taste": "Pack Call: Grit's bites deal 3% more for each allied summon, himself included.",
+      "cost": "10% less ATK.",
+      "patch": {
+        "stats_bp": {
+          "atk": 9000
+        },
+        "companions": [
+          {
+            "kit": {
+              "id": "grit",
+              "name": "Grit",
+              "stats": {
+                "hp": 1,
+                "atk": 1,
+                "def": 8,
+                "speed": 3,
+                "range": 1
+              },
+              "basic_attack": {
+                "id": "bite",
+                "name": "Bite",
+                "text": "A fast bite at the enemy in front of him.",
+                "cooldown_ms": 800,
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 10000
+                    }
+                  }
+                ]
+              },
+              "passives": [
+                {
+                  "id": "bond",
+                  "name": "Bond",
+                  "kind": "aura",
+                  "text": "Beside Kestra, he attacks faster.",
+                  "aura": {
+                    "target": "holder",
+                    "stat": "atsp",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "pack_call",
+                  "name": "Pack Call",
+                  "kind": "aura",
+                  "text": "His bites hit harder for each allied summon, himself included.",
+                  "aura": {
+                    "target": "holder",
+                    "stat": "damage_bp",
+                    "value": 10300,
+                    "per": "allied_summon",
+                    "from_basic": true
+                  }
+                }
+              ]
+            },
+            "hp_pct": 40,
+            "atk_pct": 60,
+            "return_ms": 10000
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Two hounds run with her: Grit, and Brindle with 25% of her max HP and 40% of her ATK. Every allied summon's basic attacks deal 3% more and it attacks 3% faster for each allied summon. Pack Fury: when an allied summon falls, the others attack 15% faster for 4s. Howl replaces Sic 'Em (50 mana): every allied summon gains 40% ATK for 5s and a Shield of 20% of its max HP. Sic 'Em becomes a habit, every 8th Spear Jab.",
+      "cost": "1 less range: her spear reaches 1 hex.",
+      "patch": {
+        "stats_add": {
+          "range": -1
+        },
+        "basic_attack": {
+          "id": "spear_jab",
+          "name": "Spear Jab",
+          "text": "A thrust at the enemy in front of her. Her main source of mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            }
+          ]
+        },
+        "signature": {
+          "id": "howl",
+          "name": "Howl",
+          "text": "Every allied summon gains ATK for a few seconds and a Shield.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "howl",
+              "duration_ms": 5000,
+              "target": "all_allies",
+              "only": {
+                "summon": true
+              }
+            },
+            {
+              "type": "shield",
+              "amount_bp_of_max_hp": 2000,
+              "target": "all_allies",
+              "only": {
+                "summon": true
+              }
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "pack_call",
+            "name": "Pack Call",
+            "kind": "aura",
+            "text": "Every allied summon's basic attacks hit harder for each allied summon.",
+            "aura": {
+              "target": "all_allies",
+              "only": {
+                "summon": true
+              },
+              "stat": "damage_bp",
+              "value": 10300,
+              "per": "allied_summon",
+              "from_basic": true
+            }
+          },
+          {
+            "id": "pack_pace",
+            "name": "Pack Call",
+            "kind": "aura",
+            "text": "Every allied summon attacks faster for each allied summon.",
+            "aura": {
+              "target": "all_allies",
+              "only": {
+                "summon": true
+              },
+              "stat": "atsp",
+              "value": 3,
+              "per": "allied_summon"
+            }
+          },
+          {
+            "id": "pack_fury",
+            "name": "Pack Fury",
+            "kind": "ability",
+            "text": "When an allied summon falls, the others attack faster for a few seconds.",
+            "effects": [
+              {
+                "trigger": "on_summon_fell",
+                "type": "apply_status",
+                "status": "pack_fury",
+                "duration_ms": 4000,
+                "target": "all_allies",
+                "only": {
+                  "summon": true
+                }
+              }
+            ]
+          },
+          {
+            "id": "sic_em",
+            "name": "Sic 'Em",
+            "kind": "ability",
+            "by": "companion",
+            "text": "A habit: every 8th Spear Jab, Grit leaps on her target and bites it hard.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "leap",
+                "max_hexes": 6,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 20000
+                }
+              }
+            ]
+          }
+        ],
+        "companions": [
+          {
+            "kit": {
+              "id": "grit",
+              "name": "Grit",
+              "stats": {
+                "hp": 1,
+                "atk": 1,
+                "def": 8,
+                "speed": 3,
+                "range": 1
+              },
+              "basic_attack": {
+                "id": "bite",
+                "name": "Bite",
+                "text": "A fast bite at the enemy in front of him.",
+                "cooldown_ms": 800,
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 10000
+                    }
+                  }
+                ]
+              },
+              "passives": [
+                {
+                  "id": "bond",
+                  "name": "Bond",
+                  "kind": "aura",
+                  "text": "Beside Kestra, he attacks faster.",
+                  "aura": {
+                    "target": "holder",
+                    "stat": "atsp",
+                    "value": 10
+                  }
+                }
+              ]
+            },
+            "hp_pct": 40,
+            "atk_pct": 60,
+            "return_ms": 10000
+          },
+          {
+            "kit": {
+              "id": "brindle",
+              "name": "Brindle",
+              "stats": {
+                "hp": 1,
+                "atk": 1,
+                "def": 8,
+                "speed": 3,
+                "range": 1
+              },
+              "basic_attack": {
+                "id": "bite",
+                "name": "Bite",
+                "text": "A fast bite at the enemy in front of him.",
+                "cooldown_ms": 800,
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 10000
+                    }
+                  }
+                ]
+              },
+              "passives": [
+                {
+                  "id": "bond",
+                  "name": "Bond",
+                  "kind": "aura",
+                  "text": "Beside Kestra, he attacks faster.",
+                  "aura": {
+                    "target": "holder",
+                    "stat": "atsp",
+                    "value": 10
+                  }
+                }
+              ]
+            },
+            "hp_pct": 25,
+            "atk_pct": 40,
+            "return_ms": 10000
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Extra damage from Pack Call",
+      "counts": "bonus_damage",
+      "from_part": [
+        "pack_call"
+      ],
+      "threshold": 16
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-3; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "alpha",
+        "name": "Alpha",
+        "title": "the leader no fall can stop",
+        "fantasy": "Every hound that falls only makes the pack faster.",
+        "vowed": {
+          "taste": "Pack Fury gives +20% attack speed, not 15%.",
+          "patch": {
+            "passives": [
+              {
+                "id": "pack_fury",
+                "name": "Pack Fury",
+                "kind": "ability",
+                "text": "When an allied summon falls, the others attack faster for a few seconds.",
+                "effects": [
+                  {
+                    "trigger": "on_summon_fell",
+                    "type": "apply_status",
+                    "status": "alpha_fury",
+                    "duration_ms": 4000,
+                    "target": "all_allies",
+                    "only": {
+                      "summon": true
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Three hounds run with her: Grit, Brindle, and Fang. Pack Fury gives +20% attack speed and lasts the rest of the fight. Each allied summon that falls gives every summon +10% attack speed for the rest of the fight. The apex also gives +15% HP and ATK (and her companions with them).",
+          "patch": {
+            "companions": [
+              {
+                "kit": {
+                  "id": "grit",
+                  "name": "Grit",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 8,
+                    "speed": 3,
+                    "range": 1
+                  },
+                  "basic_attack": {
+                    "id": "bite",
+                    "name": "Bite",
+                    "text": "A fast bite at the enemy in front of him.",
+                    "cooldown_ms": 800,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      }
+                    ]
+                  },
+                  "passives": [
+                    {
+                      "id": "bond",
+                      "name": "Bond",
+                      "kind": "aura",
+                      "text": "Beside Kestra, he attacks faster.",
+                      "aura": {
+                        "target": "holder",
+                        "stat": "atsp",
+                        "value": 10
+                      }
+                    }
+                  ]
+                },
+                "hp_pct": 40,
+                "atk_pct": 60,
+                "return_ms": 10000
+              },
+              {
+                "kit": {
+                  "id": "brindle",
+                  "name": "Brindle",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 8,
+                    "speed": 3,
+                    "range": 1
+                  },
+                  "basic_attack": {
+                    "id": "bite",
+                    "name": "Bite",
+                    "text": "A fast bite at the enemy in front of him.",
+                    "cooldown_ms": 800,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      }
+                    ]
+                  },
+                  "passives": [
+                    {
+                      "id": "bond",
+                      "name": "Bond",
+                      "kind": "aura",
+                      "text": "Beside Kestra, he attacks faster.",
+                      "aura": {
+                        "target": "holder",
+                        "stat": "atsp",
+                        "value": 10
+                      }
+                    }
+                  ]
+                },
+                "hp_pct": 25,
+                "atk_pct": 40,
+                "return_ms": 10000
+              },
+              {
+                "kit": {
+                  "id": "fang",
+                  "name": "Fang",
+                  "stats": {
+                    "hp": 1,
+                    "atk": 1,
+                    "def": 8,
+                    "speed": 3,
+                    "range": 1
+                  },
+                  "basic_attack": {
+                    "id": "bite",
+                    "name": "Bite",
+                    "text": "A fast bite at the enemy in front of him.",
+                    "cooldown_ms": 800,
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "target": "target",
+                        "scaling": {
+                          "atk": 10000
+                        }
+                      }
+                    ]
+                  },
+                  "passives": [
+                    {
+                      "id": "bond",
+                      "name": "Bond",
+                      "kind": "aura",
+                      "text": "Beside Kestra, he attacks faster.",
+                      "aura": {
+                        "target": "holder",
+                        "stat": "atsp",
+                        "value": 10
+                      }
+                    }
+                  ]
+                },
+                "hp_pct": 25,
+                "atk_pct": 40,
+                "return_ms": 10000
+              }
+            ],
+            "passives": [
+              {
+                "id": "pack_fury",
+                "name": "Pack Fury",
+                "kind": "ability",
+                "text": "When an allied summon falls, the others attack faster for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_summon_fell",
+                    "type": "apply_status",
+                    "status": "alpha_fury",
+                    "duration_ms": 180000,
+                    "target": "all_allies",
+                    "only": {
+                      "summon": true
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "alpha_blood",
+                "name": "Alpha",
+                "kind": "ability",
+                "text": "Each allied summon that falls makes every summon attack faster for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_summon_fell",
+                    "type": "apply_status",
+                    "status": "alpha_blood",
+                    "target": "all_allies",
+                    "only": {
+                      "summon": true
+                    }
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Attacks allied summons make under Pack Fury",
+          "counts": "hits",
+          "by_allies": true,
+          "statuses": [
+            "alpha_fury"
+          ],
+          "threshold": 5
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-3; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "wild_hunt",
+        "name": "Wild Hunt",
+        "title": "the one who looses the hunt",
+        "fantasy": "When she howls, the pack marks its prey and tears it down.",
+        "vowed": {
+          "taste": "Howl lasts 1s longer.",
+          "patch": {
+            "signature": {
+              "id": "howl",
+              "name": "Howl",
+              "text": "Every allied summon gains ATK for a few seconds and a Shield.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "howl",
+                  "duration_ms": 6000,
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  }
+                },
+                {
+                  "type": "shield",
+                  "amount_bp_of_max_hp": 2000,
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Howl lasts 8s, and summons under it Mark what they hit and deal +25% damage to Marked enemies. The apex also gives +15% HP and ATK (and her companions with them).",
+          "patch": {
+            "signature": {
+              "id": "howl",
+              "name": "Howl",
+              "text": "Every allied summon gains ATK for a few seconds and a Shield.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "howl",
+                  "duration_ms": 8000,
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  }
+                },
+                {
+                  "type": "shield",
+                  "amount_bp_of_max_hp": 2000,
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  }
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "wild_hunt",
+                "name": "Wild Hunt",
+                "kind": "ability",
+                "text": "Summons under Howl Mark what they hit.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "summon": true,
+                      "statuses": [
+                        "howl"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "marked",
+                    "target": "hit_target"
+                  }
+                ]
+              },
+              {
+                "id": "hunt_frenzy",
+                "name": "Wild Hunt",
+                "kind": "aura",
+                "text": "Summons under Howl hit Marked enemies harder.",
+                "aura": {
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true,
+                    "statuses": [
+                      "howl"
+                    ]
+                  },
+                  "stat": "damage_bp",
+                  "value": 12500,
+                  "vs": {
+                    "keywords": [
+                      "marked"
+                    ]
+                  }
+                }
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage allied summons deal under Howl",
+          "counts": "damage",
+          "by_allies": true,
+          "statuses": [
+            "howl"
+          ],
+          "threshold": 5200
+        }
+      }
+    ]
+  }
+]

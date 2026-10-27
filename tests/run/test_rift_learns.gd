@@ -267,7 +267,7 @@ func test_the_data() -> void:
 	assert_true(errors.any(func(error: String) -> bool: return error.contains("twice")), str(errors))
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in RunContent.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	texts[RunContent.RIFT_LEARNS_FILE] = JSON.stringify({"fights": 3, "second_at_pct": 100, "habits": [{"id": "x", "name": "X", "against": "your X", "measure": "front", "per_fight": 1,
 		"upgrades": ["no_upgrade"], "specializations": ["no_spec"]}]})
 	var run: RunContent = RunContent.load_texts(texts, ContentDb.load_dir("res://data"))

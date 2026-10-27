@@ -1,0 +1,28 @@
+{
+  "_note": "The base kits (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; docs/plans/rebuild-heroes.md, sections 4 and 6-8). Heroes act in this order in a fight. Stats and mana are the design's; cooldowns, Mend's heal, and Hearthguard's Shield are first numbers for step 7 to tune.",
+  "id": "brannoc",
+  "name": "Brannoc of the Hearthwatch",
+  "title": "the warden",
+  "role": "tank",
+  "kit": {
+    "stats": {"hp": 630, "atk": 14, "def": 50, "speed": 2, "range": 1},
+    "traits": ["engage"],
+    "mana": {"max": 80, "start": 30, "per_attack": 8, "per_10_damage_taken": 1},
+    "basic_attack": {
+      "id": "shield_bash", "name": "Shield Bash", "text": "Bashes the enemy in front of him.", "cooldown_ms": 1200,
+      "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+    },
+    "signature": {
+      "_note": "Taunts enemies within 2 hexes for Taunt's own 3s. The DEF is the passive of the same name below: it holds while any enemy is taunted by him.",
+      "id": "hold_the_line", "name": "Hold the Line", "text": "Taunts every enemy within 2 hexes of him, so they turn on him instead.", "trigger": {"kind": "mana"}, "targeting": "self",
+      "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "self", "hits": "enemies",
+        "effects": [{"type": "apply_status", "status": "taunt", "duration_ms": 3000, "target": "target"}]}]
+    },
+    "passives": [
+      {"id": "hold_the_line_guard", "name": "Hold the Line", "text": "His DEF is 1.5 times as high while any enemy is taunted by him.", "kind": "aura",
+        "aura": {"target": "holder", "stat": "def_bp", "value": 15000, "while": "taunting"}},
+      {"id": "hearthguard", "name": "Hearthguard", "text": "The first ally to fall low on HP gets a Shield from him, once a fight.", "kind": "ability",
+        "effects": [{"trigger": "on_ally_below_hp", "threshold_bp": 4000, "once": true, "type": "shield", "amount": 60, "target": "trigger_ally"}]}
+    ]
+  }
+}

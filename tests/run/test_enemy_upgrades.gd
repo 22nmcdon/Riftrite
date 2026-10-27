@@ -162,7 +162,7 @@ func test_the_act_reads_its_elite_upgrades() -> void:
 
 
 func _act_data(extra: Dictionary) -> Dictionary:
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/act1.json"))
+	var data: Dictionary = JSON.parse_string(DataLayout.read("res://data", "act1.json"))
 	data.merge(extra, true)
 	return data
 

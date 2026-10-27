@@ -237,7 +237,7 @@ func test_a_fight_without_void_makes_none() -> void:
 func test_content_checks_an_encounters_void() -> void:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in ContentDb.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	var encounters: Array = JSON.parse_string(texts[ContentDb.ENCOUNTERS_FILE])
 	var first: Dictionary = encounters[0]
 	var rocks: Array = first.get("rocks", [])

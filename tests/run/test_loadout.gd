@@ -193,12 +193,12 @@ func test_ranks_reach_the_fight() -> void:
 
 func test_one_gambit_per_hero() -> void:
 	var rank: Dictionary = {"stats_add": {"speed": 1}}
-	var items: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/items.json"))
+	var items: Array = JSON.parse_string(DataLayout.read("res://data", "items.json"))
 	items.append({"id": "test_gambit", "kind": "gambit", "name": "Test", "icon": "braced", "text": "x", "ranks": [rank, rank, rank]})
 	items.append({"id": "test_gambit_2", "kind": "gambit", "name": "Test 2", "icon": "braced", "text": "x", "ranks": [rank, rank, rank]})
 	var texts: Dictionary[String, String] = {}
 	for file: String in [RunContent.ACT_FILE, RunContent.UPGRADES_FILE, RunContent.CAMPS_FILE, RunContent.RELICS_FILE, RunContent.BONDS_FILE]:
-		texts[file] = FileAccess.get_file_as_string("res://data/" + file)
+		texts[file] = DataLayout.read("res://data", file)
 	texts[RunContent.ITEMS_FILE] = JSON.stringify(items)
 	var run: RunContent = RunContent.load_texts(texts, _run.content)
 	assert_true(run.is_valid(), "\n".join(run.errors))

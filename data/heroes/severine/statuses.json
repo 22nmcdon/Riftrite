@@ -1,0 +1,12 @@
+[
+  {"_note": "Engorge grows faster for the rest of the fight, a stack for each Sanguine Nova (Severine's apex; phase 8 part 5).", "id": "nova_hunger", "name": "Nova Hunger", "kind": "boost", "stacking": true, "auras": [{"stat": "lifesteal_max_hp_bp", "value": 2000}]},
+  {"_note": "More of Nova Hunger (Gluttony, Sanguine Nova's card).", "id": "gluttony", "name": "Gluttony", "kind": "boost", "stacking": true, "auras": [{"stat": "lifesteal_max_hp_bp", "value": 1000}]},
+  {"_note": "Deals less damage while in Plague Burst (Pestilence, Severine's apex; phase 8 part 5).", "id": "plague_weak", "name": "Plague-Weak", "kind": "boost", "duration_ms": 1200, "auras": [{"stat": "damage_bp", "value": 8500}]},
+  {"_note": "Her Poison is stronger for the rest of the fight, a stack for each enemy that falls Poisoned (Pestilence; phase 8 part 5).", "id": "pestilence", "name": "Pestilence", "kind": "boost", "stacking": true, "auras": [{"stat": "over_time_bp", "value": 11500}]},
+  {"_note": "More of Pestilence (Epidemic, Pestilence's card).", "id": "epidemic", "name": "Epidemic", "kind": "boost", "stacking": true, "auras": [{"stat": "over_time_bp", "value": 11000}]},
+  {"_note": "A light Slow on her Poisoned enemies (Wasting, Pestilence's card).", "id": "wasting", "name": "Wasting", "kind": "slow", "duration_ms": 2000, "slow_bp": 1500},
+  {"_note": "More ATK while it lasts (Blood Rite's taste: allies near her Exsanguinate; phase 8 part 5).", "id": "blood_offering", "name": "Blood Offering", "kind": "boost", "duration_ms": 3000, "auras": [{"stat": "atk_bp", "value": 10500}]},
+  {"_note": "More ATK and MGK for the rest of the fight, a stack for every 100 HP she spends (Blood Rite; phase 8 part 5).", "id": "sacred_blood", "name": "Sacred Blood", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10200}, {"stat": "mgk_bp", "value": 10200}]},
+  {"_note": "More of Sacred Blood (Sacrament, Blood Rite's card).", "id": "sacrament", "name": "Sacrament", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10100}, {"stat": "mgk_bp", "value": 10100}]},
+  {"_note": "Lifesteal while it lasts (Shared Blood, Blood Rite's card: lifesteal, never healing).", "id": "shared_blood", "name": "Shared Blood", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "lifesteal_bp", "value": 500}]}
+]

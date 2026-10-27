@@ -109,7 +109,7 @@ func test_the_lock_never_changes_after_a_transformation() -> void:
 
 func test_at_least_one_point() -> void:
 	var tiny: RunContent = RunContent.load_texts({
-		RunContent.ACT_FILE: FileAccess.get_file_as_string("res://data/act1.json"),
+		RunContent.ACT_FILE: DataLayout.read("res://data", "act1.json"),
 		RunContent.UPGRADES_FILE: JSON.stringify([{"id": "dab", "name": "Dab", "text": "x", "hero": "maren", "stacks": {"stat": "crit", "pct": 1}}]),
 	}, _run.content)
 	assert_true(tiny.is_valid(), str(tiny.errors))

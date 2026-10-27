@@ -1,0 +1,893 @@
+[
+  {
+    "id": "sharp_claws",
+    "name": "Sharp Claws",
+    "hero": "severine",
+    "text": "Her ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_talons",
+    "name": "Quick Talons",
+    "hero": "severine",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "thick_blood",
+    "name": "Thick Blood",
+    "hero": "severine",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "hardened_skin",
+    "name": "Hardened Skin",
+    "hero": "severine",
+    "text": "Her DEF rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "def",
+      "pct": 10
+    }
+  },
+  {
+    "id": "deep_bite",
+    "name": "Deep Bite",
+    "hero": "severine",
+    "text": "Her basic attack heals her by more of its damage.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "lifesteal_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "hungry_drain",
+    "name": "Hungry Drain",
+    "hero": "severine",
+    "text": "Drain heals her by more of its damage (once transformed, its habit too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "drain",
+          "lifesteal_add_bp": 2500
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_drain",
+    "name": "Heavy Drain",
+    "hero": "severine",
+    "text": "Drain hits harder (once transformed, its habit too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "drain",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_scent",
+    "name": "Blood Scent",
+    "hero": "severine",
+    "text": "She deals more damage to enemies below half their HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "blood_scent",
+          "name": "Blood Scent",
+          "kind": "aura",
+          "text": "She deals more damage to enemies below half their HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11500,
+            "vs": {
+              "below_hp_pct": 50
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "frenzy_of_blood",
+    "name": "Frenzy",
+    "hero": "severine",
+    "text": "She attacks faster while she's below half her HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "frenzy_of_blood",
+          "name": "Frenzy",
+          "kind": "aura",
+          "text": "She attacks faster while she's below half her HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp_bp",
+            "value": 11500,
+            "while": "below_hp",
+            "below_pct": 50
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "predator",
+    "name": "Predator",
+    "hero": "severine",
+    "text": "She goes after enemies below half their HP within 3 hexes first.",
+    "mod": {
+      "prefer": {
+        "label": "Predator",
+        "vs": {
+          "below_hp_pct": 50
+        },
+        "within_hexes": 3
+      }
+    }
+  },
+  {
+    "id": "wounded_rage",
+    "name": "Wounded Rage",
+    "hero": "severine",
+    "text": "She gains a little mana each time she's hit.",
+    "mod": {
+      "passives": [
+        {
+          "id": "wounded_rage",
+          "name": "Wounded Rage",
+          "kind": "ability",
+          "text": "Each hit on her gives her a little mana.",
+          "effects": [
+            {
+              "trigger": "on_hit_taken",
+              "type": "gain_mana",
+              "amount": 2,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_thirst",
+    "name": "Old Thirst",
+    "hero": "severine",
+    "text": "The more she drinks, the more she wants: her lifesteal grows with the HP it heals, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "lifesteal"
+      },
+      "per": 2000,
+      "each": {
+        "passives": [
+          {
+            "id": "old_thirst",
+            "name": "Old Thirst",
+            "kind": "aura",
+            "text": "Grows with what her lifesteal heals: more lifesteal.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "greedy_gorge",
+    "name": "Greedy Gorge",
+    "path": "bloodglut",
+    "taste": true,
+    "text": "Engorge can grow her further (once transformed, it grows faster).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:engorge_cap",
+          "value_add": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:engorge",
+          "value_add": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "swell",
+    "name": "Swell",
+    "path": "bloodglut",
+    "taste": true,
+    "text": "While she's at full HP, her basic attack heals her by more of its damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "swell",
+          "name": "Swell",
+          "kind": "aura",
+          "text": "At full HP, her basic attack heals her by more of its damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 500,
+            "from_basic": true,
+            "while": "state",
+            "state": {
+              "above_hp_pct": 99
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "virulent",
+    "name": "Virulent",
+    "path": "plaguebearer",
+    "taste": true,
+    "text": "Blight's Poison is stronger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:blight",
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "toxic_claws",
+    "name": "Toxic Claws",
+    "path": "plaguebearer",
+    "taste": true,
+    "text": "She deals more damage to Poisoned enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "toxic_claws",
+          "name": "Toxic Claws",
+          "kind": "aura",
+          "text": "She deals more damage to Poisoned enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11000,
+            "vs": {
+              "statuses": [
+                "poison"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "thin_blood",
+    "name": "Thin Blood",
+    "path": "hemomancer",
+    "taste": true,
+    "text": "Blood Price costs less of her HP (once transformed, Exsanguinate does).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "hp_cost_add_bp": -100
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "hp_cost_add_bp": -100
+        }
+      ]
+    }
+  },
+  {
+    "id": "bloodied_focus",
+    "name": "Bloodied Focus",
+    "path": "hemomancer",
+    "taste": true,
+    "text": "Her MGK rises.",
+    "mod": {
+      "stats_bp": {
+        "mgk": 11000
+      }
+    }
+  },
+  {
+    "id": "massive",
+    "name": "Massive",
+    "path": "bloodglut",
+    "text": "Gorge grows more with her max HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "gorge",
+          "plus_max_hp_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "overflow",
+    "name": "Overflow",
+    "path": "bloodglut",
+    "text": "Her lifesteal past full counts more toward Engorge.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:engorge",
+          "value_add": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "feast",
+    "name": "Feast",
+    "path": "bloodglut",
+    "text": "A kill with Gorge gives her back some mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "feast",
+          "name": "Feast",
+          "kind": "ability",
+          "text": "A kill with Gorge gives her back some mana.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "from_ability": [
+                "gorge"
+              ],
+              "type": "gain_mana",
+              "amount": 20,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_frame",
+    "name": "Heavy Frame",
+    "path": "bloodglut",
+    "text": "Once Engorge has grown her a fifth past her max HP, nothing can knock her back.",
+    "mod": {
+      "passives": [
+        {
+          "id": "heavy_frame",
+          "name": "Heavy Frame",
+          "kind": "aura",
+          "text": "Grown a fifth past her max HP, nothing can knock her back.",
+          "aura": {
+            "target": "holder",
+            "stat": "unpushable",
+            "value": 1,
+            "while": "state",
+            "state": {
+              "engorged_pct": 20
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ever_hungry",
+    "name": "Ever Hungry",
+    "path": "bloodglut",
+    "text": "The more she swells, the faster she swells: Engorge grows faster for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "max_hp_gained",
+        "from_ability": [
+          "engorge"
+        ]
+      },
+      "per": 1000,
+      "each": {
+        "passives": [
+          {
+            "id": "ever_hungry",
+            "name": "Ever Hungry",
+            "kind": "aura",
+            "text": "Grows with what Engorge adds: Engorge grows her faster.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_max_hp_bp",
+              "value": 100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "septic_wounds",
+    "name": "Septic Wounds",
+    "path": "plaguebearer",
+    "text": "Her basic attack deals more damage to Poisoned enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "septic_wounds",
+          "name": "Septic Wounds",
+          "kind": "aura",
+          "text": "Her basic attack deals more damage to Poisoned enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "from_basic": true,
+            "vs": {
+              "statuses": [
+                "poison"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "carrier",
+    "name": "Carrier",
+    "path": "plaguebearer",
+    "text": "Plague Burst moves with her.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "follows": "holder"
+        }
+      ]
+    }
+  },
+  {
+    "id": "weakening_venom",
+    "name": "Weakening Venom",
+    "path": "plaguebearer",
+    "text": "Poisoned enemies she hits deal less damage for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "weakening_venom",
+          "name": "Weakening Venom",
+          "kind": "ability",
+          "text": "A Poisoned enemy she hits deals less damage for a moment.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "statuses": [
+                  "poison"
+                ]
+              },
+              "type": "apply_status",
+              "status": "cowed",
+              "duration_ms": 2000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_plague_burst",
+    "name": "Quick Burst",
+    "path": "plaguebearer",
+    "text": "Plague Burst costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "plague_burst",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "strain",
+    "name": "Strain",
+    "path": "plaguebearer",
+    "text": "Each Poison she spreads breeds a stronger one: Blight's Poison grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "statuses": [
+          "poison"
+        ],
+        "from_ability": [
+          "blight"
+        ]
+      },
+      "per": 25,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:blight",
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "long_bolt",
+    "name": "Long Bolt",
+    "path": "hemomancer",
+    "text": "She reaches 1 hex farther.",
+    "mod": {
+      "stats_add": {
+        "range": 1
+      }
+    }
+  },
+  {
+    "id": "bloodline",
+    "name": "Bloodline",
+    "path": "hemomancer",
+    "text": "Exsanguinate costs less of her HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "hp_cost_add_bp": -200
+        }
+      ]
+    }
+  },
+  {
+    "id": "leeching_bolt",
+    "name": "Leeching Bolt",
+    "path": "hemomancer",
+    "text": "Blood Bolt heals her by more of its damage.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "lifesteal_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "hemorrhage",
+    "name": "Hemorrhage",
+    "path": "hemomancer",
+    "text": "Exsanguinate makes its target Bleed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 0,
+              "scaling": {
+                "mgk": 2000
+              },
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_memory",
+    "name": "Blood Memory",
+    "path": "hemomancer",
+    "text": "Every drop she has spent remembers: Exsanguinate hits harder for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "hp_spent"
+      },
+      "per": 500,
+      "each": {
+        "on": [
+          {
+            "slot": "signature",
+            "types": [
+              "damage"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "bottomless",
+    "name": "Bottomless",
+    "apex": "leviathan",
+    "text": "Every 10% max HP she gains gives her more lifesteal.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:leviathan",
+          "value_add": 300
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_hide",
+    "name": "Thick Hide",
+    "apex": "leviathan",
+    "text": "Every 5% max HP she gains gives her +1 DEF.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thick_hide",
+          "name": "Thick Hide",
+          "kind": "aura",
+          "text": "Every twentieth of her max HP that Engorge adds hardens her hide.",
+          "aura": {
+            "target": "holder",
+            "stat": "def",
+            "value": 1,
+            "per_engorged_pct": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gluttony",
+    "name": "Gluttony",
+    "apex": "sanguine_nova",
+    "text": "Each Sanguine Nova makes Engorge grow faster still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gluttony",
+          "name": "Gluttony",
+          "kind": "ability",
+          "text": "Each Sanguine Nova makes Engorge grow faster still for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "type": "apply_status",
+              "status": "gluttony",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_rain",
+    "name": "Blood Rain",
+    "apex": "sanguine_nova",
+    "text": "Sanguine Nova slows the enemies it hits.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "slow",
+              "duration_ms": 2000,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_grave",
+    "name": "Deep Grave",
+    "apex": "gravecaller",
+    "text": "Each thrall raised makes later ones rise with more HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:gravecaller",
+          "raise_grow_add_pct": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "plague_thralls",
+    "name": "Plague Thralls",
+    "apex": "gravecaller",
+    "text": "Her thralls' attacks poison what they hit.",
+    "mod": {
+      "passives": [
+        {
+          "id": "plague_thralls",
+          "name": "Plague Thralls",
+          "kind": "ability",
+          "text": "Each hit her thralls' attacks land poisons the enemy.",
+          "effects": [
+            {
+              "trigger": "on_ally_hit",
+              "by": {
+                "raised": true
+              },
+              "type": "apply_status",
+              "status": "poison",
+              "stacks": 0,
+              "scaling": {
+                "atk": 1000
+              },
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "epidemic",
+    "name": "Epidemic",
+    "apex": "pestilence",
+    "text": "Each enemy that falls Poisoned makes her Poison stronger still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "epidemic",
+          "name": "Epidemic",
+          "kind": "ability",
+          "text": "Each enemy that falls while Poisoned makes all her Poison stronger still.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "type": "apply_status",
+              "status": "epidemic",
+              "target": "self",
+              "vs": {
+                "statuses": [
+                  "poison"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "wasting",
+    "name": "Wasting",
+    "apex": "pestilence",
+    "text": "Her Poison slows the enemies it's put on.",
+    "mod": {
+      "passives": [
+        {
+          "id": "wasting",
+          "name": "Wasting",
+          "kind": "ability",
+          "text": "Each Poison she applies slows that enemy for a moment.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "type": "apply_status",
+              "status": "wasting",
+              "target": "hit_target",
+              "statuses": [
+                "poison"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "crimson_flood",
+    "name": "Crimson Flood",
+    "apex": "blood_tide",
+    "text": "Each Exsanguinate makes Blood Bolt drink more still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tidal_thirst",
+          "value_add": 200
+        }
+      ]
+    }
+  },
+  {
+    "id": "crimson_spray",
+    "name": "Crimson Spray",
+    "apex": "blood_tide",
+    "text": "Exsanguinate's splash reaches 2 hexes from its target.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "sacrament",
+    "name": "Sacrament",
+    "apex": "blood_rite",
+    "text": "Every 100 HP she spends makes every ally stronger still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sacrament",
+          "name": "Sacrament",
+          "kind": "ability",
+          "text": "Every 100 HP she spends makes every ally stronger still for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_hp_spent",
+              "type": "apply_status",
+              "status": "sacrament",
+              "target": "all_allies",
+              "per_damage": 100
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shared_blood",
+    "name": "Shared Blood",
+    "apex": "blood_rite",
+    "text": "Blood Rite also gives every ally lifesteal.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "shared_blood",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

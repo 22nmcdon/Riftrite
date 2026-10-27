@@ -17,7 +17,7 @@ func before_all() -> void:
 func _rocky_content() -> ContentDb:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in ContentDb.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	texts[ContentDb.ENCOUNTERS_FILE] = JSON.stringify([{"id": "rocky", "name": "Rocky", "tests": "rocks", "act": 1, "days": [1],
 		"enemies": [{"enemy": "rift_pup", "hex": [3, 5]}], "rocks": [[3, 2], [4, 1]]}])
 	var db: ContentDb = ContentDb.load_texts(texts)

@@ -1,0 +1,25 @@
+{
+  "_note": "Hero 7 (docs/plans/rebuild-heroes.md section 8g; rebuild-phase8-severine-edric.md 8e-1). Stats, mana, Rend, Drain, and Hemophage are the design's; Rend's 1.1s cooldown is a first number. She never heals: all her sustain is lifesteal. She can't be drafted until her paths come.",
+  "id": "severine",
+  "name": "Severine Hollowell",
+  "title": "the bloodwitch",
+  "role": "damage",
+  "kit": {
+    "stats": {"hp": 330, "atk": 20, "mgk": 12, "def": 12, "speed": 2, "range": 1},
+    "mana": {"max": 60, "per_attack": 8, "regen_per_s": 2},
+    "basic_attack": {
+      "id": "rend", "name": "Rend", "text": "A clawing strike at the enemy beside her that heals her by part of the damage. Where most of her mana comes from.", "cooldown_ms": 1200,
+      "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}, "lifesteal_pct": 15}]
+    },
+    "signature": {
+      "id": "drain", "name": "Drain", "text": "She tears into an enemy within 1 hex and drinks: a heavy strike that heals her by half the damage.", "trigger": {"kind": "mana"},
+      "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 20000}, "lifesteal_pct": 50}]
+    },
+    "passives": [
+      {
+        "id": "hemophage", "name": "Hemophage", "kind": "aura", "text": "Her lifesteal is doubled against enemies below half their HP.",
+        "aura": {"target": "holder", "stat": "lifesteal_more_bp", "value": 10000, "vs": {"below_hp_pct": 50}}
+      }
+    ]
+  }
+}

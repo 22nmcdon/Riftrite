@@ -1,0 +1,8 @@
+[
+  {"_note": "Collection's window: a stack for each shard it may still pay, each lasting 5s (Tithe-Collector's signature; phase 8 part 5). It changes nothing by itself: Collection's shards spend it.", "id": "collection", "name": "Collection", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "More DEF while it lasts (Sanctified, Sanctuary's card; phase 8 part 5).", "id": "sanctified", "name": "Sanctified", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "def", "value": 10}]},
+  {"_note": "Attacks faster while it lasts (Bright Offering, Offering's card; phase 8 part 5).", "id": "bright_offering", "name": "Bright Offering", "kind": "boost", "duration_ms": 2000, "auras": [{"stat": "atsp", "value": 10}]},
+  {"_note": "Every Shield on its holder absorbs twice the damage while it lasts (Hallowed Ground, Bastion of Saints' signature; phase 8 part 5).", "id": "hallowed_ground", "name": "Hallowed Ground", "kind": "boost", "duration_ms": 5000, "auras": [{"stat": "shield_absorb_bp", "value": 10000}]},
+  {"_note": "A stack for each Hallow: later Hallows are bigger (Bastion of Saints; phase 8 part 5). It changes nothing by itself.", "id": "bastion", "name": "Bastion", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "More ATK and MGK while it lasts (Choir of Wards: an ally whose Shield broke; phase 8 part 5).", "id": "choir", "name": "Choir", "kind": "boost", "duration_ms": 3000, "auras": [{"stat": "atk_bp", "value": 11000}, {"stat": "mgk_bp", "value": 11000}]}
+]

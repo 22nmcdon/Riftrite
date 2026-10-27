@@ -1,0 +1,984 @@
+[
+  {
+    "id": "bright_soul",
+    "name": "Bright Soul",
+    "hero": "vell",
+    "text": "Her MGK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "mgk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "pilgrims_cloak",
+    "name": "Pilgrim's Cloak",
+    "hero": "vell",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_glow",
+    "name": "Quick Glow",
+    "hero": "vell",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "wide_hearth",
+    "name": "Wide Hearth",
+    "hero": "vell",
+    "text": "Hearthlight reaches allies farther from her.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthlight",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "warm_hearth",
+    "name": "Warm Hearth",
+    "hero": "vell",
+    "text": "Hearthlight heals more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthlight",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 20000
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_well",
+    "name": "Deep Well",
+    "hero": "vell",
+    "text": "Lantern Glow gives her more mana.",
+    "mod": {
+      "mana": {
+        "per_attack_add": 4
+      }
+    }
+  },
+  {
+    "id": "ember_glow",
+    "name": "Ember Glow",
+    "hero": "vell",
+    "text": "Lantern Glow sets its target Burning.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "urgent_mercy",
+    "name": "Urgent Mercy",
+    "hero": "vell",
+    "text": "Her heals on allies near death heal more.",
+    "mod": {
+      "passives": [
+        {
+          "id": "urgent_mercy",
+          "name": "Urgent Mercy",
+          "kind": "aura",
+          "text": "Her heals on allies below 30% HP heal more.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 12500,
+            "vs": {
+              "below_hp_pct": 30
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "cleansing_touch",
+    "name": "Cleansing Touch",
+    "hero": "vell",
+    "text": "Her heals take a harmful status off whoever they heal (not Hearthlight's).",
+    "mod": {
+      "passives": [
+        {
+          "id": "cleansing_touch",
+          "name": "Cleansing Touch",
+          "kind": "ability",
+          "text": "Mend's, Weave's, and her signature's heals remove the newest harmful status from whoever they heal.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend",
+                "weave",
+                "night_lantern",
+                "sunfall"
+              ],
+              "type": "cleanse",
+              "count": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "sanctuary",
+    "name": "Sanctuary",
+    "hero": "vell",
+    "text": "Allies right next to her take less damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sanctuary",
+          "name": "Sanctuary",
+          "kind": "aura",
+          "text": "The allies within 1 hex of her take less damage.",
+          "aura": {
+            "target": "allies_near",
+            "target_within_hexes": 1,
+            "stat": "damage_reduced_bp",
+            "value": 1000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "vigilant",
+    "name": "Vigilant",
+    "hero": "vell",
+    "text": "When an ally first falls below half HP, she gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "vigilant",
+          "name": "Vigilant",
+          "kind": "ability",
+          "text": "When an ally first drops below half HP, she gains mana (once per ally).",
+          "effects": [
+            {
+              "trigger": "on_ally_below_hp",
+              "threshold_bp": 5000,
+              "type": "gain_mana",
+              "amount": 30,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "lamp_oil",
+    "name": "Lamp Oil",
+    "hero": "vell",
+    "text": "Every heal she gives feeds the lamp: her MGK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "healing"
+      },
+      "per": 200,
+      "each": {
+        "stats_bp": {
+          "mgk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "steady_flame",
+    "name": "Steady Flame",
+    "path": "lanternbearer",
+    "taste": true,
+    "text": "Her signature needs less mana (Mend, then Night Lantern).",
+    "mod": {
+      "mana": {
+        "max_add": -5
+      }
+    }
+  },
+  {
+    "id": "bright_kindle",
+    "name": "Bright Kindle",
+    "path": "lanternbearer",
+    "taste": true,
+    "text": "Kindle heals more (Mend's spill, then the heal on the allies near her).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "heal"
+          ],
+          "at": [
+            "ally_near_target"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:kindle",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_night",
+    "name": "Long Night",
+    "path": "lanternbearer",
+    "text": "Night Lantern's light lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_cleanse",
+    "name": "Wide Cleanse",
+    "path": "lanternbearer",
+    "text": "Night Lantern's light also clears Slows and Bleeding.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "cleanse",
+              "amount_bp": 10000,
+              "statuses": [
+                "slow",
+                "hobbled",
+                "bleed"
+              ],
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "last_minute_mercy",
+    "name": "Last-Minute Mercy",
+    "path": "lanternbearer",
+    "text": "When Mend heals an ally near death, she gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "last_minute_mercy",
+          "name": "Last-Minute Mercy",
+          "kind": "ability",
+          "text": "When Mend heals an ally who was below 30% HP, she gains mana.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend"
+              ],
+              "was_below_pct": 30,
+              "type": "gain_mana",
+              "amount": 20,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_lantern",
+    "name": "First Lantern",
+    "path": "lanternbearer",
+    "text": "You place her first Night Lantern yourself, lit as the fight starts.",
+    "mod": {
+      "places_lantern": true
+    }
+  },
+  {
+    "id": "kindled_flame",
+    "name": "Kindled Flame",
+    "path": "lanternbearer",
+    "text": "Every heal Mend spills beside its target feeds the flame: her healing grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "healing",
+        "from_ability": [
+          "mend",
+          "kindle"
+        ],
+        "off_target": true
+      },
+      "per": 300,
+      "each": {
+        "passives": [
+          {
+            "id": "kindled_flame",
+            "name": "Kindled Flame",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "heal_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "thread_the_hurt",
+    "name": "Thread the Hurt",
+    "path": "wardweaver",
+    "taste": true,
+    "text": "Mend also Wards its target for a moment (once transformed, Weave does).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "warded",
+              "duration_ms": 2000,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "apply_status",
+              "status": "warded",
+              "duration_ms": 2000,
+              "target": "lowest_hp_ally",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_thread",
+    "name": "Thick Thread",
+    "path": "wardweaver",
+    "taste": true,
+    "text": "Ward Thread turns more of Mend's overheal into Shield (once transformed, Weave's Shield is bigger).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "overheal_shield_add_bp": 2000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 13000
+        }
+      ]
+    }
+  },
+  {
+    "id": "lasting_circle",
+    "name": "Lasting Circle",
+    "path": "wardweaver",
+    "text": "Warding Circle lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_circle",
+    "name": "Wide Circle",
+    "path": "wardweaver",
+    "text": "Warding Circle covers a wider circle.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "front_ward",
+    "name": "Front Ward",
+    "path": "wardweaver",
+    "text": "Her Shields on the front-most ally are bigger.",
+    "mod": {
+      "passives": [
+        {
+          "id": "front_ward",
+          "name": "Front Ward",
+          "kind": "aura",
+          "text": "Her Shields on your front-most ally are bigger.",
+          "aura": {
+            "target": "holder",
+            "stat": "shield_bp",
+            "value": 15000,
+            "vs": {
+              "front_most": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "cleansing_weave",
+    "name": "Cleansing Weave",
+    "path": "wardweaver",
+    "text": "Weave also takes a harmful status off its ally.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "cleanse",
+              "count": 1,
+              "target": "lowest_hp_ally",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "woven_deep",
+    "name": "Woven Deep",
+    "path": "wardweaver",
+    "text": "Every Shield she weaves goes deeper: her Shields grow for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "shield"
+      },
+      "per": 200,
+      "each": {
+        "passives": [
+          {
+            "id": "woven_deep",
+            "name": "Woven Deep",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "shield_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "burning_judgment",
+    "name": "Burning Judgment",
+    "path": "vigil_keeper",
+    "taste": true,
+    "text": "Her smites hit harder (Mend's, before and after she transforms).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "swift_judgment",
+    "name": "Swift Judgment",
+    "path": "vigil_keeper",
+    "taste": true,
+    "text": "Mend smites more often (once transformed, Mend comes sooner).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "damage"
+          ],
+          "every_add": -1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "every_add": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "leaping_smite",
+    "name": "Leaping Smite",
+    "path": "vigil_keeper",
+    "text": "Mend's smite leaps to a second enemy, weaker.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "damage",
+              "amount": 2,
+              "scaling": {
+                "mgk": 1000
+              },
+              "target": "enemy_near_target",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "holy_crits",
+    "name": "Holy Crits",
+    "path": "vigil_keeper",
+    "text": "Her crits heal the ally lowest on HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "holy_crits",
+          "name": "Holy Crits",
+          "kind": "ability",
+          "text": "Her crits heal the ally lowest on HP within 3 hexes.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "type": "heal",
+              "amount_bp_of_max_hp": 500,
+              "target": "lowest_hp_ally",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "searing",
+    "name": "Searing",
+    "path": "vigil_keeper",
+    "text": "Mend's smite Hobbles what it hits.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_sunfall",
+    "name": "Wide Sunfall",
+    "path": "vigil_keeper",
+    "text": "Sunfall's beam is wider.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "width_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "sunwrought",
+    "name": "Sunwrought",
+    "path": "vigil_keeper",
+    "text": "Every smite burns brighter: her smites grow for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "damage",
+        "from_ability": [
+          "mend"
+        ]
+      },
+      "per": 50,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:mend",
+            "types": [
+              "damage"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "rising_light",
+    "name": "Rising Light",
+    "apex": "the_beacon",
+    "text": "Each lantern grows twice as much as the last.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "grows_add_bp": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "blinding_light",
+    "name": "Blinding Light",
+    "apex": "the_beacon",
+    "text": "Enemies in her lantern's light are slowed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target",
+              "side": "enemies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindled_dawn",
+    "name": "First Light",
+    "apex": "dawnbringer",
+    "text": "Healing an ally who's already sped up makes them faster still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "kindled_dawn",
+          "name": "First Light",
+          "kind": "ability",
+          "text": "Healing a sped-up ally speeds them up more for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend",
+                "kindle"
+              ],
+              "vs": {
+                "statuses": [
+                  "dawnlight"
+                ]
+              },
+              "type": "apply_status",
+              "status": "first_light_more",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "morning_ward",
+    "name": "Morning Ward",
+    "apex": "dawnbringer",
+    "text": "Allies she heals take less damage for a while.",
+    "mod": {
+      "passives": [
+        {
+          "id": "morning_ward",
+          "name": "Morning Ward",
+          "kind": "ability",
+          "text": "Allies she heals with Mend and Kindle take less damage for a while.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend",
+                "kindle"
+              ],
+              "type": "apply_status",
+              "status": "dawn_ward",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_loom",
+    "name": "Iron Loom",
+    "apex": "loomwarden",
+    "text": "Shared damage toughens her linked allies twice as fast.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:loom",
+          "per_shared_bp": 5000
+        }
+      ]
+    }
+  },
+  {
+    "id": "taut_threads",
+    "name": "Taut Threads",
+    "apex": "loomwarden",
+    "text": "Every ally regains a little Shield each second.",
+    "mod": {
+      "passives": [
+        {
+          "id": "taut_threads",
+          "name": "Taut Threads",
+          "kind": "ability",
+          "text": "Each second, every ally gains a little Shield, linking them.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "type": "shield",
+              "amount_bp_of_max_hp": 100,
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bramble_weave",
+    "name": "Bramble Weave",
+    "apex": "thornweave",
+    "text": "Each Shield broken makes her Shields grow twice as fast.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bramble_weave",
+          "name": "Bramble Weave",
+          "kind": "ability",
+          "text": "Each Shield broken gives her another stack of Woven Thorns.",
+          "effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "type": "apply_status",
+              "status": "woven_thorns",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thorn_burst",
+    "name": "Thorn Burst",
+    "apex": "thornweave",
+    "text": "A broken Shield makes whoever broke it Bleed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thorn_burst",
+          "name": "Thorn Burst",
+          "kind": "ability",
+          "text": "Whoever breaks an ally's Shield Bleeds.",
+          "effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 3,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "burning_zeal",
+    "name": "Zeal",
+    "apex": "inquisitor",
+    "text": "Each smite kill gives her more MGK still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "burning_zeal",
+          "name": "Burning Zeal",
+          "kind": "ability",
+          "text": "Each smite kill makes her MGK grow more for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "from_ability": [
+                "mend"
+              ],
+              "type": "apply_status",
+              "status": "zeal_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "brand_of_heresy",
+    "name": "Brand of Heresy",
+    "apex": "inquisitor",
+    "text": "Her smites Mark the enemy they hit for 3s.",
+    "mod": {
+      "passives": [
+        {
+          "id": "brand_of_heresy",
+          "name": "Brand of Heresy",
+          "kind": "ability",
+          "text": "Her smites Mark the enemy they hit for a while.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "mend"
+              ],
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 3000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "holy_land",
+    "name": "Holy Land",
+    "apex": "sanctifier",
+    "text": "More lines of hallowed ground can stand at once.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "max_standing_add": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "consecrated",
+    "name": "Consecrated",
+    "apex": "sanctifier",
+    "text": "Enemies on hallowed ground are slowed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target",
+              "side": "enemies"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

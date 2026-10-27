@@ -1,0 +1,1406 @@
+[
+  {
+    "_note": "One target, built up (rebuild-heroes.md, section 8b, path 1; phase 8 part 6, 8f-1). First numbers, the design's.",
+    "id": "furnace",
+    "hero": "ilse",
+    "name": "Furnace",
+    "title": "the one who stokes one fire hotter",
+    "fantasy": "One enemy burns hotter and hotter until nothing's left.",
+    "placement": "Where she can keep hitting one target: a lane to the enemy that will stand longest.",
+    "vowed": {
+      "taste": "Stoke: every 4th Cinder Flick adds 5% of its target's Burn.",
+      "cost": "10% less MGK.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 9000
+        },
+        "passives": [
+          {
+            "id": "stoke",
+            "name": "Stoke",
+            "kind": "ability",
+            "text": "Every 4th Cinder Flick stokes its target: its Burn grows by a share of itself.",
+            "effects": [
+              {
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "cinder_flick"
+                ],
+                "every": 4,
+                "type": "apply_status",
+                "status": "burn",
+                "stacks_of": "burn",
+                "stacks_share_bp": 500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Every 3rd Cinder Flick stokes, adding 8%, and Burn on an enemy she has hit in the last 3s fades half as fast. Immolate replaces Flare (60 mana): it sets off all its target's Burn at once, 8 damage a stack, and the enemies within 1 hex of it catch half the Burn it took. Flare becomes a habit, every 8th Cinder Flick.",
+      "cost": "Immolate hits one target, with no area.",
+      "patch": {
+        "stats_bp": {
+          "atsp": 12000
+        },
+        "basic_attack": {
+          "id": "cinder_flick",
+          "name": "Cinder Flick",
+          "text": "A mote of fire at the nearest enemy within 3 hexes that sets it Burning; Burn on it fades slower for a few seconds. It gives her no mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 10000
+              }
+            },
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "mgk": 1000
+              },
+              "target": "hit_target",
+              "trigger": "on_hit"
+            },
+            {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "smoldering",
+              "target": "hit_target"
+            }
+          ]
+        },
+        "signature": {
+          "id": "immolate",
+          "name": "Immolate",
+          "text": "She sets off all the Burn on an enemy within 3 hexes at once, a great hit for each stack; the enemies within 1 hex of it catch half.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "stacks_share_bp": 5000,
+              "target": "enemies_near_target",
+              "within_hexes": 1
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "amount_per_stack": {
+                "status": "burn",
+                "per": 8
+              },
+              "target": "target"
+            },
+            {
+              "type": "cleanse",
+              "amount_bp": 10000,
+              "statuses": [
+                "burn"
+              ],
+              "target": "target"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "stoke",
+            "name": "Stoke",
+            "kind": "ability",
+            "text": "Every 3rd Cinder Flick stokes its target: its Burn grows by a share of itself.",
+            "effects": [
+              {
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "cinder_flick"
+                ],
+                "every": 3,
+                "type": "apply_status",
+                "status": "burn",
+                "stacks_of": "burn",
+                "stacks_share_bp": 800,
+                "target": "hit_target"
+              }
+            ]
+          },
+          {
+            "id": "flare",
+            "name": "Flare",
+            "kind": "ability",
+            "text": "A habit: every 8th Cinder Flick, a fireball bursts around her target: every enemy within 1 hex of it is set Burning.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 6000
+                    },
+                    "target": "target"
+                  }
+                ],
+                "trigger": "on_basic_attack",
+                "every": 8
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Burn added by Stoke",
+      "counts": "applied",
+      "from_ability": [
+        "stoke"
+      ],
+      "by_stacks": true,
+      "threshold": 14
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-1; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "blast_furnace",
+        "name": "Blast Furnace",
+        "title": "the fire that feeds itself",
+        "fantasy": "Every stoke makes her faster, and the faster she is, the hotter it burns.",
+        "vowed": {
+          "taste": "+5% attack speed while her target is Burning.",
+          "patch": {
+            "passives": [
+              {
+                "id": "blast_draft",
+                "name": "Blast Draft",
+                "kind": "aura",
+                "text": "She attacks faster while her target is Burning.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "atsp",
+                  "value": 5,
+                  "while": "state",
+                  "state": {
+                    "target": {
+                      "keywords": [
+                        "burning"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Every 2nd Cinder Flick stokes. Each Stoke gives her +2% attack speed and +1% MGK for the rest of the fight, with no cap. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "stoke",
+                "name": "Stoke",
+                "kind": "ability",
+                "text": "Every 2nd Cinder Flick stokes its target, and each Stoke makes her faster and stronger for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "cinder_flick"
+                    ],
+                    "every": 2,
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks_of": "burn",
+                    "stacks_share_bp": 800,
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "cinder_flick"
+                    ],
+                    "every": 2,
+                    "type": "apply_status",
+                    "status": "blast_furnace",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Stokes landed",
+          "counts": "applied",
+          "from_ability": [
+            "stoke"
+          ],
+          "threshold": 95
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-1; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "crucible",
+        "name": "Crucible",
+        "title": "the fire that never spends itself",
+        "fantasy": "She sets the fire off and it is still there, hotter, waiting for the next.",
+        "vowed": {
+          "taste": "Immolate leaves 10% of the Burn it set off.",
+          "patch": {
+            "signature": {
+              "id": "immolate",
+              "name": "Immolate",
+              "trigger": {
+                "kind": "mana"
+              },
+              "text": "She sets off all the Burn on an enemy within 3 hexes at once, a great hit for each stack; the enemies within 1 hex of it catch half.",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks_of": "burn",
+                  "stacks_share_bp": 5000,
+                  "target": "enemies_near_target",
+                  "within_hexes": 1
+                },
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "amount_per_stack": {
+                    "status": "burn",
+                    "per": 8
+                  },
+                  "target": "target"
+                },
+                {
+                  "type": "cleanse",
+                  "amount_bp": 9000,
+                  "statuses": [
+                    "burn"
+                  ],
+                  "target": "target"
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Immolate no longer takes the Burn it sets off. Each Immolate makes Stoke add 1% more for the rest of the fight. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "immolate",
+              "name": "Immolate",
+              "trigger": {
+                "kind": "mana"
+              },
+              "text": "She sets off all the Burn on an enemy within 3 hexes at once, a great hit for each stack; the enemies within 1 hex of it catch half.",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks_of": "burn",
+                  "stacks_share_bp": 5000,
+                  "target": "enemies_near_target",
+                  "within_hexes": 1
+                },
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "amount_per_stack": {
+                    "status": "burn",
+                    "per": 8
+                  },
+                  "target": "target"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "crucible",
+                  "target": "self"
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "stoke",
+                "name": "Stoke",
+                "kind": "ability",
+                "text": "Her Cinder Flicks stoke their target: its Burn grows by a share of itself.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "cinder_flick"
+                    ],
+                    "every": 3,
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks_of": "burn",
+                    "stacks_share_bp": 800,
+                    "target": "hit_target",
+                    "grows_per_stack": {
+                      "status": "crucible",
+                      "bp": 100
+                    }
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage dealt by Immolate",
+          "counts": "damage",
+          "from_ability": [
+            "immolate"
+          ],
+          "threshold": 5500
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Fire on the ground (rebuild-heroes.md, section 8b, path 2; phase 8 part 6, 8f-1). First numbers, the design's; the vowed cost is Flare's Burn, not its circle (a 1-hex circle can't shrink; a call made while building).",
+    "id": "wildfire",
+    "hero": "ilse",
+    "name": "Wildfire",
+    "title": "the one who sets the ground alight",
+    "fantasy": "The ground itself catches, and the fire spreads where enemies stand.",
+    "placement": "Where enemies will gather, with room for the fire to spread.",
+    "vowed": {
+      "taste": "Kindling: Flare leaves burning ground on its circle for 3s.",
+      "cost": "Flare's Burn is 25% weaker.",
+      "patch": {
+        "signature": {
+          "id": "flare",
+          "name": "Flare",
+          "text": "A fireball bursts around an enemy within 3 hexes: every enemy within 1 hex of it is set Burning.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "mgk": 4500
+                  },
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "kindling",
+            "name": "Kindling",
+            "kind": "ability",
+            "text": "Flare leaves the ground within 1 hex of its target burning for a few seconds: enemies on it catch Burn each second.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "duration_ms": 3000,
+                "every_ms": 1000,
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 500
+                    },
+                    "target": "target"
+                  }
+                ],
+                "trigger": "on_ability"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Her burning ground spreads 1 hex every 2s, up to 3 hexes from where it started, and lasts 6s; enemies on it gain Burn of 15% of her MGK each second. Firestorm replaces Flare (60 mana): a fire under each of the 3 largest groups of enemies. Flare becomes a habit, every 6th Cinder Flick, and leaves Kindling's ground.",
+      "cost": "Cinder Flick applies no Burn: the ground does the work.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 11000,
+          "hp": 11000
+        },
+        "basic_attack": {
+          "id": "cinder_flick",
+          "name": "Cinder Flick",
+          "text": "A mote of fire at the nearest enemy within 3 hexes. It gives her no mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 10000
+              }
+            }
+          ]
+        },
+        "signature": {
+          "id": "firestorm",
+          "name": "Firestorm",
+          "text": "Fire starts within 1 hex of each of the three largest groups of enemies and spreads up to 3 hexes: enemies on it catch Burn each second.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "duration_ms": 6000,
+              "every_ms": 1000,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "mgk": 1500
+                  },
+                  "target": "target"
+                }
+              ],
+              "grows": {
+                "every_ms": 2000,
+                "max_radius": 3
+              },
+              "at_largest_groups": 3
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "kindling",
+            "name": "Kindling",
+            "kind": "ability",
+            "text": "Flare's habit leaves the ground within 1 hex of its target burning, spreading for a few seconds: enemies on it catch Burn each second.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "duration_ms": 6000,
+                "every_ms": 1000,
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 1500
+                    },
+                    "target": "target"
+                  }
+                ],
+                "grows": {
+                  "every_ms": 2000,
+                  "max_radius": 3
+                },
+                "trigger": "on_basic_attack",
+                "every": 6
+              }
+            ]
+          },
+          {
+            "id": "flare",
+            "name": "Flare",
+            "kind": "ability",
+            "text": "A habit: every 6th Cinder Flick, a fireball bursts around her target: every enemy within 1 hex of it is set Burning.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 6000
+                    },
+                    "target": "target"
+                  }
+                ],
+                "trigger": "on_basic_attack",
+                "every": 6
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Burn applied by her burning ground",
+      "counts": "applied",
+      "from_ability": [
+        "kindling",
+        "firestorm"
+      ],
+      "by_stacks": true,
+      "threshold": 56
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-1; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "living_flame",
+        "name": "Living Flame",
+        "title": "the fire that hunts",
+        "fantasy": "Her fire walks. It goes where they go, and it feeds on the ones it catches.",
+        "vowed": {
+          "taste": "Her burning ground creeps toward the nearest enemy.",
+          "patch": {
+            "signature": {
+              "id": "firestorm",
+              "name": "Firestorm",
+              "trigger": {
+                "kind": "mana"
+              },
+              "text": "Fire starts within 1 hex of each of the three largest groups of enemies, creeping toward the nearest and spreading up to 3 hexes: enemies on it catch Burn each second.",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "duration_ms": 6000,
+                  "every_ms": 1000,
+                  "grows": {
+                    "every_ms": 2000,
+                    "max_radius": 3
+                  },
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 0,
+                      "scaling": {
+                        "mgk": 1500
+                      },
+                      "target": "target"
+                    }
+                  ],
+                  "follows": "nearest",
+                  "at_largest_groups": 3
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "kindling",
+                "name": "Kindling",
+                "kind": "ability",
+                "text": "Flare's habit leaves the ground within 1 hex of its target burning, spreading up to 3 hexes: enemies on it catch Burn each second.",
+                "effects": [
+                  {
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 1
+                    },
+                    "anchor": "target",
+                    "hits": "enemies",
+                    "duration_ms": 6000,
+                    "every_ms": 1000,
+                    "grows": {
+                      "every_ms": 2000,
+                      "max_radius": 3
+                    },
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "mgk": 1500
+                        },
+                        "target": "target"
+                      }
+                    ],
+                    "follows": "nearest",
+                    "trigger": "on_basic_attack",
+                    "every": 6
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Her fires creep toward the nearest enemy, never go out while an enemy is within 1 hex, and burn for 20% of her MGK a second. Each enemy her fire kills makes every fire 1 hex wider and 25% hotter for the rest of the fight, and starts a new fire where it fell. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "firestorm",
+              "name": "Firestorm",
+              "trigger": {
+                "kind": "mana"
+              },
+              "text": "Fire starts within 1 hex of each of the three largest groups of enemies and hunts them, spreading up to 3 hexes: it never goes out beside an enemy.",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "duration_ms": 6000,
+                  "every_ms": 1000,
+                  "grows": {
+                    "every_ms": 2000,
+                    "max_radius": 3
+                  },
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 0,
+                      "scaling": {
+                        "mgk": 2000
+                      },
+                      "target": "target",
+                      "grows_per_stack": {
+                        "status": "living_flame",
+                        "bp": 2500
+                      }
+                    }
+                  ],
+                  "follows": "nearest",
+                  "stays_near_hexes": 1,
+                  "radius_per_stack": "living_flame",
+                  "at_largest_groups": 3
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "kindling",
+                "name": "Kindling",
+                "kind": "ability",
+                "text": "Flare's habit leaves the ground within 1 hex of its target burning, spreading up to 3 hexes: enemies on it catch Burn each second.",
+                "effects": [
+                  {
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 1
+                    },
+                    "anchor": "target",
+                    "hits": "enemies",
+                    "duration_ms": 6000,
+                    "every_ms": 1000,
+                    "grows": {
+                      "every_ms": 2000,
+                      "max_radius": 3
+                    },
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "mgk": 2000
+                        },
+                        "target": "target",
+                        "grows_per_stack": {
+                          "status": "living_flame",
+                          "bp": 2500
+                        }
+                      }
+                    ],
+                    "follows": "nearest",
+                    "stays_near_hexes": 1,
+                    "radius_per_stack": "living_flame",
+                    "trigger": "on_basic_attack",
+                    "every": 6
+                  }
+                ]
+              },
+              {
+                "id": "living_flame",
+                "name": "Living Flame",
+                "kind": "ability",
+                "text": "Each enemy her fire kills feeds every fire, and a new one starts within 1 hex of where it fell, spreading up to 3 hexes.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "from_ability": [
+                      "kindling",
+                      "firestorm",
+                      "living_flame"
+                    ],
+                    "type": "apply_status",
+                    "status": "living_flame",
+                    "target": "self"
+                  },
+                  {
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 1
+                    },
+                    "anchor": "target",
+                    "hits": "enemies",
+                    "duration_ms": 6000,
+                    "every_ms": 1000,
+                    "grows": {
+                      "every_ms": 2000,
+                      "max_radius": 3
+                    },
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "mgk": 2000
+                        },
+                        "target": "target",
+                        "grows_per_stack": {
+                          "status": "living_flame",
+                          "bp": 2500
+                        }
+                      }
+                    ],
+                    "follows": "nearest",
+                    "stays_near_hexes": 1,
+                    "radius_per_stack": "living_flame",
+                    "trigger": "on_kill",
+                    "from_ability": [
+                      "kindling",
+                      "firestorm",
+                      "living_flame"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies killed by her burning ground",
+          "counts": "kills",
+          "from_ability": [
+            "kindling",
+            "firestorm",
+            "living_flame"
+          ],
+          "threshold": 12
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-1; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "ring_of_fire",
+        "name": "Ring of Fire",
+        "title": "the circle none may cross",
+        "fantasy": "She draws a line of fire around them, and every step across it costs.",
+        "vowed": {
+          "taste": "Enemies stepping onto her burning ground gain Burn equal to 10% of her MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "ring_step",
+                "name": "Ring Step",
+                "kind": "ability",
+                "text": "Enemies stepping onto her burning ground catch Burn.",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 1000
+                    },
+                    "target": "hit_target",
+                    "trigger": "on_zone_enter",
+                    "from_ability": [
+                      "kindling",
+                      "firestorm"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Each Firestorm also draws a ring of fire 2 hexes around the largest group; rings last the rest of the fight, up to 3 at once. Enemies crossing one gain Burn equal to 80% of her MGK and are Slowed 30% for 2s, and each crossing makes every ring's Burn 10% stronger for the rest of the fight. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "ring_step",
+                "name": "Ring Step",
+                "kind": "ability",
+                "text": "Enemies stepping onto her burning ground catch Burn.",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 1000
+                    },
+                    "target": "hit_target",
+                    "trigger": "on_zone_enter",
+                    "from_ability": [
+                      "kindling",
+                      "firestorm"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "ring_of_fire",
+                "name": "Ring of Fire",
+                "kind": "ability",
+                "text": "Each Firestorm also draws a ring of fire 2 hexes around the largest group of enemies; it lasts the fight, and crossing it burns, Slows, and makes every ring hotter.",
+                "effects": [
+                  {
+                    "trigger": "on_ability",
+                    "type": "area",
+                    "shape": {
+                      "kind": "ring",
+                      "radius": 2
+                    },
+                    "anchor": "target",
+                    "hits": "enemies",
+                    "at_largest_groups": 1,
+                    "duration_ms": 180000,
+                    "every_ms": 1000,
+                    "max_standing": 3,
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "mgk": 1000
+                        },
+                        "target": "target"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 8000
+                    },
+                    "target": "hit_target",
+                    "grows_per_stack": {
+                      "status": "ring_heat",
+                      "bp": 1000
+                    },
+                    "trigger": "on_zone_enter",
+                    "from_ability": [
+                      "ring_of_fire"
+                    ]
+                  },
+                  {
+                    "trigger": "on_zone_enter",
+                    "from_ability": [
+                      "ring_of_fire"
+                    ],
+                    "type": "apply_status",
+                    "status": "ringed",
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_zone_enter",
+                    "from_ability": [
+                      "ring_of_fire"
+                    ],
+                    "type": "apply_status",
+                    "status": "ring_heat",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Times enemies step onto her burning ground",
+          "counts": "applied",
+          "from_ability": [
+            "ring_step",
+            "ring_of_fire"
+          ],
+          "statuses": [
+            "burn"
+          ],
+          "threshold": 40
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Fire on every ally's weapon (rebuild-heroes.md, section 8b, path 3; phase 8 part 6, 8f-1). First numbers, the design's; Hymn's Burn on allies' attacks is 15% on top of Ember Choir's 5% (20% in all).",
+    "id": "ember_choir",
+    "hero": "ilse",
+    "name": "Ember Choir",
+    "title": "the one who sings fire into her allies' weapons",
+    "fantasy": "She sings fire into her allies' weapons.",
+    "placement": "Behind the team, in range of every ally.",
+    "vowed": {
+      "taste": "Blessing: every 8s, the ally nearest her has their next 3 basic attacks apply 1 Burn.",
+      "cost": "1 less range.",
+      "patch": {
+        "stats_add": {
+          "range": -1
+        },
+        "basic_attack": {
+          "id": "cinder_flick",
+          "name": "Cinder Flick",
+          "text": "A mote of fire at the nearest enemy within 2 hexes that sets it Burning. It gives her no mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 10000
+              }
+            },
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "mgk": 1000
+              },
+              "target": "hit_target",
+              "trigger": "on_hit"
+            }
+          ]
+        },
+        "signature": {
+          "id": "flare",
+          "name": "Flare",
+          "text": "A fireball bursts around an enemy within 2 hexes: every enemy within 1 hex of it is set Burning.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "mgk": 6000
+                  },
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "blessing",
+            "name": "Blessing",
+            "kind": "ability",
+            "text": "Every few seconds, the ally nearest her within 8 hexes is blessed: their next 3 basic attacks set their targets Burning.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 8000,
+                "type": "apply_status",
+                "status": "blessed",
+                "stacks": 3,
+                "target": "allies_near_self",
+                "within_hexes": 8,
+                "nearest": 1
+              },
+              {
+                "trigger": "on_ally_hit",
+                "spends": "blessed",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 1,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Every ally's basic attack applies Burn of 5% of her MGK. Hymn of Cinders replaces Flare (60 mana): for 5s, allies' basic attacks apply Burn of 20% of her MGK and they attack 15% faster. Flare becomes a habit, every 8th Cinder Flick.",
+      "cost": "Her own Burn is 30% weaker.",
+      "patch": {
+        "basic_attack": {
+          "id": "cinder_flick",
+          "name": "Cinder Flick",
+          "text": "A mote of fire at the nearest enemy within 3 hexes that sets it Burning. It gives her no mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 10000
+              }
+            },
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "mgk": 700
+              },
+              "target": "hit_target",
+              "trigger": "on_hit"
+            }
+          ]
+        },
+        "signature": {
+          "id": "hymn_of_cinders",
+          "name": "Hymn of Cinders",
+          "text": "She sings: for a few seconds every ally attacks faster and their basic attacks carry more of her Burn.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "hymn",
+              "duration_ms": 5000,
+              "target": "all_allies"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "ember_choir",
+            "name": "Ember Choir",
+            "kind": "ability",
+            "text": "Every ally's basic attack sets its target Burning.",
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 0,
+                "scaling": {
+                  "mgk": 500
+                },
+                "target": "hit_target",
+                "trigger": "on_ally_hit"
+              }
+            ]
+          },
+          {
+            "id": "hymn",
+            "name": "Hymn",
+            "kind": "ability",
+            "text": "While Hymn of Cinders lasts, allies' basic attacks carry more of her Burn.",
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 0,
+                "scaling": {
+                  "mgk": 1500
+                },
+                "target": "hit_target",
+                "trigger": "on_ally_hit",
+                "by": {
+                  "statuses": [
+                    "hymn"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "flare",
+            "name": "Flare",
+            "kind": "ability",
+            "text": "A habit: every 8th Cinder Flick, a fireball bursts around her target: every enemy within 1 hex of it is set Burning.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 4200
+                    },
+                    "target": "target"
+                  }
+                ],
+                "trigger": "on_basic_attack",
+                "every": 8
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Burn applied by allies' attacks",
+      "counts": "applied",
+      "from_ability": [
+        "blessing",
+        "ember_choir",
+        "hymn"
+      ],
+      "by_stacks": true,
+      "threshold": 18
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-1; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "cinder_saint",
+        "name": "Cinder Saint",
+        "title": "the saint of every burning blade",
+        "fantasy": "Every blow her allies strike is a prayer, and every prayer makes her brighter.",
+        "vowed": {
+          "taste": "Allies she has blessed (every ally, once transformed) gain +5% ATK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "saint_blessing",
+                "name": "Saint's Blessing",
+                "kind": "aura",
+                "text": "Every other ally within 8 hexes of her hits a little harder.",
+                "aura": {
+                  "target": "allies_near",
+                  "target_within_hexes": 8,
+                  "stat": "atk_bp",
+                  "value": 10500
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Allies deal +20% damage to Burning enemies, and the Burn on their basic attacks rises to 10% of her MGK. Every ally basic attack gives her +1% MGK for the rest of the fight. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "ember_choir",
+                "name": "Ember Choir",
+                "kind": "ability",
+                "text": "Every ally's basic attack sets its target Burning.",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 1000
+                    },
+                    "target": "hit_target",
+                    "trigger": "on_ally_hit"
+                  },
+                  {
+                    "trigger": "on_ally_hit",
+                    "type": "apply_status",
+                    "status": "cinder_saint",
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "saints_fire",
+                "name": "Saint's Fire",
+                "kind": "aura",
+                "text": "Allies deal more damage to Burning enemies.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 12000,
+                  "vs": {
+                    "keywords": [
+                      "burning"
+                    ]
+                  }
+                }
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage allies' attacks deal to Burning enemies",
+          "counts": "damage",
+          "by_allies": true,
+          "vs_keywords": [
+            "burning"
+          ],
+          "threshold": 9500
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-1; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "kindred_flame",
+        "name": "Kindred Flame",
+        "title": "the fire that mends its own",
+        "fantasy": "All the burning in the world comes back to her friends as warmth.",
+        "vowed": {
+          "taste": "Every hero heals 0.2% of all Burn damage dealt.",
+          "patch": {
+            "passives": [
+              {
+                "id": "kindred_flame",
+                "name": "Kindred Flame",
+                "kind": "ability",
+                "text": "Every hero heals a little for all the Burn damage dealt, by anyone, anywhere.",
+                "effects": [
+                  {
+                    "trigger": "on_status_tick",
+                    "statuses": [
+                      "burn"
+                    ],
+                    "per_damage": 500,
+                    "type": "heal",
+                    "amount": 1,
+                    "target": "all_allies"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Every hero heals 1% of all Burn damage dealt, by anyone, anywhere: healing, not lifesteal. What would heal past full sets the enemy nearest them Burning, 1 for every 5. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "kindred_flame",
+                "name": "Kindred Flame",
+                "kind": "ability",
+                "text": "Every hero heals a little for all the Burn damage dealt, by anyone, anywhere. What would heal past full sets the enemy nearest them Burning.",
+                "effects": [
+                  {
+                    "trigger": "on_status_tick",
+                    "statuses": [
+                      "burn"
+                    ],
+                    "per_damage": 100,
+                    "type": "heal",
+                    "amount": 1,
+                    "target": "all_allies",
+                    "overheal_status": {
+                      "status": "burn",
+                      "per": 5
+                    }
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Healing from Kindred Flame",
+          "counts": "healing",
+          "from_ability": [
+            "kindred_flame"
+          ],
+          "threshold": 16
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,464 @@
+[
+  {
+    "id": "mirror_of_ash",
+    "name": "Mirror of Ash",
+    "tier": "epic",
+    "icon": "rift_glass_eye",
+    "flavor": "What it shows, it gives back.",
+    "text": "Enemies take part of the damage they deal to heroes.",
+    "mod": {
+      "passives": [
+        {
+          "id": "mirror_of_ash",
+          "name": "Mirror of Ash",
+          "kind": "ability",
+          "text": "An enemy's hit on it hurts the enemy too.",
+          "effects": [
+            {
+              "trigger": "on_hit_taken",
+              "type": "damage",
+              "amount_bp_of_damage": 6000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_ninth_arrow",
+    "name": "The Ninth Arrow",
+    "tier": "epic",
+    "icon": "fletched_for_wings",
+    "flavor": "Eight to find the way, one to end it.",
+    "text": "Every 9th hit by each hero deals triple damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_ninth_arrow",
+          "name": "The Ninth Arrow",
+          "kind": "ability",
+          "text": "Every 9th hit strikes again for twice its damage.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "every": 9,
+              "type": "damage",
+              "amount_bp_of_damage": 20000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "sunder",
+    "name": "Sunder",
+    "tier": "epic",
+    "icon": "braced",
+    "flavor": "Nothing stays whole.",
+    "text": "Every hit lowers the target's DEF for the rest of the fight.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sunder",
+          "name": "Sunder",
+          "kind": "ability",
+          "text": "Its hits wear down the target's DEF.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "type": "apply_status",
+              "status": "sunder",
+              "stacks": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "misers_vault",
+    "name": "Miser's Vault",
+    "tier": "epic",
+    "icon": "hollow_crown",
+    "flavor": "It grows heavier the less you spend.",
+    "text": "Shards at every shop for the shards you're holding.",
+    "miser": true
+  },
+  {
+    "id": "merchants_covenant",
+    "name": "Merchant's Covenant",
+    "tier": "epic",
+    "icon": "cheaper",
+    "flavor": "Signed in something darker than ink.",
+    "text": "Rerolls never get more expensive.",
+    "flat_rerolls": true
+  },
+  {
+    "id": "thicket_engine",
+    "name": "Thicket Engine",
+    "tier": "epic",
+    "icon": "braced",
+    "flavor": "Gears of root and thorn, turning.",
+    "text": "Rooted enemies take more damage, and every few hits on a Rooted enemy keep it Rooted a little longer.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thicket_engine",
+          "name": "Thicket Engine",
+          "kind": "aura",
+          "text": "More damage to Rooted enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 13000,
+            "vs": {
+              "keywords": [
+                "rooted"
+              ]
+            }
+          }
+        },
+        {
+          "id": "thicket_engine_roots",
+          "name": "Thicket Engine",
+          "kind": "ability",
+          "text": "Every few hits on a Rooted enemy keep it Rooted a little longer.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              },
+              "every": 4,
+              "type": "extend_status",
+              "status": "root",
+              "duration_ms": 100,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "stormcallers_bell",
+    "name": "Stormcaller's Bell",
+    "tier": "epic",
+    "icon": "echo",
+    "flavor": "It rings before the thunder.",
+    "text": "When any hero fires a signature, every hero's ATK and MGK rise for a while.",
+    "mod": {
+      "passives": [
+        {
+          "id": "stormcallers_bell",
+          "name": "Stormcaller's Bell",
+          "kind": "ability",
+          "text": "When it fires its signature, every ally's ATK and MGK rise for a while.",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "type": "apply_status",
+              "status": "storm_call",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "overkill_tithe",
+    "name": "Overkill Tithe",
+    "tier": "epic",
+    "icon": "cheaper",
+    "flavor": "The rift collects what spills over.",
+    "text": "Shards for the team's kills that overkill, more for a big one.",
+    "grows": {
+      "counts": {
+        "counts": "overkill",
+        "steps_at_pct": [0, 50, 100]
+      },
+      "per": 1,
+      "each_shards": 1
+    }
+  },
+  {
+    "id": "ashen_engine",
+    "name": "Ashen Engine",
+    "tier": "epic",
+    "icon": "ember_heart",
+    "flavor": "It runs on what burns.",
+    "text": "Heroes' ATK and MGK rise, and every hit on a Burning enemy spreads some of its Burn to the enemy nearest it.",
+    "mod": {
+      "stats_bp": {
+        "atk": 12000,
+        "mgk": 12000
+      },
+      "passives": [
+        {
+          "id": "ashen_engine",
+          "name": "Ashen Engine",
+          "kind": "ability",
+          "text": "A hit on a Burning enemy spreads some of its Burn to the enemy nearest it.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "stacks_share_bp": 500,
+              "target": "enemy_near_named"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "overflow_chalice",
+    "name": "Overflow Chalice",
+    "tier": "epic",
+    "icon": "deep_mend",
+    "flavor": "It never spills. It keeps.",
+    "text": "Healing past full HP from heroes' heals comes back as Shield.",
+    "mod": {
+      "passives": [
+        {
+          "id": "overflow_chalice",
+          "name": "Overflow Chalice",
+          "kind": "aura",
+          "text": "Healing past full HP from its heals comes back as Shield.",
+          "aura": {
+            "target": "holder",
+            "stat": "overheal_shield_bp",
+            "value": 5000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_communion",
+    "name": "Blood Communion",
+    "tier": "epic",
+    "icon": "ember_heart",
+    "flavor": "Drink, and be made whole.",
+    "text": "Heroes' lifesteal counts as healing, and all healing heroes give or receive is stronger.",
+    "mod": {
+      "passives": [
+        {
+          "id": "blood_communion",
+          "name": "Blood Communion",
+          "kind": "aura",
+          "text": "Its lifesteal counts as healing.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_heals",
+            "value": 1
+          }
+        },
+        {
+          "id": "blood_communion_given",
+          "name": "Blood Communion",
+          "kind": "aura",
+          "text": "Its heals are stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 11000
+          }
+        },
+        {
+          "id": "blood_communion_taken",
+          "name": "Blood Communion",
+          "kind": "aura",
+          "text": "Healing it receives is stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "healing_taken_bp",
+            "value": 11000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "sanguine_frenzy",
+    "name": "Sanguine Frenzy",
+    "tier": "epic",
+    "icon": "opener",
+    "flavor": "The taste only makes it hungrier.",
+    "text": "Each time lifesteal heals a hero, it attacks faster for a while; it stacks.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sanguine_frenzy",
+          "name": "Sanguine Frenzy",
+          "kind": "ability",
+          "text": "Each time its lifesteal heals it, it attacks faster for a while; it stacks.",
+          "effects": [
+            {
+              "trigger": "on_lifesteal",
+              "type": "apply_status",
+              "status": "frenzy",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "knifes_edge",
+    "name": "Knife's Edge",
+    "tier": "epic",
+    "icon": "steady_hands",
+    "flavor": "Sharper than certain.",
+    "text": "Heroes' crit chance past 100% turns into crit damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "knifes_edge",
+          "name": "Knife's Edge",
+          "kind": "aura",
+          "text": "Its crit chance past 100% turns into crit damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_overflow_bp",
+            "value": 20000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "stonebound",
+    "name": "Stonebound",
+    "tier": "epic",
+    "icon": "unbroken_wall",
+    "flavor": "The longer it stands, the harder it is to move.",
+    "text": "A hero who stands still grows stronger the longer it stays put; moving resets it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "stonebound",
+          "name": "Stonebound",
+          "kind": "aura",
+          "text": "Standing still, its ATK grows; moving resets it.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 11500,
+            "while": "planted",
+            "after_ms": 2000,
+            "step": {
+              "every_ms": 2000,
+              "value": 500
+            }
+          }
+        },
+        {
+          "id": "stonebound_mgk",
+          "name": "Stonebound",
+          "kind": "aura",
+          "text": "Standing still, its MGK grows; moving resets it.",
+          "aura": {
+            "target": "holder",
+            "stat": "mgk_bp",
+            "value": 11500,
+            "while": "planted",
+            "after_ms": 2000,
+            "step": {
+              "every_ms": 2000,
+              "value": 500
+            }
+          }
+        },
+        {
+          "id": "stonebound_def",
+          "name": "Stonebound",
+          "kind": "aura",
+          "text": "Standing still, its DEF grows; moving resets it.",
+          "aura": {
+            "target": "holder",
+            "stat": "def",
+            "value": 15,
+            "while": "planted",
+            "after_ms": 2000,
+            "step": {
+              "every_ms": 2000,
+              "value": 5
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "full_vigor",
+    "name": "Full Vigor",
+    "tier": "epic",
+    "icon": "purifying_light",
+    "flavor": "Unhurt, and hungry for it.",
+    "text": "Heroes near full HP hit harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "full_vigor",
+          "name": "Full Vigor",
+          "kind": "aura",
+          "text": "More ATK while above 90% HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 11500,
+            "while": "state",
+            "state": {
+              "above_hp_pct": 90
+            }
+          }
+        },
+        {
+          "id": "full_vigor_mgk",
+          "name": "Full Vigor",
+          "kind": "aura",
+          "text": "More MGK while above 90% HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "mgk_bp",
+            "value": 11500,
+            "while": "state",
+            "state": {
+              "above_hp_pct": 90
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "shackle_engine",
+    "name": "Shackle Engine",
+    "tier": "epic",
+    "icon": "braced",
+    "flavor": "Every link learns to hold longer.",
+    "text": "Roots and Stuns heroes put on enemies last longer, and Rooted or Stunned enemies gain no mana.",
+    "rules": {
+      "holds": {
+        "time_bp": 13000,
+        "no_mana": true
+      }
+    }
+  }
+]

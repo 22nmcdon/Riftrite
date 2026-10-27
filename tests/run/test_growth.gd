@@ -43,7 +43,7 @@ func _deed(hero_id: String, path_id: String, amount: int) -> Array[FightResult.D
 func _with_upgrades(upgrades: Array) -> RunContent:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in RunContent.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data/" + file_name)
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	texts[RunContent.UPGRADES_FILE] = JSON.stringify(upgrades)
 	return RunContent.load_texts(texts, _run.content)
 

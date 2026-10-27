@@ -28,8 +28,8 @@ func _kit(path_id: String, transformed: bool = false) -> UnitDef:
 
 func _with_items(items: Array) -> RunContent:
 	var texts: Dictionary[String, String] = {
-		RunContent.ACT_FILE: FileAccess.get_file_as_string("res://data/act1.json"),
-		RunContent.UPGRADES_FILE: FileAccess.get_file_as_string("res://data/upgrades.json"),
+		RunContent.ACT_FILE: DataLayout.read("res://data", "act1.json"),
+		RunContent.UPGRADES_FILE: DataLayout.read("res://data", "upgrades.json"),
 		RunContent.ITEMS_FILE: JSON.stringify(items),
 	}
 	return RunContent.load_texts(texts, _run.content)

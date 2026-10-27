@@ -54,16 +54,16 @@ static func load_dir(dir: String, content_db: ContentDb) -> RunContent:
 	var texts: Dictionary[String, String] = {}
 	var missing: Array[String] = []
 	for file_name: String in FILES:
-		var file_path: String = dir.path_join(file_name)
-		if FileAccess.file_exists(file_path):
-			texts[file_name] = FileAccess.get_file_as_string(file_path)
+		var text: String = DataLayout.read(dir, file_name, missing)
+		if not text.is_empty():
+			texts[file_name] = text
 		else:
-			missing.append("%s: file not found" % file_path)
+			missing.append("%s: file not found under %s (DataLayout)" % [file_name, dir])
 	for number: int in range(2, MAX_ACTS + 1):
-		var act_path: String = dir.path_join(LATER_ACT_FILE % number)
-		if not FileAccess.file_exists(act_path):
+		var act_text: String = DataLayout.read(dir, LATER_ACT_FILE % number, missing)
+		if act_text.is_empty():
 			break
-		texts[LATER_ACT_FILE % number] = FileAccess.get_file_as_string(act_path)
+		texts[LATER_ACT_FILE % number] = act_text
 	var run: RunContent = load_texts(texts, content_db)
 	missing.append_array(run.errors)
 	run.errors = missing
@@ -77,7 +77,7 @@ static func load_texts(texts: Dictionary[String, String], content_db: ContentDb)
 		var file_name: String = LATER_ACT_FILE % number
 		if number > 1 and not texts.has(file_name):
 			break
-		var act_data: Variant = run._parse(texts, file_name)
+		var act_data: Variant = DataLayout.parse(texts, file_name, run.errors, false)
 		if act_data == null:
 			break
 		var reader: DataReader = DataReader.from_value(act_data, file_name, run.errors)
@@ -87,27 +87,27 @@ static func load_texts(texts: Dictionary[String, String], content_db: ContentDb)
 		if act_def.act != number:
 			run.errors.append("%s: \"act\" must be %d" % [file_name, number])
 		run.acts.append(act_def)
-	run._read_upgrades(run._parse(texts, UPGRADES_FILE))
-	run._read_items(run._parse(texts, ITEMS_FILE))
-	var camps_data: Variant = run._parse(texts, CAMPS_FILE)
+	run._read_upgrades(DataLayout.parse(texts, UPGRADES_FILE, run.errors, false))
+	run._read_items(DataLayout.parse(texts, ITEMS_FILE, run.errors, false))
+	var camps_data: Variant = DataLayout.parse(texts, CAMPS_FILE, run.errors, false)
 	if camps_data != null:
 		var camps_reader: DataReader = DataReader.from_value(camps_data, CAMPS_FILE, run.errors)
 		if camps_reader != null:
 			run.camps = CampsDef.read(camps_reader)
-	for reader: DataReader in run._entries(run._parse(texts, RELICS_FILE), RELICS_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, RELICS_FILE, run.errors, false), RELICS_FILE, run.errors):
 		var relic: RelicDef = RelicDef.read(reader)
 		if run._claim(relic.id, reader, run.relic_ids):
 			run.relics[relic.id] = relic
-	for reader: DataReader in run._entries(run._parse(texts, BONDS_FILE), BONDS_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, BONDS_FILE, run.errors, false), BONDS_FILE, run.errors):
 		var bond: BondDef = BondDef.read(reader)
 		if run._claim(bond.id, reader, run.bond_ids):
 			run.bonds[bond.id] = bond
-	var events_data: Variant = run._parse(texts, EVENTS_FILE)
+	var events_data: Variant = DataLayout.parse(texts, EVENTS_FILE, run.errors, false)
 	if events_data != null:
 		var events_reader: DataReader = DataReader.from_value(events_data, EVENTS_FILE, run.errors)
 		if events_reader != null:
 			run.events = EventDef.read(events_reader)
-	var learns_data: Variant = run._parse(texts, RIFT_LEARNS_FILE)
+	var learns_data: Variant = DataLayout.parse(texts, RIFT_LEARNS_FILE, run.errors, false)
 	if learns_data != null:
 		var learns_reader: DataReader = DataReader.from_value(learns_data, RIFT_LEARNS_FILE, run.errors)
 		if learns_reader != null:
@@ -688,26 +688,8 @@ func _claim(id: String, reader: DataReader, ids: Array[String]) -> bool:
 	return true
 
 
-func _entries(data: Variant, file_name: String) -> Array[DataReader]:
-	var readers: Array[DataReader] = []
-	if data == null:
-		return readers
-	if typeof(data) != TYPE_ARRAY:
-		errors.append("%s: expected a list of entries" % file_name)
-		return readers
-	var entries: Array = data
-	for i: int in entries.size():
-		var label: String = "%s[%d]" % [file_name, i]
-		if typeof(entries[i]) == TYPE_DICTIONARY and typeof(entries[i].get("id")) == TYPE_STRING:
-			label += " (%s)" % entries[i]["id"]
-		var reader: DataReader = DataReader.from_value(entries[i], label, errors)
-		if reader != null:
-			readers.append(reader)
-	return readers
-
-
 func _read_items(data: Variant) -> void:
-	for reader: DataReader in _entries(data, ITEMS_FILE):
+	for reader: DataReader in DataLayout.entries(data, ITEMS_FILE, errors):
 		var item: ItemDef = ItemDef.read(reader)
 		if item.id.is_empty():
 			continue
@@ -719,7 +701,7 @@ func _read_items(data: Variant) -> void:
 
 
 func _read_upgrades(data: Variant) -> void:
-	for reader: DataReader in _entries(data, UPGRADES_FILE):
+	for reader: DataReader in DataLayout.entries(data, UPGRADES_FILE, errors):
 		var upgrade: UpgradeDef = UpgradeDef.read(reader)
 		if upgrade.id.is_empty():
 			continue
@@ -1041,13 +1023,3 @@ func _check_all_upgrades(hero_id: String) -> void:
 				apex_kit = mod.apply(apex_kit, apex_problems)
 			for problem: String in apex_problems:
 				errors.append("%s: %s's upgrades together at %s: %s" % [UPGRADES_FILE, hero_id, apex.id, problem])
-
-
-func _parse(texts: Dictionary[String, String], file_name: String) -> Variant:
-	if not texts.has(file_name):
-		return null
-	var json := JSON.new()
-	if json.parse(texts[file_name]) != OK:
-		errors.append("%s: invalid JSON at line %d: %s" % [file_name, json.get_error_line(), json.get_error_message()])
-		return null
-	return json.data

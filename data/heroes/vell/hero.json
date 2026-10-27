@@ -1,0 +1,25 @@
+{
+  "id": "vell",
+  "name": "Sister Vell",
+  "title": "the mender",
+  "role": "support",
+  "kit": {
+    "stats": {"hp": 300, "atk": 6, "mgk": 20, "def": 10, "speed": 2, "range": 3},
+    "mana": {"max": 60, "start": 20, "per_attack": 12, "regen_per_s": 2},
+    "basic_attack": {
+      "_note": "Slow, but her main source of mana: about 10 mana a second while she attacks.",
+      "id": "lantern_glow", "name": "Lantern Glow", "text": "Throws lantern light at her target from up to 3 hexes away. Weak, but it's where most of her mana comes from.", "cooldown_ms": 1500,
+      "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+    },
+    "signature": {
+      "_note": "The ally lowest on HP% within 3 hexes, Vell included.",
+      "id": "mend", "name": "Mend", "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included.", "trigger": {"kind": "mana"}, "targeting": "lowest_hp_ally",
+      "effects": [{"type": "heal", "amount": 20, "target": "target", "scaling": {"mgk": 10000}}]
+    },
+    "passives": [
+      {"id": "hearthlight", "name": "Hearthlight", "text": "Every second, heals the other allies within 1 hex of her by a little of their max HP.", "kind": "ability",
+        "effects": [{"trigger": "on_interval", "interval_ms": 1000, "type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "other_allies",
+          "effects": [{"type": "heal", "amount_bp_of_max_hp": 100, "target": "target"}]}]}
+    ]
+  }
+}

@@ -1,0 +1,716 @@
+[
+  {
+    "id": "echo",
+    "kind": "sigil",
+    "name": "Echo",
+    "icon": "echo",
+    "text": "Your signature fires again a moment later, weaker.",
+    "ranks": [
+      {
+        "echo": {
+          "after_ms": 2000,
+          "share_pct": 40
+        }
+      },
+      {
+        "echo": {
+          "after_ms": 2000,
+          "share_pct": 60
+        }
+      },
+      {
+        "echo": {
+          "after_ms": 1000,
+          "share_pct": 60
+        }
+      }
+    ]
+  },
+  {
+    "id": "thrift",
+    "kind": "sigil",
+    "name": "Thrift",
+    "icon": "cheaper",
+    "text": "Your signature costs less mana.",
+    "ranks": [
+      {
+        "mana": {
+          "max_bp": 8500
+        }
+      },
+      {
+        "mana": {
+          "max_bp": 7500
+        }
+      },
+      {
+        "mana": {
+          "max_bp": 6500
+        }
+      }
+    ]
+  },
+  {
+    "id": "desperate",
+    "kind": "sigil",
+    "name": "Desperate",
+    "icon": "the_tank_first",
+    "text": "Your signature also fires, once, when you drop low on HP; at rank III you gain a Shield then too.",
+    "ranks": [
+      {
+        "also_fires": [
+          {
+            "kind": "hp_below",
+            "threshold_bp": 4000
+          }
+        ]
+      },
+      {
+        "also_fires": [
+          {
+            "kind": "hp_below",
+            "threshold_bp": 5000
+          }
+        ]
+      },
+      {
+        "also_fires": [
+          {
+            "kind": "hp_below",
+            "threshold_bp": 5000
+          }
+        ],
+        "passives": [
+          {
+            "id": "desperate",
+            "name": "Desperate",
+            "kind": "ability",
+            "text": "Low on HP, a Shield.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 5000,
+                "type": "shield",
+                "amount_bp_of_max_hp": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "lingering",
+    "kind": "sigil",
+    "name": "Lingering",
+    "icon": "pilgrims_lantern",
+    "text": "Your signature's areas and statuses last longer.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "duration_add_ms": 1000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "duration_add_ms": 2000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "duration_add_ms": 3000
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tolling",
+    "kind": "sigil",
+    "name": "Tolling",
+    "icon": "rift_glass_eye",
+    "text": "Your signature Marks everything it hits.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 3000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 5000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "kindled",
+    "kind": "sigil",
+    "name": "Kindled",
+    "icon": "ember_heart",
+    "text": "Your signature sets everything it hits Burning.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 3,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 5,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 8,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "grasping",
+    "kind": "sigil",
+    "name": "Grasping",
+    "icon": "braced",
+    "text": "Your signature Roots everything it hits.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "veiled",
+    "kind": "sigil",
+    "name": "Veiled",
+    "icon": "light_feet",
+    "text": "Your signature hides you for a moment after it fires.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 1500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bulwark",
+    "kind": "sigil",
+    "name": "Bulwark",
+    "icon": "unbroken_wall",
+    "text": "Your signature Shields you; at rank III, the allies beside you too.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              },
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "allies_near_self",
+                "within_hexes": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "surge",
+    "kind": "sigil",
+    "name": "Surge",
+    "icon": "steady_hands",
+    "text": "After your signature fires, you attack faster for a while.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "surge",
+            "name": "Surge",
+            "kind": "ability",
+            "text": "After its signature, faster attacks.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "apply_status",
+                "status": "surge",
+                "duration_ms": 3000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "surge",
+            "name": "Surge",
+            "kind": "ability",
+            "text": "After its signature, faster attacks.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "apply_status",
+                "status": "surge_2",
+                "duration_ms": 3000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "surge",
+            "name": "Surge",
+            "kind": "ability",
+            "text": "After its signature, faster attacks.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "apply_status",
+                "status": "surge_2",
+                "duration_ms": 5000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "opener",
+    "kind": "sigil",
+    "name": "Opener",
+    "icon": "opener",
+    "text": "You start every fight with your signature's bar partly full.",
+    "ranks": [
+      {
+        "mana": {
+          "start_bp": 5000
+        }
+      },
+      {
+        "mana": {
+          "start_bp": 7500
+        }
+      },
+      {
+        "mana": {
+          "start_bp": 10000
+        }
+      }
+    ]
+  },
+  {
+    "id": "quickcast",
+    "kind": "sigil",
+    "name": "Quickcast",
+    "icon": "steady_hands",
+    "text": "Your signature casts faster; at rank III, at once.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "cast_bp": 7000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "cast_bp": 5000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "cast_bp": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wide",
+    "kind": "sigil",
+    "name": "Wide",
+    "icon": "pilgrims_lantern",
+    "text": "Your signature's area is larger, or it reaches more units; from rank II, both.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "radius_add": 1,
+            "targets_add": 1,
+            "one_of": true
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "radius_add": 1,
+            "targets_add": 1
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "radius_add": 2,
+            "targets_add": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "siphon",
+    "kind": "sigil",
+    "name": "Siphon",
+    "icon": "deep_mend",
+    "text": "Your signature's hits heal you for a share of their damage.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "siphon",
+            "name": "Siphon",
+            "kind": "aura",
+            "text": "Lifesteal on its signature.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 1500,
+              "from_signature": true
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "siphon",
+            "name": "Siphon",
+            "kind": "aura",
+            "text": "Lifesteal on its signature.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 2500,
+              "from_signature": true
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "siphon",
+            "name": "Siphon",
+            "kind": "aura",
+            "text": "Lifesteal on its signature.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 3500,
+              "from_signature": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "execution",
+    "kind": "sigil",
+    "name": "Execution",
+    "icon": "the_tank_first",
+    "text": "Your signature hits enemies near death harder; at rank III, a kill with it gives mana back.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "execution",
+            "name": "Execution",
+            "kind": "aura",
+            "text": "Its signature hits enemies near death harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 13000,
+              "from_signature": true,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "execution",
+            "name": "Execution",
+            "kind": "aura",
+            "text": "Its signature hits enemies near death harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 14500,
+              "from_signature": true,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "execution",
+            "name": "Execution",
+            "kind": "aura",
+            "text": "Its signature hits enemies near death harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 14500,
+              "from_signature": true,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          },
+          {
+            "id": "execution_refund",
+            "name": "Execution",
+            "kind": "ability",
+            "text": "A kill with its signature refunds mana.",
+            "effects": [
+              {
+                "trigger": "on_kill",
+                "from_signature": true,
+                "type": "gain_mana",
+                "amount_bp_of_max_mana": 2500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

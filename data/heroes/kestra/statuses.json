@@ -1,0 +1,13 @@
+[
+  {"_note": "Attacks faster while it lasts: an allied summon fell (Pack Fury, transformed Packleader; phase 8 part 6).", "id": "pack_fury", "name": "Pack Fury", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "atsp", "value": 15}]},
+  {"_note": "More ATK while it lasts (Howl, Packleader's signature; phase 8 part 6).", "id": "howl", "name": "Howl", "kind": "boost", "duration_ms": 5000, "auras": [{"stat": "atk_bp", "value": 14000}]},
+  {"_note": "Slowed for a moment by her jab on a Poisoned enemy (Numbing Venom, Serpent-Keeper's card; phase 8 part 6).", "id": "numbed", "name": "Numbed", "kind": "slow", "duration_ms": 1000, "slow_bp": 1000},
+  {"_note": "A stack for each enemy that fell Burning near Grit: he hits harder (Hellhound, Cinderhound's apex; phase 8 part 6).", "id": "hellhound", "name": "Hellhound", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 11500}]},
+  {"_note": "A stack for each enemy that fell Burning near Grit, beside Hellhound's (Inferno Hound, Hellhound's card; phase 8 part 6).", "id": "inferno_hound", "name": "Inferno Hound", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10500}]},
+  {"_note": "Slowed by the viper's spit (Viper Queen, Serpent-Keeper's apex; phase 8 part 6).", "id": "viper_slow", "name": "Viper Venom", "kind": "slow", "duration_ms": 1000, "slow_bp": 2000},
+  {"_note": "A stack for each enemy that fell Poisoned: the viper hits harder and stands longer (Viper Queen, Serpent-Keeper's apex; phase 8 part 6).", "id": "viper_queen", "name": "Viper Queen", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 11500}, {"stat": "max_hp_bp", "value": 11500}]},
+  {"_note": "A stack for each enemy that fell Poisoned, beside Viper Queen's (Queen's Venom, Viper Queen's card; phase 8 part 6).", "id": "queens_venom", "name": "Queen's Venom", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 11000}, {"stat": "max_hp_bp", "value": 11000}]},
+  {"_note": "Attacks faster: an allied summon fell (Alpha, Packleader's apex; phase 8 part 6). Its duration is the effect's.", "id": "alpha_fury", "name": "Pack Fury", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "atsp", "value": 20}]},
+  {"_note": "A stack for each allied summon that fell: every summon attacks faster (Alpha, Packleader's apex; phase 8 part 6).", "id": "alpha_blood", "name": "Alpha", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 10}]},
+  {"_note": "A stack for each allied summon that fell, beside Alpha's (Blood of the Pack, Alpha's card; phase 8 part 6).", "id": "pack_blood", "name": "Blood of the Pack", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 5}]}
+]

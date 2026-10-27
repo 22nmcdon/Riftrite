@@ -1,0 +1,1169 @@
+[
+  {
+    "_note": "Burn and Poison: payoff (rebuild-heroes.md, section 8i, path 1; phase 8 part 6, 8f-2). Tuned by build: the design's numbers were +1 over base; a lift of her MGK and HP and the habit every 4th Toss make it +8.",
+    "id": "catalyst",
+    "hero": "ottilie",
+    "name": "Catalyst",
+    "title": "the one who knows how much worse two poisons are",
+    "fantasy": "Two poisons are worse than one, and she knows exactly how much worse.",
+    "placement": "Behind allies who set enemies Burning and Poisoned, in reach of the enemies carrying both.",
+    "vowed": {
+      "taste": "Reaction: +1% damage for every 5 Burn and Poison on her target, combined (up to +10%).",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "passives": [
+          {
+            "id": "reaction",
+            "name": "Reaction",
+            "kind": "aura",
+            "text": "Her hits deal more to enemies for the Burn and Poison on them, the two added together.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "per_target_stacks": [
+                "burn",
+                "poison"
+              ],
+              "per_stacks": 5,
+              "cap_bp": 1000
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Reaction gives +1% damage for every 2 Burn and Poison on her target, with no cap, and +25% against enemies with both. Reaction Flask replaces Volatile Flask (60 mana): it hits her target and every enemy within 1 hex of it, more for each Burn and Poison on each, without using them up. Volatile Flask becomes a habit, every 4th Toss. She gains 15% MGK and 10% max HP.",
+      "cost": "Brewing stops.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 11500,
+          "hp": 11000
+        },
+        "remove_passives": [
+          "brewing"
+        ],
+        "signature": {
+          "id": "reaction_flask",
+          "name": "Reaction Flask",
+          "text": "A flask bursts around an enemy within 3 hexes: every enemy within 1 hex of it is hit, harder for each Burn and Poison on it, which stay.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "scaling": {
+                    "mgk": 10000
+                  },
+                  "amount_per_stack": {
+                    "status": [
+                      "burn",
+                      "poison"
+                    ],
+                    "per": 3
+                  },
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "reaction",
+            "name": "Reaction",
+            "kind": "aura",
+            "text": "Her hits deal more to enemies for the Burn and Poison on them, the two added together.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "per_target_stacks": [
+                "burn",
+                "poison"
+              ],
+              "per_stacks": 2
+            }
+          },
+          {
+            "id": "reaction_both",
+            "name": "Reaction",
+            "kind": "aura",
+            "text": "Her hits deal more to enemies both Burning and Poisoned.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 12500,
+              "vs": {
+                "all_statuses": [
+                  "burn",
+                  "poison"
+                ]
+              }
+            }
+          },
+          {
+            "id": "volatile_flask",
+            "name": "Volatile Flask",
+            "kind": "ability",
+            "text": "A habit: every 4th Toss bursts around the enemy it hits: every enemy within 1 hex of it is hit, set Burning, and Poisoned.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 12000
+                    },
+                    "target": "target"
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "target"
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "poison",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "target"
+                  }
+                ],
+                "trigger": "on_basic_attack",
+                "every": 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Extra damage from Reaction",
+      "counts": "bonus_damage",
+      "from_part": [
+        "reaction",
+        "reaction_both"
+      ],
+      "threshold": 13
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-2; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "grand_reaction",
+        "name": "Grand Reaction",
+        "title": "the reaction that runs away",
+        "fantasy": "Burn and Poison together become something worse, and every one that falls feeds the rest.",
+        "vowed": {
+          "taste": "Reaction Flask's splash reaches 2 hexes.",
+          "patch": {
+            "signature": {
+              "id": "reaction_flask",
+              "name": "Reaction Flask",
+              "trigger": {
+                "kind": "mana"
+              },
+              "text": "A flask bursts around an enemy within 3 hexes: every enemy within 2 hexes of it is hit, harder for each Burn and Poison on it, which stay.",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 0,
+                      "scaling": {
+                        "mgk": 10000
+                      },
+                      "amount_per_stack": {
+                        "status": [
+                          "burn",
+                          "poison"
+                        ],
+                        "per": 3
+                      },
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Reaction Flask's splash reaches 2 hexes. Enemies with both Burn and Poison take 25% more damage from every hero. Each enemy that falls with both makes that 5% bigger for the rest of the fight. The apex also gives +35% HP and +25% MGK.",
+          "patch": {
+            "signature": {
+              "id": "reaction_flask",
+              "name": "Reaction Flask",
+              "trigger": {
+                "kind": "mana"
+              },
+              "text": "A flask bursts around an enemy within 3 hexes: every enemy within 2 hexes of it is hit, harder for each Burn and Poison on it, which stay.",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 0,
+                      "scaling": {
+                        "mgk": 10000
+                      },
+                      "amount_per_stack": {
+                        "status": [
+                          "burn",
+                          "poison"
+                        ],
+                        "per": 3
+                      },
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "grand_reaction",
+                "name": "Grand Reaction",
+                "kind": "aura",
+                "text": "Every hero hits enemies both Burning and Poisoned harder.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 12500,
+                  "vs": {
+                    "all_statuses": [
+                      "burn",
+                      "poison"
+                    ]
+                  }
+                }
+              },
+              {
+                "id": "chain_of_reactions",
+                "name": "Chain of Reactions",
+                "kind": "aura",
+                "text": "Every hero hits enemies both Burning and Poisoned harder still for each such enemy that has fallen.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 10500,
+                  "vs": {
+                    "all_statuses": [
+                      "burn",
+                      "poison"
+                    ]
+                  },
+                  "per_holder_stacks": "grand_reaction"
+                }
+              },
+              {
+                "id": "reaction_feed",
+                "name": "Grand Reaction",
+                "kind": "ability",
+                "text": "Each enemy that falls both Burning and Poisoned feeds the reaction.",
+                "effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "all_statuses": [
+                        "burn",
+                        "poison"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "grand_reaction",
+                    "target": "all_allies"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 13500,
+              "mgk": 12500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage dealt by Reaction Flask",
+          "counts": "damage",
+          "from_ability": [
+            "reaction_flask"
+          ],
+          "threshold": 800
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-2; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "solvent",
+        "name": "Solvent",
+        "title": "the one who keeps both fires even",
+        "fantasy": "Whatever burns, she poisons; whatever is poisoned, she burns. Always both.",
+        "vowed": {
+          "taste": "Her hits add 1 to whichever of Burn or Poison is smaller on the enemy hit.",
+          "patch": {
+            "passives": [
+              {
+                "id": "solvent",
+                "name": "Solvent",
+                "kind": "ability",
+                "text": "Each hit of hers adds to whichever of Burn or Poison is smaller on the enemy.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "type": "apply_status",
+                    "to_smaller_of": [
+                      "burn",
+                      "poison"
+                    ],
+                    "stacks": 1,
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Each hit of hers raises whichever of Burn or Poison is smaller on the enemy by 20% of the larger, so her both-bonuses always hold. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "solvent",
+                "name": "Solvent",
+                "kind": "ability",
+                "text": "Each hit of hers raises whichever of Burn or Poison is smaller on the enemy by a share of the larger.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "type": "apply_status",
+                    "to_smaller_of": [
+                      "burn",
+                      "poison"
+                    ],
+                    "larger_share_bp": 2000,
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Stacks added by Solvent",
+          "counts": "applied",
+          "from_ability": [
+            "solvent"
+          ],
+          "by_stacks": true,
+          "threshold": 220
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Economy: maker (rebuild-heroes.md, section 8i, path 2; phase 8 part 6, 8f-2). First numbers, the design's; Gilded Death's cap is her kit's shard_cap (Decision 5), so Philosopher's Flask's shards count toward it.",
+    "id": "transmuter",
+    "hero": "ottilie",
+    "name": "Transmuter",
+    "title": "the one who turns lead to gold, and the dead to coin",
+    "fantasy": "Lead into gold, and the dead into coin.",
+    "placement": "Where her vials reach the enemies that will fall first.",
+    "vowed": {
+      "taste": "Gilded Death: an enemy that falls both Burning and Poisoned pays 1 shard (up to 3 a fight).",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "shard_cap": 3,
+        "passives": [
+          {
+            "id": "gilded_death",
+            "name": "Gilded Death",
+            "kind": "ability",
+            "text": "Any enemy that falls while both Burning and Poisoned pays a shard for the run, up to a few a fight.",
+            "effects": [
+              {
+                "trigger": "on_enemy_fell",
+                "vs": {
+                  "all_statuses": [
+                    "burn",
+                    "poison"
+                  ]
+                },
+                "type": "shards",
+                "amount": 1,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Gilded Death pays 2 shards (up to 8 a fight), and once a shop she can turn an item you own into shards at its full price. Philosopher's Flask replaces Volatile Flask (60 mana): the same burst, and enemies it kills pay 2 shards. Volatile Flask becomes a habit, every 6th Toss.",
+      "cost": "Brewing slows to every 6s.",
+      "transmute": {
+        "per_shop": 1
+      },
+      "patch": {
+        "shard_cap": 8,
+        "signature": {
+          "id": "philosophers_flask",
+          "name": "Philosopher's Flask",
+          "text": "A flask bursts around an enemy within 3 hexes: every enemy within 1 hex of it is hit, set Burning, and Poisoned; those it kills pay shards.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "scaling": {
+                    "mgk": 12000
+                  },
+                  "target": "target"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "mgk": 2000
+                  },
+                  "target": "target"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "poison",
+                  "stacks": 0,
+                  "scaling": {
+                    "mgk": 2000
+                  },
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "gilded_death",
+            "name": "Gilded Death",
+            "kind": "ability",
+            "text": "Any enemy that falls while both Burning and Poisoned pays shards for the run, up to a cap a fight.",
+            "effects": [
+              {
+                "trigger": "on_enemy_fell",
+                "vs": {
+                  "all_statuses": [
+                    "burn",
+                    "poison"
+                  ]
+                },
+                "type": "shards",
+                "amount": 2,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "philosophers_gold",
+            "name": "Philosopher's Gold",
+            "kind": "ability",
+            "text": "Each enemy her Philosopher's Flask kills pays shards for the run.",
+            "effects": [
+              {
+                "trigger": "on_kill",
+                "from_ability": [
+                  "philosophers_flask"
+                ],
+                "type": "shards",
+                "amount": 2,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "brewing",
+            "name": "Brewing",
+            "kind": "ability",
+            "text": "Every 6s her next Toss carries a vial, fire and venom in turn: it sets the enemy it hits Burning or Poisoned. With nothing within 3 hexes, no vial flies.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 12000,
+                "first_ms": 6000,
+                "type": "apply_status",
+                "status": "fire_vial",
+                "target": "self"
+              },
+              {
+                "trigger": "on_interval",
+                "interval_ms": 12000,
+                "type": "apply_status",
+                "status": "venom_vial",
+                "target": "self"
+              },
+              {
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 0,
+                "scaling": {
+                  "mgk": 2000
+                },
+                "target": "hit_target",
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "toss"
+                ],
+                "spends": "fire_vial"
+              },
+              {
+                "type": "apply_status",
+                "status": "poison",
+                "stacks": 0,
+                "scaling": {
+                  "mgk": 2000
+                },
+                "target": "hit_target",
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "toss"
+                ],
+                "spends": "venom_vial"
+              }
+            ]
+          },
+          {
+            "id": "volatile_flask",
+            "name": "Volatile Flask",
+            "kind": "ability",
+            "text": "A habit: every 6th Toss bursts around the enemy it hits: every enemy within 1 hex of it is hit, set Burning, and Poisoned.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 12000
+                    },
+                    "target": "target"
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "target"
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "poison",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "target"
+                  }
+                ],
+                "trigger": "on_basic_attack",
+                "every": 6
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Shards from Gilded Death",
+      "counts": "shards",
+      "from_ability": [
+        "gilded_death"
+      ],
+      "threshold": 6
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-2; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase. The taste raises transformed Transmuter's cap of 8 (the design's 3 to 4 was written for the vowed cap).",
+        "id": "midas_touch",
+        "name": "Midas Touch",
+        "title": "the one whose touch turns them to gold",
+        "fantasy": "Everything she poisons or burns is already gold; she only waits for it to fall.",
+        "vowed": {
+          "taste": "Her shards a fight can go 1 higher.",
+          "patch": {
+            "shard_cap": 9
+          }
+        },
+        "apex": {
+          "text": "An enemy that falls Burning or Poisoned pays 1 shard, with both 3, up to 12 a fight. Every 20 shards the team's effects collect raises that cap by 1 for the rest of the run, up to 8 more. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "shard_cap": 12,
+            "passives": [
+              {
+                "id": "gilded_death",
+                "name": "Gilded Death",
+                "kind": "ability",
+                "text": "Any enemy that falls Burning or Poisoned pays a shard for the run, more with both, up to a cap a fight.",
+                "effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "burn",
+                        "poison"
+                      ]
+                    },
+                    "type": "shards",
+                    "amount": 1,
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "all_statuses": [
+                        "burn",
+                        "poison"
+                      ]
+                    },
+                    "type": "shards",
+                    "amount": 2,
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "grows": {
+          "run_counts": "shards",
+          "per": 20,
+          "max_steps": 8,
+          "each": {
+            "shard_cap_add": 1
+          }
+        },
+        "deed": {
+          "text": "Shards from Gilded Death",
+          "counts": "shards",
+          "from_ability": [
+            "gilded_death"
+          ],
+          "threshold": 45
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-2; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "grand_transmutation",
+        "name": "Grand Transmutation",
+        "title": "the one who remakes what she's given",
+        "fantasy": "Nothing she owns stays what it was: lead to gold, and one tool into a better one.",
+        "vowed": {
+          "taste": "Once an act, she can transmute an item into a random item of the same kind.",
+          "transmute": {
+            "into_per_act": 1
+          }
+        },
+        "apex": {
+          "text": "She transmutes 2 items a shop at full price, and may turn either into a random item of the same kind instead, which arrives at rank II. The apex also gives +15% HP and MGK.",
+          "transmute": {
+            "per_shop": 2,
+            "into_shop": 1,
+            "into_rank": 2
+          },
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Items transmuted into items",
+          "counts": "transmuted",
+          "threshold": 2
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Mana: maker (rebuild-heroes.md, section 8i, path 3; phase 8 part 6, 8f-2). Tuned by build: the design's vial (+20 mana, +10% attack speed), Elixir (30 mana, +10% for 4s), and Toss cost (15%) gave a lift of -2; with these numbers, a lift of her MGK and HP, and the habit every 4th Toss, its floor is +19 and its lift +10 (5% MGK was +14 and +8). Elixir's mana is for the other allies only, and it waits 6s between casts: on her own bar, or traded with Aldous's Crescendo, it cast again at once.",
+    "id": "apothecary",
+    "hero": "ottilie",
+    "name": "Apothecary",
+    "title": "the one with a vial for the foe and a tonic for the friend",
+    "fantasy": "A vial for the foe, and a tonic for the friend.",
+    "placement": "Behind the allies whose signatures matter most, in reach of an enemy to throw at.",
+    "vowed": {
+      "taste": "Tonic: every 8s, her next Toss also throws a mana vial to the ally with the least mana (+10 mana).",
+      "cost": "10% less MGK.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 9000
+        },
+        "passives": [
+          {
+            "id": "tonic",
+            "name": "Tonic",
+            "kind": "ability",
+            "text": "Every 8s her next Toss also throws a mana vial to the ally with the least mana.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 8000,
+                "type": "apply_status",
+                "status": "tonic_vial",
+                "target": "self"
+              },
+              {
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "toss"
+                ],
+                "spends": "tonic_vial",
+                "type": "gain_mana",
+                "amount": 10,
+                "target": "lowest_mana_ally"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Every 4s her next Toss also throws a mana vial to the ally with the least mana: +30 mana and 20% faster attacks for 3s. Brewing stays. Elixir replaces Volatile Flask (60 mana, at most every 6s): every other ally gains 50 mana, and every ally +25% ATK and MGK for 6s. Volatile Flask becomes a habit, every 4th Toss. She gains 10% MGK and max HP.",
+      "cost": "Toss deals 10% less damage.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 11000,
+          "hp": 11000
+        },
+        "basic_attack": {
+          "id": "toss",
+          "name": "Toss",
+          "text": "A vial thrown at the nearest enemy within 3 hexes. Her main source of mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 9000
+              }
+            }
+          ]
+        },
+        "signature": {
+          "id": "elixir",
+          "name": "Elixir",
+          "text": "Every ally drinks: the others gain mana, and all hit harder for a few seconds.",
+          "trigger": {
+            "kind": "mana",
+            "recover_ms": 6000
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "gain_mana",
+              "amount": 50,
+              "target": "all_allies",
+              "only": {
+                "others": true
+              }
+            },
+            {
+              "type": "apply_status",
+              "status": "elixir",
+              "duration_ms": 6000,
+              "target": "all_allies"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "tonic",
+            "name": "Tonic",
+            "kind": "ability",
+            "text": "Every 4s her next Toss also throws a mana vial to the ally with the least mana: it gains mana and attacks faster for a few seconds.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 4000,
+                "type": "apply_status",
+                "status": "tonic_vial",
+                "target": "self"
+              },
+              {
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "toss"
+                ],
+                "spends": "tonic_vial",
+                "type": "apply_status",
+                "status": "tonic_rush",
+                "target": "lowest_mana_ally"
+              },
+              {
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "toss"
+                ],
+                "spends": "tonic_vial",
+                "type": "gain_mana",
+                "amount": 30,
+                "target": "lowest_mana_ally"
+              }
+            ]
+          },
+          {
+            "id": "volatile_flask",
+            "name": "Volatile Flask",
+            "kind": "ability",
+            "text": "A habit: every 4th Toss bursts around the enemy it hits: every enemy within 1 hex of it is hit, set Burning, and Poisoned.",
+            "effects": [
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "target",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 12000
+                    },
+                    "target": "target"
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "target"
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "poison",
+                    "stacks": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "target"
+                  }
+                ],
+                "trigger": "on_basic_attack",
+                "every": 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Mana given by Tonic",
+      "counts": "mana_given",
+      "from_ability": [
+        "tonic"
+      ],
+      "threshold": 68
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-2; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "panacea",
+        "name": "Panacea",
+        "title": "the cure for whatever ails them",
+        "fantasy": "She knows exactly what each ally needs, and she throws it before they ask.",
+        "vowed": {
+          "taste": "Tonic's vial gives 5 more mana.",
+          "patch": {
+            "passives": [
+              {
+                "id": "tonic",
+                "name": "Tonic",
+                "kind": "ability",
+                "text": "Every 4s her next Toss also throws a mana vial to the ally with the least mana: it gains mana and attacks faster for a few seconds.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 4000,
+                    "type": "apply_status",
+                    "status": "tonic_vial",
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "toss"
+                    ],
+                    "spends": "tonic_vial",
+                    "type": "apply_status",
+                    "status": "tonic_rush",
+                    "target": "lowest_mana_ally"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "toss"
+                    ],
+                    "spends": "tonic_vial",
+                    "type": "gain_mana",
+                    "amount": 35,
+                    "target": "lowest_mana_ally"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Her vial-carrying Toss throws vials to the 2 allies with the least mana, 35 mana each, and an ally who drinks one has its next signature 20% stronger. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "tonic",
+                "name": "Tonic",
+                "kind": "ability",
+                "text": "Every 4s her next Toss also throws mana vials to the 2 allies with the least mana: they gain mana, attack faster for a few seconds, and their next signature is stronger.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 4000,
+                    "type": "apply_status",
+                    "status": "tonic_vial",
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "toss"
+                    ],
+                    "spends": "tonic_vial",
+                    "type": "apply_status",
+                    "status": "tonic_rush",
+                    "target": "lowest_mana_ally",
+                    "count": 2
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "toss"
+                    ],
+                    "spends": "tonic_vial",
+                    "type": "apply_status",
+                    "status": "potent_draught",
+                    "target": "lowest_mana_ally",
+                    "count": 2
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "toss"
+                    ],
+                    "spends": "tonic_vial",
+                    "type": "gain_mana",
+                    "amount": 35,
+                    "target": "lowest_mana_ally",
+                    "count": 2
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Mana given by Tonic",
+          "counts": "mana_given",
+          "from_ability": [
+            "tonic"
+          ],
+          "threshold": 2400
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-2; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "mana_flood",
+        "name": "Mana Flood",
+        "title": "the one who drowns them in power",
+        "fantasy": "She floods the team with so much power that every signature comes cheap.",
+        "vowed": {
+          "taste": "Elixir gives 10 more mana.",
+          "patch": {
+            "signature": {
+              "id": "elixir",
+              "name": "Elixir",
+              "trigger": {
+                "kind": "mana",
+                "recover_ms": 6000
+              },
+              "targeting": "self",
+              "text": "Every ally drinks: the others gain mana, and all hit harder for a few seconds.",
+              "effects": [
+                {
+                  "type": "gain_mana",
+                  "amount": 60,
+                  "target": "all_allies",
+                  "only": {
+                    "others": true
+                  }
+                },
+                {
+                  "type": "apply_status",
+                  "status": "elixir",
+                  "duration_ms": 6000,
+                  "target": "all_allies"
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Elixir gives every other ally 70 mana, and for 6s every ally's signature costs 30% less. Each ally signature in that time makes it last 1s longer. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "elixir",
+              "name": "Elixir",
+              "trigger": {
+                "kind": "mana",
+                "recover_ms": 6000
+              },
+              "targeting": "self",
+              "text": "Every ally drinks: the others gain mana, and all hit harder for a few seconds. Their signatures cost less for a while, longer for each one cast.",
+              "effects": [
+                {
+                  "type": "gain_mana",
+                  "amount": 70,
+                  "target": "all_allies",
+                  "only": {
+                    "others": true
+                  }
+                },
+                {
+                  "type": "apply_status",
+                  "status": "elixir",
+                  "duration_ms": 6000,
+                  "target": "all_allies"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "mana_flood",
+                  "target": "all_allies"
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "flood_tide",
+                "name": "Flood Tide",
+                "kind": "ability",
+                "text": "Each signature an ally casts while the flood lasts makes it last longer.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_ability",
+                    "type": "extend_status",
+                    "status": "mana_flood",
+                    "duration_ms": 1000,
+                    "target": "all_allies"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Mana given by Elixir",
+          "counts": "mana_given",
+          "from_ability": [
+            "elixir"
+          ],
+          "threshold": 3900
+        }
+      }
+    ]
+  }
+]

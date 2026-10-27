@@ -1,0 +1,922 @@
+[
+  {
+    "id": "bright_mind",
+    "name": "Bright Mind",
+    "hero": "ilse",
+    "text": "Her MGK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "mgk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_hands",
+    "name": "Quick Hands",
+    "hero": "ilse",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "cinder_robe",
+    "name": "Cinder Robe",
+    "hero": "ilse",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "ilse_focus",
+    "name": "Focus",
+    "hero": "ilse",
+    "text": "Her CRIT rises by a quarter of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "crit",
+      "pct": 25
+    }
+  },
+  {
+    "id": "hot_hands",
+    "name": "Hot Hands",
+    "hero": "ilse",
+    "text": "Cinder Flick's Burn is stronger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "statuses": [
+            "burn"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_flare",
+    "name": "Wide Flare",
+    "hero": "ilse",
+    "text": "Flare's burst is 1 hex wider (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "flare",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "fan_the_coals",
+    "name": "Fan the Coals",
+    "hero": "ilse",
+    "text": "Heat counts Burn ticks 1 hex farther from her.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:heat",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindled_start",
+    "name": "Kindled Start",
+    "hero": "ilse",
+    "text": "Her first Cinder Flick each fight sets a great Burn.",
+    "mod": {
+      "passives": [
+        {
+          "id": "kindled_start",
+          "name": "Kindled Start",
+          "kind": "ability",
+          "text": "Her first Cinder Flick each fight sets a great Burn.",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "mgk": 4000
+              },
+              "target": "hit_target",
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "cinder_flick"
+              ],
+              "once": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "heat_shimmer",
+    "name": "Heat Shimmer",
+    "hero": "ilse",
+    "text": "Enemies' basic attacks on her miss some of the time.",
+    "mod": {
+      "passives": [
+        {
+          "id": "heat_shimmer",
+          "name": "Heat Shimmer",
+          "kind": "aura",
+          "text": "Enemies' basic attacks on her miss some of the time.",
+          "aura": {
+            "target": "holder",
+            "stat": "evade_bp",
+            "value": 1500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "scorch",
+    "name": "Scorch",
+    "hero": "ilse",
+    "text": "She deals more damage to Burning enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "scorch",
+          "name": "Scorch",
+          "kind": "aura",
+          "text": "She deals more damage to Burning enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11500,
+            "vs": {
+              "keywords": [
+                "burning"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "flashover",
+    "name": "Flashover",
+    "hero": "ilse",
+    "text": "When a Burning enemy falls within 3 hexes of her, she gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "flashover",
+          "name": "Flashover",
+          "kind": "ability",
+          "text": "When a Burning enemy falls within 3 hexes of her, she gains mana.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "fell_within_hexes": 3,
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "tinder_box",
+    "name": "Tinder Box",
+    "hero": "ilse",
+    "text": "Every fire she sets is kindling for the next: her MGK grows with the Burn she sets, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "keywords": [
+          "burning"
+        ],
+        "by_stacks": true
+      },
+      "per": 300,
+      "each": {
+        "stats_bp": {
+          "mgk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "deep_stoke",
+    "name": "Deep Stoke",
+    "path": "furnace",
+    "taste": true,
+    "text": "Stoke adds more of its target's Burn.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:stoke",
+          "share_add_bp": 200
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindled_hands",
+    "name": "Kindled Hands",
+    "path": "furnace",
+    "taste": true,
+    "text": "She attacks faster while her target is Burning.",
+    "mod": {
+      "passives": [
+        {
+          "id": "kindled_hands",
+          "name": "Kindled Hands",
+          "kind": "aura",
+          "text": "She attacks faster while her target is Burning.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp",
+            "value": 10,
+            "while": "state",
+            "state": {
+              "target": {
+                "keywords": [
+                  "burning"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_kindling",
+    "name": "Long Kindling",
+    "path": "wildfire",
+    "taste": true,
+    "text": "Her burning ground lasts a second longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:kindling",
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_kindling",
+    "name": "Wide Kindling",
+    "path": "wildfire",
+    "taste": true,
+    "text": "Her burning ground starts 1 hex wider.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:kindling",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_blessing",
+    "name": "Quick Blessing",
+    "path": "ember_choir",
+    "taste": true,
+    "text": "Blessing comes more often (once transformed, her allies' Burn is stronger).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:blessing",
+          "cooldown_bp": 7500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:ember_choir",
+          "statuses": [
+            "burn"
+          ],
+          "amount_bp": 12000
+        }
+      ]
+    }
+  },
+  {
+    "id": "shared_blessing",
+    "name": "Shared Blessing",
+    "path": "ember_choir",
+    "taste": true,
+    "text": "Blessing reaches the 2 allies nearest her (once transformed, Hymn's Burn is stronger).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:blessing",
+          "count_add": 1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:hymn",
+          "statuses": [
+            "burn"
+          ],
+          "amount_bp": 12000
+        }
+      ]
+    }
+  },
+  {
+    "id": "searing_stoke",
+    "name": "Searing Stoke",
+    "path": "furnace",
+    "text": "Each Stoke also hits its target.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:stoke",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "cinder_flick"
+              ],
+              "every": 3,
+              "type": "damage",
+              "amount": 0,
+              "scaling": {
+                "mgk": 1000
+              },
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "short_fuse",
+    "name": "Short Fuse",
+    "path": "furnace",
+    "text": "Immolate costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "immolate",
+          "mana_max_add": -15
+        }
+      ]
+    }
+  },
+  {
+    "id": "slow_coals",
+    "name": "Slow Coals",
+    "path": "furnace",
+    "text": "Burn on enemies she has hit fades slower still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "slow_coals",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ashfall",
+    "name": "Ashfall",
+    "path": "furnace",
+    "text": "Immolate's Burn spreads to enemies 1 hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "at": [
+            "enemies_near_target"
+          ],
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "furnace_heart",
+    "name": "Furnace Heart",
+    "path": "furnace",
+    "text": "The furnace learns its rhythm: she attacks faster with the Burn Stoke adds, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "from_ability": [
+          "stoke"
+        ],
+        "by_stacks": true
+      },
+      "per": 200,
+      "each": {
+        "stats_bp": {
+          "atsp": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "fast_spread",
+    "name": "Fast Spread",
+    "path": "wildfire",
+    "text": "Her burning ground spreads faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "grow_every_add_ms": -500
+        }
+      ]
+    }
+  },
+  {
+    "id": "far_spread",
+    "name": "Far Spread",
+    "path": "wildfire",
+    "text": "Her burning ground spreads 1 hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "grow_max_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "hot_ground",
+    "name": "Hot Ground",
+    "path": "wildfire",
+    "text": "Her burning ground's Burn is stronger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:kindling",
+          "statuses": [
+            "burn"
+          ],
+          "amount_bp": 15000
+        },
+        {
+          "slot": "signature",
+          "statuses": [
+            "burn"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "smoke",
+    "name": "Smoke",
+    "path": "wildfire",
+    "text": "Enemies on her burning ground miss some of their attacks.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:kindling",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "smoke",
+              "target": "target"
+            }
+          ]
+        },
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "smoke",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "scorched_earth",
+    "name": "Scorched Earth",
+    "path": "wildfire",
+    "text": "The ground remembers: her burning ground's Burn grows with the Burn it sets, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "from_ability": [
+          "kindling",
+          "firestorm"
+        ],
+        "by_stacks": true
+      },
+      "per": 300,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:kindling",
+            "statuses": [
+              "burn"
+            ],
+            "amount_bp": 10100
+          },
+          {
+            "slot": "signature",
+            "statuses": [
+              "burn"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "fervor",
+    "name": "Fervor",
+    "path": "ember_choir",
+    "text": "Hymn of Cinders also raises every ally's ATK.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "fervor",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "rekindle",
+    "name": "Rekindle",
+    "path": "ember_choir",
+    "text": "When any Burning enemy falls, she gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "rekindle",
+          "name": "Rekindle",
+          "kind": "ability",
+          "text": "When any Burning enemy falls, she gains mana.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ember_ward",
+    "name": "Ember Ward",
+    "path": "ember_choir",
+    "text": "Enemies her allies' attacks set Burning deal less damage for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:ember_choir",
+          "add_effects": [
+            {
+              "trigger": "on_ally_hit",
+              "type": "apply_status",
+              "status": "singed",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_hymn",
+    "name": "Long Hymn",
+    "path": "ember_choir",
+    "text": "Hymn of Cinders lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "hymn"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "choirs_swell",
+    "name": "Choir's Swell",
+    "path": "ember_choir",
+    "text": "The choir swells: the Burn on her allies' attacks grows with all they set, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "from_ability": [
+          "ember_choir",
+          "hymn"
+        ],
+        "by_stacks": true
+      },
+      "per": 500,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:ember_choir",
+            "statuses": [
+              "burn"
+            ],
+            "amount_bp": 10100
+          },
+          {
+            "slot": "passive:hymn",
+            "statuses": [
+              "burn"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "roaring_bellows",
+    "name": "Roaring Bellows",
+    "apex": "blast_furnace",
+    "text": "Each Stoke makes her faster still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:stoke",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "cinder_flick"
+              ],
+              "every": 2,
+              "type": "apply_status",
+              "status": "roaring_bellows",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bellows",
+    "name": "Bellows",
+    "apex": "blast_furnace",
+    "text": "Each Stoke also stokes the enemies within 1 hex of its target a little.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:stoke",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "cinder_flick"
+              ],
+              "every": 2,
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "stacks_share_bp": 200,
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "white_heat",
+    "name": "White Heat",
+    "apex": "crucible",
+    "text": "Each Immolate makes Stoke add more still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:stoke",
+          "per_stack_add_bp": 100
+        }
+      ]
+    }
+  },
+  {
+    "id": "molten_core",
+    "name": "Molten Core",
+    "apex": "crucible",
+    "text": "Immolate's Burn spreads to enemies 1 hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "at": [
+            "enemies_near_target"
+          ],
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "hungry_fire",
+    "name": "Hungry Fire",
+    "apex": "living_flame",
+    "text": "Each kill makes her fires hotter still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "per_stack_add_bp": 1500
+        }
+      ]
+    }
+  },
+  {
+    "id": "choking_smoke",
+    "name": "Choking Smoke",
+    "apex": "living_flame",
+    "text": "Enemies on her fire are Slowed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "choking_smoke",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "searing_ring",
+    "name": "Searing Ring",
+    "apex": "ring_of_fire",
+    "text": "Each crossing makes every ring hotter still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:ring_of_fire",
+          "per_stack_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_ring",
+    "name": "Wide Ring",
+    "apex": "ring_of_fire",
+    "text": "Her rings are 1 hex wider.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:ring_of_fire",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "rising_choir",
+    "name": "Rising Choir",
+    "apex": "cinder_saint",
+    "text": "Each ally basic attack raises her MGK a little more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:ember_choir",
+          "add_effects": [
+            {
+              "trigger": "on_ally_hit",
+              "type": "apply_status",
+              "status": "rising_choir",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "crowned_in_flame",
+    "name": "Crowned in Flame",
+    "apex": "cinder_saint",
+    "text": "Hymn of Cinders also raises every ally's ATK.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "crowned_in_flame",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_embers",
+    "name": "Iron Embers",
+    "apex": "kindred_flame",
+    "text": "Every 500 healing from Kindred Flame gives every hero more DEF for the rest of the fight.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:kindred_flame",
+          "add_effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "kindred_flame"
+              ],
+              "per_damage": 500,
+              "type": "apply_status",
+              "status": "iron_embers",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hearth_embers",
+    "name": "Hearth Embers",
+    "apex": "kindred_flame",
+    "text": "Heroes below half their HP heal twice as much from Kindred Flame.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hearth_embers",
+          "name": "Hearth Embers",
+          "kind": "aura",
+          "text": "Her heals on heroes below half their HP are twice as big.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 20000,
+            "vs": {
+              "below_hp_pct": 50
+            }
+          }
+        }
+      ]
+    }
+  }
+]

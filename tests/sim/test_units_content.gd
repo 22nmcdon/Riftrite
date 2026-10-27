@@ -7,7 +7,7 @@ extends GutTest
 func _texts(heroes: Array, enemies: Array, encounters: Array) -> Dictionary[String, String]:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in [ContentDb.TUNING_FILE, ContentDb.STATUSES_FILE]:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	texts[ContentDb.HEROES_FILE] = JSON.stringify(heroes)
 	texts[ContentDb.ENEMIES_FILE] = JSON.stringify(enemies)
 	texts[ContentDb.ENCOUNTERS_FILE] = JSON.stringify(encounters)

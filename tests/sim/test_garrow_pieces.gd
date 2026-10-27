@@ -236,7 +236,7 @@ func test_spending_a_shield_is_an_event() -> void:
 
 
 func test_a_pulled_enemy_can_land_on_a_snare() -> void:
-	var relics: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/relics.json"))
+	var relics: Array = JSON.parse_string(DataLayout.read("res://data", "relics.json"))
 	var chain: Dictionary = relics.filter(func(relic: Dictionary) -> bool: return relic["id"] == "the_snaring_chain")[0]["mod"]["passives"][0]
 	var fight: CombatSim = K.sim(K.fight([_hauler([chain])] as Array[UnitSetup], [K.foe(_dummy("far"), 3, 5)] as Array[UnitSetup]))
 	_place(fight, {"far": Vector2i(0, 3000)})

@@ -1,0 +1,449 @@
+[
+  {
+    "_note": "Strongest per stack, fades fast, half as effective against shields. Ticks twice a second; loses 5% of its stacks (rounded up) each tick. Numbers are placeholders.",
+    "id": "burn",
+    "name": "Burn",
+    "kind": "damage_over_time",
+    "keyword": "burning",
+    "interval_ms": 500,
+    "damage_per_stack": 1,
+    "stacks_lost_bp": 500,
+    "vs_shield_bp": 5000
+  },
+  {
+    "_note": "Never fades; ignores shields.",
+    "id": "poison",
+    "name": "Poison",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 1,
+    "vs_shield_bp": 0
+  },
+  {
+    "_note": "Never fades; hits shields; each stack lowers the target's DEF by 1.",
+    "id": "bleed",
+    "name": "Bleed",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 1,
+    "defense_shred_per_stack": 1
+  },
+  {
+    "_note": "Can't move; can still attack and cast. Snares (Trapper Maren) and Drag (Bog Lurker) root.",
+    "id": "root",
+    "name": "Root",
+    "kind": "root",
+    "keyword": "rooted",
+    "duration_ms": 1500
+  },
+  {
+    "_note": "Can't move, attack, or fire a mana signature; mana still comes in, and other signature triggers still fire (decided). A push stopped short stuns for collision_stun_ms.",
+    "id": "stun",
+    "name": "Stun",
+    "kind": "stun",
+    "duration_ms": 1000
+  },
+  {
+    "_note": "Moves and attacks slow_bp slower. Slows don't stack: the strongest on a unit wins.",
+    "id": "slow",
+    "name": "Slow",
+    "kind": "slow",
+    "duration_ms": 2000,
+    "slow_bp": 3000
+  },
+  {
+    "_note": "The unit's target becomes whoever taunted it, for as long as it lasts; a newer Taunt wins. Hold the Line taunts for 3s.",
+    "id": "taunt",
+    "name": "Taunt",
+    "kind": "taunt",
+    "duration_ms": 3000
+  },
+  {
+    "_note": "No mana gain while it lasts (the Gloam Witch's Hush). Units without mana ignore it.",
+    "id": "silence",
+    "name": "Silence",
+    "kind": "silence",
+    "duration_ms": 3000
+  },
+  {
+    "_note": "Takes damage_taken_bp more damage from every source (Marking Shot: +15% for 4s). Marks don't stack: the strongest wins.",
+    "id": "marked",
+    "name": "Marked",
+    "kind": "marked",
+    "keyword": "marked",
+    "duration_ms": 4000,
+    "damage_taken_bp": 1500
+  },
+  {
+    "_note": "Its HP can't drop below 1 while it lasts; each save is logged. Brannoc's 'can't fall for 1s' when he hits 1 HP; Last Rites gives it for 3s.",
+    "id": "undying",
+    "name": "Undying",
+    "kind": "undying",
+    "duration_ms": 1000
+  },
+  {
+    "_note": "Held by an engager: can't move until it breaks free (break_free_ms in tuning.json). Only the Engage trait sets and clears it; effects can't apply it.",
+    "id": "engaged",
+    "name": "Engaged",
+    "kind": "engaged"
+  },
+  {
+    "_note": "No enemy can pick it as a target while it lasts, and one already targeting it picks again. Shots already flying and areas still hit it, and it keeps attacking. Maren's Slip Away gives it for 1s after each hop (playtest gate 1).",
+    "id": "stealth",
+    "name": "Stealth",
+    "kind": "stealth",
+    "keyword": "stealthed",
+    "duration_ms": 1000
+  },
+  {
+    "_note": "Takes damage_reduced_bp less damage from hits and damage over time (Wardweaver's Warding Circle, phase 4). Wards don't stack: the strongest wins, and it adds to a Mark.",
+    "id": "warded",
+    "name": "Warded",
+    "kind": "warded",
+    "duration_ms": 600,
+    "damage_reduced_bp": 1500
+  },
+  {
+    "_note": "Each stack takes 1 DEF off, never fades, and deals no damage (Sunder, an epic relic; phase 5c step 5a).",
+    "id": "sunder",
+    "name": "Sunder",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 0,
+    "defense_shred_per_stack": 1
+  },
+  {
+    "_note": "Attacks faster while it lasts (Veil of the Lost, a rare relic: a hero leaving Stealth; phase 5c step 5b).",
+    "id": "veiled_haste",
+    "name": "Veiled Haste",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 30}]
+  },
+  {
+    "_note": "More ATK and MGK while it lasts (Stormcaller's Bell, an epic relic: any hero firing a signature; phase 5c step 5b).",
+    "id": "storm_call",
+    "name": "Storm Call",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}]
+  },
+  {
+    "_note": "Attacks faster; each stack its own 3s (Sanguine Frenzy, an epic relic: each time lifesteal heals the hero; phase 5c step 5c).",
+    "id": "frenzy",
+    "name": "Frenzy",
+    "kind": "boost",
+    "stacking": true,
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 2}]
+  },
+  {
+    "_note": "Attacks faster for the rest of the fight, a stack for every hit, no cap (Quickening, a legendary relic; phase 5c step 5c).",
+    "id": "quickened",
+    "name": "Quickened",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "atsp", "value": 1}]
+  },
+  {
+    "_note": "Hits harder for the rest of the fight, a stack for each second spent above 75% HP, no cap (Unending Vigil, a legendary relic; the tuning phase).",
+    "id": "vigilant",
+    "name": "Vigilant",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [
+      {
+        "stat": "atk_bp",
+        "value": 10100
+      },
+      {
+        "stat": "mgk_bp",
+        "value": 10100
+      }
+    ]
+  },
+  {
+    "_note": "Hits harder for the rest of the fight, a stack for each Root or Stun any hero puts on an enemy, no cap (Iron Garden, a legendary relic; the tuning phase).",
+    "id": "iron_garden",
+    "name": "Iron Garden",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [
+      {
+        "stat": "atk_bp",
+        "value": 10200
+      },
+      {
+        "stat": "mgk_bp",
+        "value": 10200
+      }
+    ]
+  },
+  {
+    "_note": "A stack for each status The Unbending (a boss relic) blocked: more DEF and max HP for the rest of the fight (phase 5c step 5c).",
+    "id": "unbending",
+    "name": "Unbending",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "def_bp", "value": 10100}, {"stat": "max_hp_bp", "value": 10100}]
+  },
+  {
+    "_note": "A stack every 10s from 60s under The Long Watch (a boss relic): every basic stat higher for the rest of the fight (phase 5c step 5c).",
+    "id": "long_watch",
+    "name": "Long Watch",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "max_hp_bp", "value": 11000}, {"stat": "atk_bp", "value": 11000}, {"stat": "mgk_bp", "value": 11000}, {"stat": "def_bp", "value": 11000}, {"stat": "crit_bp", "value": 11000}, {"stat": "atsp_bp", "value": 11000}]
+  },
+  {
+    "_note": "Attacks faster while it lasts (Surge, a sigil: after its holder's signature fires; phase 5c step 6). Rank II and III are surge_2.",
+    "id": "surge",
+    "name": "Surge",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 20}]
+  },
+  {
+    "_note": "Surge at ranks II and III (rank III lasts 5s, set by the sigil).",
+    "id": "surge_2",
+    "name": "Surge",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 30}]
+  },
+  {
+    "_note": "More ATK and MGK while it lasts (Last Breath, a charm at rank III: the allies near its holder as it falls; phase 5c step 6).",
+    "id": "last_breath",
+    "name": "Last Breath",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "auras": [{"stat": "atk_bp", "value": 11000}, {"stat": "mgk_bp", "value": 11000}]
+  },
+  {
+    "_note": "More DEF while it lasts (Purifying Light, a charm at rank III: the ally its holder heals; phase 5c step 6).",
+    "id": "purified",
+    "name": "Purified",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "def", "value": 10}]
+  },
+  {
+    "_note": "A flier can't fly while it lasts: it walks, and rocks and walls stop it (Fletched for Wings at rank III, and Fliers first; phase 5c step 6b).",
+    "id": "grounded",
+    "name": "Grounded",
+    "kind": "grounded",
+    "duration_ms": 2000
+  },
+  {
+    "_note": "Its holder's next attack is stronger; it ends as it attacks (Shadow Step, a charm: leaving Stealth; phase 5c step 6b). shadow_step_2 and _3 are ranks II and III.",
+    "id": "shadow_step",
+    "name": "Shadow Step",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "until_attack": true,
+    "auras": [{"stat": "atk_bp", "value": 20000}]
+  },
+  {
+    "id": "shadow_step_2",
+    "name": "Shadow Step",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "until_attack": true,
+    "auras": [{"stat": "atk_bp", "value": 25000}]
+  },
+  {
+    "id": "shadow_step_3",
+    "name": "Shadow Step",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "until_attack": true,
+    "auras": [{"stat": "atk_bp", "value": 25000}, {"stat": "crit_chance_bp", "value": 10000}]
+  },
+  {
+    "_note": "Attacks faster while it lasts (Bloodhound, a charm at rank III: on a kill; phase 5c step 6b).",
+    "id": "bloodhound",
+    "name": "Bloodhound",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 10}]
+  },
+  {
+    "_note": "More ATK and MGK for the rest of the fight, a stack for each enemy that falls near its holder (Scavenger, a charm at rank III; phase 5c step 6b).",
+    "id": "scavenged",
+    "name": "Scavenged",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "atk_bp", "value": 10500}, {"stat": "mgk_bp", "value": 10500}]
+  },
+  {
+    "_note": "More ATK and MGK for the rest of the fight, a stack for each ally that fell (Blood Frenzy, a rift modifier; phase 5c step 8b).",
+    "id": "blood_frenzy",
+    "name": "Blood Frenzy",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "atk_bp", "value": 10500}, {"stat": "mgk_bp", "value": 10500}]
+  },
+  {
+    "_note": "More ATK for a few seconds (Vengeful, an enemy upgrade: allies near it as it falls; phase 8 part 3).",
+    "id": "vengeance",
+    "name": "Vengeance",
+    "kind": "boost",
+    "duration_ms": 4000,
+    "auras": [{"stat": "atk_bp", "value": 12000}]
+  },
+  {
+    "_note": "Healing it takes is cut by 30% while it lasts (Festering, an enemy upgrade: the hero its hits strike; phase 8 part 3, Question CM).",
+    "id": "festering",
+    "name": "Festering",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "healing_taken_bp", "value": 7000}]
+  },
+  {
+    "_note": "Its basic attack's hits miss 30% of the time while it lasts (the Dazzling Moth's Ember Dust; phase 8 part 3).",
+    "id": "ember_blind",
+    "name": "Ember-Blind",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "miss_bp", "value": 3000}]
+  },
+  {
+    "_note": "More DEF while it lasts (Guard the weakest at rank III: the ally it guards, renewed every second; phase 5c step 6c).",
+    "id": "watched_over",
+    "name": "Watched Over",
+    "kind": "boost",
+    "duration_ms": 1050,
+    "auras": [{"stat": "def", "value": 10}]
+  },
+  {
+    "_note": "Its first attack crits; it ends as it attacks (Ambush, a gambit; phase 5c step 6d). ambush_2 adds +50% crit damage.",
+    "id": "ambush",
+    "name": "Ambush",
+    "kind": "boost",
+    "duration_ms": 60000,
+    "until_attack": true,
+    "auras": [{"stat": "crit_chance_bp", "value": 10000}]
+  },
+  {
+    "id": "ambush_2",
+    "name": "Ambush",
+    "kind": "boost",
+    "duration_ms": 60000,
+    "until_attack": true,
+    "auras": [{"stat": "crit_chance_bp", "value": 10000}, {"stat": "crit_damage_bp", "value": 5000}]
+  },
+  {
+    "_note": "Attacks faster for its first 5s out of hiding (Rear Guard at rank II; phase 5c step 6d).",
+    "id": "rear_guard",
+    "name": "Rear Guard",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "auras": [{"stat": "atsp", "value": 20}]
+  },
+  {
+    "_note": "More ATK and MGK for 5s after it arrives (Late Arrival at rank II; phase 5c step 6d).",
+    "id": "late_surge",
+    "name": "Late Surge",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}]
+  },
+  {
+    "_note": "Moves and attacks 20% slower: a lighter Slow (the upgrade pools' Staggering Bash and Searing; phase 5c step 7). Slows don't stack: the strongest wins.",
+    "id": "hobbled",
+    "name": "Hobbled",
+    "kind": "slow",
+    "duration_ms": 2000,
+    "slow_bp": 2000
+  },
+  {
+    "_note": "Moves and attacks 15% slower for a moment (Anchor's Weight, Garrow's upgrade; phase 8 part 4). Slows don't stack: the strongest wins.",
+    "id": "weighed_down",
+    "name": "Weighed Down",
+    "kind": "slow",
+    "duration_ms": 1000,
+    "slow_bp": 1500
+  },
+  {
+    "_note": "Deals less damage while it lasts (Stubborn Taunt, Brannoc's upgrade: the enemies he taunts; phase 5c step 7).",
+    "id": "cowed",
+    "name": "Cowed",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "damage_bp", "value": 9000}]
+  },
+  {
+    "_note": "Its holder's next attack crits; it ends as it attacks (Parting Shot, Maren's upgrade: after a hop; phase 5c step 7).",
+    "id": "parting_shot",
+    "name": "Parting Shot",
+    "kind": "boost",
+    "duration_ms": 10000,
+    "until_attack": true,
+    "auras": [{"stat": "crit_chance_bp", "value": 10000}]
+  },
+  {
+    "_note": "Attacks faster for the rest of the fight, a stack for each hop (Windrunner, Volley's apex; phase 8 part 2).",
+    "id": "tailwind",
+    "name": "Tailwind",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "atsp", "value": 7}]
+  },
+  {"_note": "Deals much less damage while in her lantern's light (The Beacon; phase 8 part 2).", "id": "dazzled", "name": "Dazzled", "kind": "boost", "duration_ms": 1200, "auras": [{"stat": "damage_bp", "value": 8500}]},
+  {"_note": "More DEF for the rest of the fight, a stack for every 500 damage her link shares (Loomwarden; phase 8 part 2).", "id": "iron_loom", "name": "Iron Loom", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 6}]},
+  {"_note": "Torn by her briars: like Bleed, a little damage each second (Warden of Thorns, Trapper's apex; phase 8 part 2).", "id": "briar_torn", "name": "Briar-Torn", "kind": "damage_over_time", "interval_ms": 1000, "damage_per_stack": 1},
+  {"_note": "A mark his hits leave; at 5 they flare or explode (Forgebreaker, Ironbrand's apex; phase 8 part 2). It changes nothing by itself.", "id": "brand", "name": "Brand", "kind": "boost", "stacking": true, "duration_ms": 5000, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "Stronger and tougher for the rest of the fight, a stack each time he rises (Undying Oath, Last Watch's apex; phase 8 part 2).", "id": "oathbound", "name": "Oathbound", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 11000}, {"stat": "def_bp", "value": 11000}]},
+  {"_note": "Attacks faster for the rest of the fight, a stack for each hop (Gale, a Windrunner card; phase 8 part 2).", "id": "gale", "name": "Gale", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 2}]},
+  {
+    "_note": "Tamsin's Stealth (phase 8 part 4): it ends as her next basic attack fires (that attack is still from Stealth). Shadowstep and Ambusher put it on her.",
+    "id": "hidden",
+    "name": "Hidden",
+    "kind": "stealth",
+    "keyword": "stealthed",
+    "until_attack": true,
+    "duration_ms": 2000
+  },
+  {
+    "_note": "Shadow Dance (Nightblade's signature; phase 8 part 4): hidden, and her next 3 basic attacks don't end it; the 4th does.",
+    "id": "shadow_dance",
+    "name": "Shadow Dance",
+    "kind": "stealth",
+    "keyword": "stealthed",
+    "until_attack": true,
+    "spares_attacks": 3,
+    "duration_ms": 3000
+  },
+  {
+    "_note": "Garrote's hold on its target (phase 8 part 4): a Root, and the Garrote grips while it lasts. Choke extends it.",
+    "id": "garroted",
+    "name": "Garroted",
+    "kind": "root",
+    "keyword": "rooted",
+    "duration_ms": 1500
+  },
+  {
+    "_note": "Tamsin stays hidden while she garrotes (Grips: it lasts as long as the grip, and her attacks don't end it).",
+    "id": "garrote_veil",
+    "name": "In the Shadows",
+    "kind": "stealth",
+    "keyword": "stealthed",
+    "duration_ms": 2000
+  },
+  {"_note": "Phantom's Stealth (Tamsin's apex; phase 8 part 4): her own Stealth swapped for one her attacks don't end.", "id": "phantom_veil", "name": "Phantom", "kind": "stealth", "keyword": "stealthed", "duration_ms": 3000},
+  {"_note": "An ally Veilmaster hides: a Stealth that ends as it next attacks (Tamsin's apex).", "id": "veiled", "name": "Veiled", "kind": "stealth", "keyword": "stealthed", "until_attack": true, "duration_ms": 1000},
+  {"_note": "A stack for each kill: more damage for the rest of the fight (Bloodtrail).", "id": "blood_scent", "name": "Blood Scent", "kind": "boost", "stacking": true, "auras": [{"stat": "damage_bp", "value": 11000}]},
+  {"_note": "Hits harder while it lasts (Kindled Chorus, Chorister's card; phase 8 part 4).", "id": "kindled", "name": "Kindled", "kind": "boost", "duration_ms": 3000, "auras": [{"stat": "atk_bp", "value": 10500}, {"stat": "mgk_bp", "value": 10500}]},
+  {"_note": "A stack for each Exsanguinate: Blood Bolt drinks more (Blood Tide, Severine's apex; phase 8 part 5). It changes nothing by itself.", "id": "blood_tide", "name": "Blood Tide", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "More ATK and MGK while it lasts (Blood Rite: every ally, on each Exsanguinate; phase 8 part 5).", "id": "blood_rite", "name": "Blood Rite", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}]},
+  {"_note": "A stack for each enemy her fire kills: every fire wider and hotter (Living Flame, Ilse's apex; phase 8 part 6). It changes nothing by itself.", "id": "living_flame", "name": "Living Flame", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "A mana vial her next Toss carries (Tonic, Apothecary's; phase 8 part 6). It changes nothing by itself: the Toss spends it.", "id": "tonic_vial", "name": "Tonic Vial", "kind": "boost", "stacking": true, "max_stacks": 1, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "A stack for each of her next Tosses that throws a mana vial (The Tonic Choir, Tonic and Hymn's bond relic; phase 8 part 6). It changes nothing by itself: her Toss spends it.", "id": "choir_vial", "name": "Choir Vial", "kind": "boost", "stacking": true, "max_stacks": 3, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "A viper or nestling bit it lately: Severine's lifesteal is doubled against it (Mother of Serpents, Nest of Rot's bond relic; phase 8 part 6). It changes nothing by itself.", "id": "viper_bitten", "name": "Viper-Bitten", "kind": "boost", "duration_ms": 6000, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "Hidden by Shroud (Veilweaver; phase 8 part 6): a Stealth that ends as its holder next attacks.", "id": "shrouded", "name": "Shrouded", "kind": "stealth", "keyword": "stealthed", "until_attack": true, "duration_ms": 1000},
+  {"_note": "Hidden by Vanishing Act (Veilweaver's signature; phase 8 part 6): a Stealth that ends as its holder next attacks.", "id": "vanished", "name": "Vanished", "kind": "stealth", "keyword": "stealthed", "until_attack": true, "duration_ms": 2000},
+  {"_note": "An elite or a boss Night Veil can't confuse takes more damage instead (Decision 7).", "id": "veil_exposed", "name": "Bewildered", "kind": "marked", "duration_ms": 2000, "damage_taken_bp": 2500},
+  {"_note": "An elite or a boss Puppet Thread can't control takes more damage instead (Decision 7).", "id": "puppet_exposed", "name": "Strung", "kind": "marked", "duration_ms": 3000, "damage_taken_bp": 2500},
+  {"_note": "An elite or a boss Marionette can't control takes more damage instead (Decision 7).", "id": "marionette_exposed", "name": "Strung", "kind": "marked", "duration_ms": 6000, "damage_taken_bp": 2500},
+  {"_note": "A Mark on the toughest enemy (Hob's Bounty Hunter; phase 8 part 6): killing it while it lasts pays shards, and another Mark doesn't replace it.", "id": "bounty", "name": "Bounty", "kind": "marked", "keyword": "marked", "duration_ms": 8000, "damage_taken_bp": 1500}
+]

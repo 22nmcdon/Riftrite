@@ -1,0 +1,919 @@
+[
+  {
+    "id": "hearthblood",
+    "name": "Hearthblood",
+    "hero": "brannoc",
+    "text": "His max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "iron_hide",
+    "name": "Iron Hide",
+    "hero": "brannoc",
+    "text": "His DEF rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "def",
+      "pct": 10
+    }
+  },
+  {
+    "id": "heavy_arm",
+    "name": "Heavy Arm",
+    "hero": "brannoc",
+    "text": "His ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "long_hold",
+    "name": "Long Hold",
+    "hero": "brannoc",
+    "text": "His taunts last longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "statuses": [
+            "taunt"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "stubborn_taunt",
+    "name": "Stubborn Taunt",
+    "hero": "brannoc",
+    "text": "Enemies he taunts are Cowed: they deal less damage for a while.",
+    "mod": {
+      "passives": [
+        {
+          "id": "stubborn_taunt",
+          "name": "Stubborn Taunt",
+          "kind": "ability",
+          "text": "Enemies he taunts are Cowed: they deal less damage for a while.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "taunt"
+              ],
+              "type": "apply_status",
+              "status": "cowed",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_hearth",
+    "name": "Deep Hearth",
+    "hero": "brannoc",
+    "text": "Hearthguard's Shield is bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthguard",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 13500
+        }
+      ]
+    }
+  },
+  {
+    "id": "staggering_bash",
+    "name": "Staggering Bash",
+    "hero": "brannoc",
+    "text": "Every 4th basic attack Hobbles its target.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target",
+              "every": 4
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "opening_stand",
+    "name": "Opening Stand",
+    "hero": "brannoc",
+    "text": "His DEF is higher for the first moments of each fight.",
+    "mod": {
+      "passives": [
+        {
+          "id": "opening_stand",
+          "name": "Opening Stand",
+          "kind": "aura",
+          "text": "His DEF is higher for the first 5s of each fight.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_bp",
+            "value": 13000,
+            "window": {
+              "until_ms": 5000
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "twice_guarded",
+    "name": "Twice Guarded",
+    "hero": "brannoc",
+    "text": "Hearthguard can Shield a second ally who falls low.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthguard",
+          "times_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_to_pass",
+    "name": "Hard to Pass",
+    "hero": "brannoc",
+    "text": "Enemies he engages take longer to break free.",
+    "mod": {
+      "engage": {
+        "break_free_add_ms": 1000
+      }
+    }
+  },
+  {
+    "id": "grudge",
+    "name": "Grudge",
+    "hero": "brannoc",
+    "text": "He gains more mana from the damage he takes.",
+    "mod": {
+      "mana": {
+        "taken_bp": 13000
+      }
+    }
+  },
+  {
+    "id": "weathered",
+    "name": "Weathered",
+    "hero": "brannoc",
+    "text": "Every blow he weathers hardens him: his max HP grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "taken"
+      },
+      "per": 800,
+      "each": {
+        "stats_bp": {
+          "hp": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "broad_guard",
+    "name": "Broad Guard",
+    "path": "hearthwall",
+    "taste": true,
+    "text": "Guard takes a bigger share of each hit.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:guard",
+          "guard": {
+            "share_add": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_guard",
+    "name": "Wide Guard",
+    "path": "hearthwall",
+    "taste": true,
+    "text": "Guard reaches farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:guard",
+          "guard": {
+            "within_add": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "shared_strength",
+    "name": "Shared Strength",
+    "path": "hearthwall",
+    "text": "When he takes a hit for an ally, that ally heals a little.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shared_strength",
+          "name": "Shared Strength",
+          "kind": "ability",
+          "text": "When his Guard takes a hit for an ally, that ally heals a little.",
+          "effects": [
+            {
+              "trigger": "on_guard",
+              "type": "heal",
+              "amount_bp_of_max_hp": 200,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "drawing_wall",
+    "name": "Drawing Wall",
+    "path": "hearthwall",
+    "text": "When his wall rises, it drags nearby enemies toward him.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "pull",
+                  "hexes": 1,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "lasting_wall",
+    "name": "Lasting Wall",
+    "path": "hearthwall",
+    "text": "His wall stands longer (and he holds still behind it as long).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall",
+            "apply_status"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "reflecting_wall",
+    "name": "Reflecting Wall",
+    "path": "hearthwall",
+    "text": "His wall sends the arrows it stops back at their archers.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "reflect_bp": 5000
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_scars",
+    "name": "Old Scars",
+    "path": "hearthwall",
+    "text": "Every blow he takes for an ally leaves a scar: his DEF grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "guarded"
+      },
+      "per": 100,
+      "each": {
+        "stats_add": {
+          "def": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "heavy_brand",
+    "name": "Heavy Brand",
+    "path": "ironbrand",
+    "taste": true,
+    "text": "Brand hits harder (once transformed, the Mace's other hits).",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemy_near_target"
+          ],
+          "amount_bp": 16700
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemies_near_target"
+          ],
+          "amount_bp": 16700
+        }
+      ]
+    }
+  },
+  {
+    "id": "crowd_sense",
+    "name": "Crowd Sense",
+    "path": "ironbrand",
+    "taste": true,
+    "text": "He hits harder with enemies pressing around him.",
+    "mod": {
+      "passives": [
+        {
+          "id": "crowd_sense",
+          "name": "Crowd Sense",
+          "kind": "aura",
+          "text": "With 2 or more enemies within 1 hex, he hits harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 11000,
+            "while": "crowded",
+            "enemies": 2,
+            "within_hexes": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hungry_mace",
+    "name": "Hungry Mace",
+    "path": "ironbrand",
+    "text": "The Hearthbrand Mace heals him more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "crushing_blow",
+    "name": "Crushing Blow",
+    "path": "ironbrand",
+    "text": "Brand Slam knocks enemies farther, so more of them crash into something.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "knockback"
+          ],
+          "amount_bp": 20000
+        }
+      ]
+    }
+  },
+  {
+    "id": "cleaving_wounds",
+    "name": "Cleaving Wounds",
+    "path": "ironbrand",
+    "text": "His Mace makes everything it hits Bleed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "target"
+            },
+            {
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "enemies_near_target",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "brand_the_marked",
+    "name": "Brand the Marked",
+    "path": "ironbrand",
+    "text": "Brand Slam leaps toward Marked enemies first.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "prefer": {
+            "keywords": [
+              "marked"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "brandmarks",
+    "name": "Brandmarks",
+    "path": "ironbrand",
+    "text": "Every extra enemy his swings catch brands his arm: his ATK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "extra_hits",
+        "from_ability": [
+          "hearthbrand_mace"
+        ]
+      },
+      "per": 15,
+      "each": {
+        "stats_add": {
+          "atk": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "grim_resolve",
+    "name": "Grim Resolve",
+    "path": "last_watch",
+    "taste": true,
+    "text": "When Unyielding saves him, it Shields him too (once transformed, Last Rites does).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:unyielding",
+          "add_effects": [
+            {
+              "trigger": "on_would_fall",
+              "type": "shield",
+              "amount_bp_of_max_hp": 1000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "shield",
+              "amount_bp_of_max_hp": 1000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_to_kill",
+    "name": "Hard to Kill",
+    "path": "last_watch",
+    "taste": true,
+    "text": "His DEF is higher while he's low on HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hard_to_kill",
+          "name": "Hard to Kill",
+          "kind": "aura",
+          "text": "Below 30% HP his DEF is higher.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_bp",
+            "value": 12000,
+            "while": "below_hp",
+            "below_pct": 30
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "final_gift",
+    "name": "Final Gift",
+    "path": "last_watch",
+    "text": "When he falls, every ally gets a Shield.",
+    "mod": {
+      "passives": [
+        {
+          "id": "final_gift",
+          "name": "Final Gift",
+          "kind": "ability",
+          "text": "When he falls, every ally gets a Shield.",
+          "effects": [
+            {
+              "trigger": "on_fall",
+              "type": "shield",
+              "amount_bp_of_max_hp": 1500,
+              "target": "allies_near_self",
+              "within_hexes": 9
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "rites_of_mercy",
+    "name": "Rites of Mercy",
+    "path": "last_watch",
+    "text": "Last Rites also heals the allies near him.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "heal",
+              "amount_bp_of_max_hp": 1000,
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "scar_tissue",
+    "name": "Scar Tissue",
+    "path": "last_watch",
+    "text": "Every second near death hardens him for the rest of the fight.",
+    "mod": {
+      "passives": [
+        {
+          "id": "scar_tissue",
+          "name": "Scar Tissue",
+          "kind": "ability",
+          "text": "Each second below 30% HP gives him DEF for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "holder": {
+                "below_hp_pct": 30
+              },
+              "type": "apply_status",
+              "status": "scarred",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bloody_kills",
+    "name": "Bloody Kills",
+    "path": "last_watch",
+    "text": "A kill while he's near death heals him.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bloody_kills",
+          "name": "Bloody Kills",
+          "kind": "ability",
+          "text": "A kill while he's below 30% HP heals him.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "holder": {
+                "below_hp_pct": 30
+              },
+              "type": "heal",
+              "amount_bp_of_max_hp": 500,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "borrowed_time",
+    "name": "Borrowed Time",
+    "path": "last_watch",
+    "text": "Every moment he fights near death is borrowed: his damage while low grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "ms_below",
+        "while_below_pct": 30
+      },
+      "per": 8000,
+      "each": {
+        "passives": [
+          {
+            "id": "borrowed_time",
+            "name": "Borrowed Time",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "while": "below_hp",
+              "below_pct": 30
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "iron_gate",
+    "name": "Iron Gate",
+    "apex": "unbroken_gate",
+    "text": "Each attack his wall blocks makes him twice as tough.",
+    "mod": {
+      "passives": [
+        {
+          "id": "iron_gate",
+          "name": "Iron Gate",
+          "kind": "ability",
+          "text": "Each attack his wall blocks gives him another stack of Gatekeeper.",
+          "effects": [
+            {
+              "trigger": "on_wall_block",
+              "type": "apply_status",
+              "status": "gatekeeper",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gatehouse",
+    "name": "Gatehouse",
+    "apex": "unbroken_gate",
+    "text": "His wall is a hex wider.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "width_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "deeper_hearth",
+    "name": "Deeper Hearth",
+    "apex": "hearthkeeper",
+    "text": "Less overheal raises his max HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthkeeper",
+          "overheal_max_hp_add": -5
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_arms",
+    "name": "Long Arms",
+    "apex": "hearthkeeper",
+    "text": "Guard reaches a hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:guard",
+          "guard": {
+            "within_add": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hot_iron",
+    "name": "Hot Iron",
+    "apex": "forgebreaker",
+    "text": "Brands explode at 4, not 5.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:forge_blast",
+          "at_stacks_add": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "shockwave",
+    "name": "Shockwave",
+    "apex": "forgebreaker",
+    "text": "His brands' blasts knock enemies back.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:forge_blast",
+          "add_to_areas": [
+            {
+              "type": "knockback",
+              "hexes": 1,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "war_cry",
+    "name": "War Cry",
+    "apex": "warlord",
+    "text": "Each Brand Slam makes the rally grow faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "grows_boosts_add_bp": 2500
+        }
+      ]
+    }
+  },
+  {
+    "id": "shield_wall",
+    "name": "Shield Wall",
+    "apex": "warlord",
+    "text": "Rallied allies take less damage while the rally lasts.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shield_wall",
+          "name": "Shield Wall",
+          "kind": "ability",
+          "text": "Allies he rallies take less damage for a while.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "rally"
+              ],
+              "type": "apply_status",
+              "status": "shield_wall",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "stubborn_flame",
+    "name": "Stubborn Flame",
+    "apex": "undying_oath",
+    "text": "He rises with more of his HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:undying_oath",
+          "rise_add_pct": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "dread_return",
+    "name": "Dread Return",
+    "apex": "undying_oath",
+    "text": "Each time he rises, he taunts every enemy within 3 hexes for 2s.",
+    "mod": {
+      "passives": [
+        {
+          "id": "dread_return",
+          "name": "Dread Return",
+          "kind": "ability",
+          "text": "As he rises, enemies within 3 hexes turn on him.",
+          "effects": [
+            {
+              "trigger": "on_rise",
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 3
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "taunt",
+                  "duration_ms": 2000,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bonfire",
+    "name": "Bonfire",
+    "apex": "martyrs_pyre",
+    "text": "His burst grows faster with the damage he takes.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:martyrs_pyre",
+          "per_taken_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "cinders",
+    "name": "Cinders",
+    "apex": "martyrs_pyre",
+    "text": "His burst sets enemies within 2 hexes Burning.",
+    "mod": {
+      "passives": [
+        {
+          "id": "cinders",
+          "name": "Cinders",
+          "kind": "ability",
+          "text": "As he falls, enemies within 2 hexes catch fire.",
+          "effects": [
+            {
+              "trigger": "on_fall",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 5,
+              "target": "enemies_near_self",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

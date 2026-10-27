@@ -1,0 +1,1255 @@
+[
+  {
+    "id": "the_watchtower_stone",
+    "name": "The Watchtower Stone",
+    "tier": "bond",
+    "icon": "unbroken_wall",
+    "flavor": "Sentry and Sniper: from behind the wall, the eye sees farther.",
+    "text": "Heroes standing behind an allied wall reach farther.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_watchtower_stone",
+          "name": "The Watchtower Stone",
+          "kind": "aura",
+          "text": "Behind an allied wall (within 3 hexes of it), it reaches farther.",
+          "aura": {
+            "target": "holder",
+            "stat": "range",
+            "value": 1,
+            "while": "behind_wall",
+            "within_hexes": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_hunters_anvil",
+    "name": "The Hunter's Anvil",
+    "tier": "bond",
+    "icon": "braced",
+    "flavor": "Snare and Cleave: where he sends them, they stay.",
+    "text": "Enemies a hero knocks back are Rooted when they land.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_hunters_anvil",
+          "name": "The Hunter's Anvil",
+          "kind": "ability",
+          "text": "An enemy it knocks back is Rooted where it lands.",
+          "effects": [
+            {
+              "trigger": "on_knockback",
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_hearth_woven_mail",
+    "name": "The Hearth-Woven Mail",
+    "tier": "bond",
+    "icon": "deep_mend",
+    "flavor": "Light and Iron: the ward follows the blow it turned.",
+    "text": "When a hero takes a hit for an ally, that ally gains a Shield of a share of its max HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_hearth_woven_mail",
+          "name": "The Hearth-Woven Mail",
+          "kind": "ability",
+          "text": "When it takes a hit for an ally, that ally gains a Shield of a share of its max HP.",
+          "effects": [
+            {
+              "trigger": "on_guard",
+              "cooldown_per_unit_ms": 2000,
+              "type": "shield",
+              "amount_bp_of_max_hp": 500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_snaring_chain",
+    "name": "The Snaring Chain",
+    "tier": "bond",
+    "icon": "braced",
+    "flavor": "Dragged to the Snare: his chains drag them into her traps.",
+    "text": "An enemy a hero pulls lands on a fresh snare that Roots it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_snaring_chain",
+          "name": "The Snaring Chain",
+          "kind": "ability",
+          "text": "An enemy it pulls lands on a fresh snare, which Roots it.",
+          "effects": [
+            {
+              "trigger": "on_pull",
+              "cooldown_per_unit_ms": 3000,
+              "type": "snare",
+              "at": "named",
+              "max_standing": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 1500,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_woven_fang",
+    "name": "The Woven Fang",
+    "tier": "bond",
+    "icon": "deep_mend",
+    "flavor": "Woven Fang: she reloads his armor every time he spends it.",
+    "text": "When a hero spends its Shield, it is woven a new one of part of what it spent, past any cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_woven_fang",
+          "name": "The Woven Fang",
+          "kind": "ability",
+          "text": "When it spends its Shield, it gains a Shield of part of what it spent.",
+          "effects": [
+            {
+              "trigger": "on_shield_spent",
+              "type": "shield",
+              "amount_bp_of_damage": 3000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hammer_and_wire",
+    "name": "Hammer and Wire",
+    "tier": "bond",
+    "icon": "braced",
+    "flavor": "Hold and Break: he knocks them senseless; she's already behind them.",
+    "text": "Tamsin's Garrote reaches a Stunned enemy within 4 hexes (she steps behind it), and grips a Stunned enemy twice as often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "garrote",
+          "prefer": {
+            "statuses": [
+              "stun"
+            ]
+          },
+          "reach_add": 3,
+          "add_effects": [
+            {
+              "type": "leap",
+              "to": "behind",
+              "max_hexes": 4,
+              "target": "target"
+            }
+          ],
+          "grip_fast_vs": {
+            "statuses": [
+              "stun"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "deaths_appointment",
+    "name": "Death's Appointment",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "The Hunter's Bell: the bell tolls; she answers it.",
+    "text": "Whenever Aldous's Death Knell rings, Tamsin's Sentence is ready at once, and it can strike a Marked enemy anywhere on the field (she steps behind it).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "add_effects": [
+            {
+              "type": "gain_mana",
+              "amount": 100,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "tamsin"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "sentence",
+          "prefer": {
+            "keywords": [
+              "marked"
+            ]
+          },
+          "reach_add": 9,
+          "add_effects": [
+            {
+              "type": "leap",
+              "to": "behind",
+              "max_hexes": 10,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_toll_of_dawn",
+    "name": "The Toll of Dawn",
+    "tier": "bond",
+    "icon": "purifying_light",
+    "flavor": "Toll and Judgment: his bell calls down her light.",
+    "text": "Each Death Knell also calls down a Sunfall at half strength along the line to its target, and Vell's smites strike every Marked enemy.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "add_effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "line",
+                "length": 4
+              },
+              "anchor": "target_direction",
+              "hits": "all",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 5,
+                  "target": "target",
+                  "scaling": {
+                    "mgk": 7000
+                  },
+                  "side": "enemies"
+                },
+                {
+                  "type": "heal",
+                  "amount": 5,
+                  "target": "target",
+                  "scaling": {
+                    "mgk": 5000
+                  },
+                  "side": "allies"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "mend",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "damage",
+              "amount": 8,
+              "scaling": {
+                "mgk": 4000
+              },
+              "target": "all_enemies",
+              "only": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_iron_maw",
+    "name": "The Iron Maw",
+    "tier": "bond",
+    "icon": "deep_mend",
+    "flavor": "Iron Hunger: he takes the blows; she drinks them.",
+    "text": "While Severine is within 2 hexes of Garrow, the damage he sends back heals her as lifesteal (feeding Engorge), and every max HP Engorge gives her, he gains too.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_iron_maw",
+          "name": "The Iron Maw",
+          "kind": "ability",
+          "text": "Damage Garrow sends back heals Severine within 2 hexes of him as lifesteal, and the max HP Engorge gives her, he gains too.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "spikes",
+                "maidens_spite",
+                "vengeance"
+              ],
+              "type": "heal",
+              "as_lifesteal": true,
+              "amount_bp_of_damage": 10000,
+              "target": "allies_near_self",
+              "within_hexes": 2,
+              "only": {
+                "kits": [
+                  "severine"
+                ]
+              }
+            },
+            {
+              "trigger": "on_max_hp_up",
+              "from_ability": [
+                "engorge"
+              ],
+              "type": "gain_max_hp",
+              "amount_bp_of_damage": 10000,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "garrow"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_lamp_of_ichor",
+    "name": "The Lamp of Ichor",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Blood and Lamplight: she bleeds, Vell refills her, she casts again.",
+    "text": "Each Exsanguinate gives Vell 10 mana, and Vell's Mend always goes to Severine when she's at or below half her HP, healing her 50% more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "exsanguinate",
+          "add_effects": [
+            {
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "vell"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "mend",
+          "prefer": {
+            "kits": [
+              "severine"
+            ],
+            "below_hp_pct": 51
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_lamp_of_ichor",
+          "name": "The Lamp of Ichor",
+          "kind": "aura",
+          "text": "Vell's heals on Severine at or below half her HP are 50% stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 15000,
+            "while": "state",
+            "state": {
+              "kits": [
+                "vell"
+              ]
+            },
+            "vs": {
+              "kits": [
+                "severine"
+              ],
+              "below_hp_pct": 51
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_last_ward",
+    "name": "The Last Ward",
+    "tier": "bond",
+    "icon": "unbroken_wall",
+    "flavor": "Watched Over: the last of them standing is the one he never stops warding.",
+    "text": "Hallow always goes to Brannoc first while he's below 30% HP, and while he's Shielded below 30% his Last Watch bonuses to ATK and DEF are doubled.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "hallow",
+          "prefer": {
+            "kits": [
+              "brannoc"
+            ],
+            "below_hp_pct": 30
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_last_ward",
+          "name": "The Last Ward",
+          "kind": "aura",
+          "text": "While Brannoc is Shielded below 30% HP, his Last Stand hits twice as much harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 28000,
+            "while": "state",
+            "state": {
+              "kits": [
+                "brannoc"
+              ],
+              "below_hp_pct": 30,
+              "shielded": true
+            }
+          }
+        },
+        {
+          "id": "the_last_ward_wall",
+          "name": "The Last Ward",
+          "kind": "aura",
+          "text": "While Brannoc is Shielded below 30% HP, his Last Wall's DEF is doubled.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_bp",
+            "value": 15000,
+            "while": "state",
+            "state": {
+              "kits": [
+                "brannoc"
+              ],
+              "below_hp_pct": 30,
+              "shielded": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_psalter",
+    "name": "The Psalter",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "Psalm and Chorus: every ward that breaks is a note, and the bell carries it.",
+    "text": "When any Shield on an ally breaks, Aldous gains 10 mana too (and shares it, as his Chorus does), and Crescendo gives the allies it reaches a Shield as big as the mana it gave.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "crescendo",
+          "add_effects": [
+            {
+              "type": "shield",
+              "amount": 55,
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_psalter",
+          "name": "The Psalter",
+          "kind": "ability",
+          "text": "When any Shield on an ally breaks, Aldous gains mana too.",
+          "effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "holder": {
+                "kits": [
+                  "edric"
+                ]
+              },
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "aldous"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "fire_on_the_wind",
+    "name": "Fire on the Wind",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Burning Volley: her blessing rides on every arrow.",
+    "text": "Maren's arrows always carry Ilse's Burn, split arrows too, and Arrow Storm rains fire: enemies under it are set Burning.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "arrow_storm",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "atk": 2000
+              },
+              "target": "target"
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "fire_on_the_wind",
+          "name": "Fire on the Wind",
+          "kind": "ability",
+          "text": "Maren's arrows carry Ilse's Burn.",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "mgk": 2000
+              },
+              "target": "hit_target",
+              "trigger": "on_ally_hit",
+              "holder": {
+                "kits": [
+                  "ilse"
+                ]
+              },
+              "by": {
+                "kits": [
+                  "maren"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bellows_of_the_wind",
+    "name": "Bellows of the Wind",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "The Bellows: his wind fans her fire.",
+    "text": "Ilse always counts as attacking from far off for Aldous's winds (faster and harder), and every enemy Gale knocks back is Stoked: its Burn grows by a quarter.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bellows_tailwind",
+          "name": "Bellows of the Wind",
+          "kind": "aura",
+          "text": "Ilse attacks faster, as if from far off.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp",
+            "value": 8,
+            "while": "state",
+            "state": {
+              "kits": [
+                "ilse"
+              ]
+            }
+          }
+        },
+        {
+          "id": "bellows_high_wind",
+          "name": "Bellows of the Wind",
+          "kind": "aura",
+          "text": "Ilse hits harder, as if from far off.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12500,
+            "while": "state",
+            "state": {
+              "kits": [
+                "ilse"
+              ]
+            }
+          }
+        },
+        {
+          "id": "bellows_of_the_wind",
+          "name": "Bellows of the Wind",
+          "kind": "ability",
+          "text": "Every enemy Gale knocks back is Stoked.",
+          "effects": [
+            {
+              "trigger": "on_knockback",
+              "holder": {
+                "kits": [
+                  "aldous"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "stacks_share_bp": 2500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_firepit",
+    "name": "The Firepit",
+    "tier": "bond",
+    "icon": "hold_the_middle",
+    "flavor": "The Firepit: he drags them into her fire.",
+    "text": "Every Maelstrom sets the ground under the crowd it pulls burning, spreading as Ilse's does, and Crowd Strength counts Burning enemies twice.",
+    "mod_for": "garrow",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:crowd_strength",
+          "per_twice": {
+            "keywords": [
+              "burning"
+            ]
+          }
+        },
+        {
+          "slot": "passive:crowd_guard",
+          "per_twice": {
+            "keywords": [
+              "burning"
+            ]
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_firepit",
+          "name": "The Firepit",
+          "kind": "ability",
+          "text": "Maelstrom sets the ground around him burning, and it spreads: enemies on it catch Burn each second.",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "duration_ms": 6000,
+              "every_ms": 1000,
+              "grows": {
+                "every_ms": 2000,
+                "max_radius": 3
+              },
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "atk": 1000
+                  },
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_vigil_lamp",
+    "name": "The Vigil Lamp",
+    "tier": "bond",
+    "icon": "pilgrims_lantern",
+    "flavor": "Lantern Vigil: she keeps him exactly where he's strongest.",
+    "text": "While Brannoc is below 30% HP, Vell's lantern goes to him first, and her heals on him never lift him above 30%: the rest is a Shield instead.",
+    "mod_for": "vell",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "types": [
+            "heal"
+          ],
+          "heal_cap": {
+            "pct": 30,
+            "vs": {
+              "kits": [
+                "brannoc"
+              ],
+              "below_hp_pct": 30
+            }
+          }
+        },
+        {
+          "slot": "signature",
+          "prefer": {
+            "kits": [
+              "brannoc"
+            ],
+            "below_hp_pct": 30
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "plague_alchemy",
+    "name": "Plague Alchemy",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Putrefaction: Ottilie's reagents in Severine's cloud.",
+    "text": "Severine's Plague Burst also sets Burn as strong as its Poison, and her lifesteal is tripled against enemies both Burning and Poisoned.",
+    "mod_for": "severine",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "plague_burst",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "atk": 3000
+              },
+              "target": "target"
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "plague_alchemy",
+          "name": "Plague Alchemy",
+          "kind": "aura",
+          "text": "Her lifesteal is tripled against enemies both Burning and Poisoned.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_more_bp",
+            "value": 20000,
+            "vs": {
+              "all_statuses": [
+                "burn",
+                "poison"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_tonic_choir",
+    "name": "The Tonic Choir",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "Tonic and Hymn: her tonics, his chorus.",
+    "text": "Each of Ottilie's mana vials gives Aldous the same mana too, which he shares on, and each Crescendo makes her next 3 Tosses throw mana vials.",
+    "mod_for": "ottilie",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "tonic_vial",
+              "type": "gain_mana",
+              "amount": 30,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "aldous"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_tonic_choir",
+          "name": "The Tonic Choir",
+          "kind": "ability",
+          "text": "Each Crescendo of Aldous's fills her next 3 Tosses with mana vials for the ally with the least mana.",
+          "effects": [
+            {
+              "trigger": "on_ally_ability",
+              "vs": {
+                "kits": [
+                  "aldous"
+                ]
+              },
+              "type": "apply_status",
+              "status": "choir_vial",
+              "stacks": 3,
+              "target": "self"
+            },
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "choir_vial",
+              "type": "gain_mana",
+              "amount": 30,
+              "target": "lowest_mana_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_gilded_hound",
+    "name": "The Gilded Hound",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Gilded Ash: the hound brings back gold.",
+    "text": "Grit's bites also Poison a little, so a Burning enemy he bites counts as both for Ottilie's Gilded Death, and Grit fetches 1 shard for each kill he makes.",
+    "mod_for": "kestra",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "add_effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "poison",
+                    "stacks": 1,
+                    "target": "target"
+                  }
+                ]
+              }
+            ],
+            "passives": [
+              {
+                "id": "gilded_fetch",
+                "name": "Gilded Fetch",
+                "kind": "ability",
+                "text": "Each kill he makes, he fetches a shard for the run.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "type": "shards",
+                    "amount": 1,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mother_of_serpents",
+    "name": "Mother of Serpents",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Nest of Rot: her plague feeds Kestra's brood.",
+    "text": "Each Poisoned enemy Severine fells hatches a nestling beside Kestra for 6s (Nest's rules), and Severine's lifesteal is doubled against enemies a viper or nestling has bitten.",
+    "mod_for": "kestra",
+    "mod": {
+      "companions": [
+        {
+          "kit": "viper",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "add_effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "viper_bitten",
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "kit": "nestling",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "add_effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "viper_bitten",
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "mother_of_serpents",
+          "name": "Mother of Serpents",
+          "kind": "ability",
+          "text": "Each Poisoned enemy Severine fells hatches a nestling beside her for a few seconds.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "by": {
+                "kits": [
+                  "severine"
+                ]
+              },
+              "vs": {
+                "statuses": [
+                  "poison"
+                ]
+              },
+              "type": "summon",
+              "kit": "nestling",
+              "count": 1,
+              "placement": "adjacent",
+              "lasts_ms": 6000
+            }
+          ]
+        },
+        {
+          "id": "serpents_feast",
+          "name": "Mother of Serpents",
+          "kind": "aura",
+          "text": "Severine's lifesteal is doubled against enemies a viper or nestling has bitten.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "kits": [
+                "severine"
+              ]
+            },
+            "stat": "lifesteal_more_bp",
+            "value": 20000,
+            "vs": {
+              "statuses": [
+                "viper_bitten"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_shroud_of_knives",
+    "name": "The Shroud of Knives",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Unseen Blade: he covers her; her kills cover everyone.",
+    "text": "Every 5s, Shroud also hides Tamsin for 1.5s, and each enemy she fells keeps every hidden ally hidden 1s longer.",
+    "mod_for": "lucan",
+    "mod": {
+      "passives": [
+        {
+          "id": "shroud_of_knives",
+          "name": "The Shroud of Knives",
+          "kind": "ability",
+          "text": "Every few seconds, Tamsin is hidden for a moment.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 5000,
+              "type": "apply_status",
+              "status": "shrouded",
+              "duration_ms": 1500,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "tamsin"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "covering_kills",
+          "name": "The Shroud of Knives",
+          "kind": "ability",
+          "text": "Each enemy Tamsin fells keeps every hidden ally hidden a little longer.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "by": {
+                "kits": [
+                  "tamsin"
+                ]
+              },
+              "type": "extend_status",
+              "statuses": [
+                "shrouded",
+                "vanished",
+                "stealth",
+                "hidden",
+                "shadow_dance",
+                "garrote_veil",
+                "veiled",
+                "phantom_veil"
+              ],
+              "duration_ms": 1000,
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_menagerie",
+    "name": "The Menagerie",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "The Menagerie: puppets and beasts, one pack.",
+    "text": "Kestra's hounds count twice for Strings. (Lucan's copies are allied summons, so they already count for Pack Call and Pack Fury.)",
+    "mod_for": "lucan",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:strings",
+          "per_twice": {
+            "kits": [
+              "grit",
+              "brindle"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mirror_step",
+    "name": "Mirror Step",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Hall of Arrows: she vanishes; her reflection keeps shooting.",
+    "text": "Each time Maren hops away, a copy of her stays beside where she lands for 3s, with 40% of her stats, shooting her split arrows; up to 3 of her copies stand at once.",
+    "mod_for": "maren",
+    "mod": {
+      "passives": [
+        {
+          "id": "mirror_step",
+          "name": "Mirror Step",
+          "kind": "ability",
+          "text": "Each time she hops away, a copy of her stays behind for a few seconds, with a share of her stats.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "summon",
+              "copy_of": "self",
+              "share_pct": 40,
+              "lasts_ms": 3000,
+              "max_standing": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_contract",
+    "name": "The Contract",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Price and Prey: he names the price; she collects.",
+    "text": "Bounties Tamsin kills pay double, and when a Bounty dies, Tamsin steps straight to the new Bounty and her next attack crits.",
+    "mod_for": "tamsin",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_contract",
+          "name": "The Contract",
+          "kind": "ability",
+          "text": "Each Bounty she kills pays her shards.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "shards",
+              "amount": 3,
+              "target": "self"
+            }
+          ]
+        },
+        {
+          "id": "contract_step",
+          "name": "The Contract",
+          "kind": "ability",
+          "text": "When a Bounty dies, she steps behind the new Bounty, and her next attack crits.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "leap",
+              "to": "step",
+              "resets_attack": true,
+              "target": "toughest_enemies",
+              "only": {
+                "without": [
+                  "bounty"
+                ]
+              }
+            },
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "apply_status",
+              "status": "parting_shot",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_counting_house",
+    "name": "The Counting House",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Tithe and Hoard: Edric collects; Hob hoards.",
+    "text": "Shards the Tithe paid count double for Hob's Nest Egg until they're spent, and Edric's Shields grow by 1% for every 5 shards held.",
+    "mod_for": "edric",
+    "mod": {
+      "passives": [
+        {
+          "id": "counting_house",
+          "name": "The Counting House",
+          "kind": "aura",
+          "text": "Hob's hits land harder for the Tithe's shards held.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "kits": [
+                "hob"
+              ]
+            },
+            "stat": "damage_bp",
+            "value": 10100,
+            "per_shards": 5,
+            "tithe": true,
+            "vs": {
+              "others": true
+            }
+          }
+        },
+        {
+          "id": "counting_house_guard",
+          "name": "The Counting House",
+          "kind": "aura",
+          "text": "Hob's DEF rises for the Tithe's shards held.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "kits": [
+                "hob"
+              ]
+            },
+            "stat": "def_bp",
+            "value": 10100,
+            "per_shards": 5,
+            "tithe": true
+          }
+        },
+        {
+          "id": "counting_house_ward",
+          "name": "The Counting House",
+          "kind": "aura",
+          "text": "His Shields grow for the shards the run holds.",
+          "aura": {
+            "target": "holder",
+            "stat": "shield_bp",
+            "value": 10100,
+            "per_shards": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_black_market_ledger",
+    "name": "The Black Market Ledger",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Black Market Ledger: she turns goods to gold; he turns gold to power.",
+    "text": "When Ottilie transmutes an item, its full price counts as shards spent for Hob's Fence bonus, and the shop gives a free reroll.",
+    "ledger": true
+  }
+]

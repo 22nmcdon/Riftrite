@@ -1,0 +1,19 @@
+[
+  {
+    "_note": "Its holder's first attack hits twice as hard; it ends as it attacks (First Blood, Maren's upgrade: from the fight's start; phase 5c step 7).",
+    "id": "first_blood",
+    "name": "First Blood",
+    "kind": "boost",
+    "duration_ms": 60000,
+    "until_attack": true,
+    "auras": [{"stat": "damage_bp", "value": 20000}]
+  },
+  {
+    "_note": "Deals more damage for the rest of the fight, a stack for each enemy Arrow Storm hit (Hailstorm, Volley's apex; phase 8 part 2).",
+    "id": "hailstorm",
+    "name": "Hailstorm",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "damage_bp", "value": 10100}]
+  }
+]

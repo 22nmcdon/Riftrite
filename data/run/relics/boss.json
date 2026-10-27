@@ -1,0 +1,152 @@
+[
+  {
+    "id": "the_second_sun",
+    "name": "The Second Sun",
+    "tier": "boss",
+    "icon": "purifying_light",
+    "flavor": "It rose where the first one fell.",
+    "text": "Signatures fire twice.",
+    "mod": {
+      "echo": {
+        "after_ms": 500,
+        "share_pct": 100
+      }
+    }
+  },
+  {
+    "id": "rift_bound_heart",
+    "name": "Rift-Bound Heart",
+    "tier": "boss",
+    "icon": "ember_heart",
+    "flavor": "It beats in time with the rift.",
+    "text": "Every growing upgrade and relic grows twice as fast.",
+    "growth_bp": 20000
+  },
+  {
+    "id": "the_hollow_throne",
+    "name": "The Hollow Throne",
+    "tier": "boss",
+    "icon": "hollow_crown",
+    "flavor": "Room for one more.",
+    "text": "Take two cards from every after-fight pick.",
+    "take_picks_add": 1
+  },
+  {
+    "id": "the_hollow_covenant",
+    "name": "The Hollow Covenant",
+    "tier": "boss",
+    "icon": "unbroken_wall",
+    "flavor": "What one has, all have.",
+    "text": "Each hero uses the team's highest HP, ATK, MGK, DEF, CRIT, and attack speed.",
+    "covenant": true
+  },
+  {
+    "id": "snaring_shot",
+    "name": "Snaring Shot",
+    "tier": "boss",
+    "icon": "braced",
+    "flavor": "The arrow holds what it hits.",
+    "text": "Every 3rd basic attack by a ranged hero Roots its target, never stacking or lengthening a Root.",
+    "mod_for": "ranged",
+    "mod": {
+      "passives": [
+        {
+          "id": "snaring_shot",
+          "name": "Snaring Shot",
+          "kind": "ability",
+          "text": "Every 3rd basic attack Roots its target, if it isn't Rooted already.",
+          "effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 3,
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1000,
+              "fresh_only": true,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "chain_of_echoes",
+    "name": "Chain of Echoes",
+    "tier": "boss",
+    "icon": "echo",
+    "flavor": "Every link rings louder than the last.",
+    "text": "Every chain the heroes start goes deeper, and each step is stronger than the one before.",
+    "rules": {
+      "deeper_chains": {
+        "steps": 4,
+        "grow_bp": 1500
+      }
+    }
+  },
+  {
+    "id": "crown_of_the_hollow_king",
+    "name": "Crown of the Hollow King",
+    "tier": "boss",
+    "icon": "hollow_crown",
+    "flavor": "He gave twice what he was asked. So does his crown.",
+    "text": "Every keyword heroes apply goes on twice: double stacks, or double duration.",
+    "rules": {
+      "keywords_twice": true
+    }
+  },
+  {
+    "id": "everflame",
+    "name": "Everflame",
+    "tier": "boss",
+    "icon": "ember_heart",
+    "flavor": "It was lit before the rift. It will burn after.",
+    "text": "Keywords heroes put on enemies never wear off during a fight, and enemies can't remove them.",
+    "rules": {
+      "keywords_last": true
+    }
+  },
+  {
+    "id": "the_unbending",
+    "name": "The Unbending",
+    "tier": "boss",
+    "icon": "unbroken_wall",
+    "flavor": "Bend, and the rift breaks you. Stand.",
+    "text": "Heroes are immune to every status enemies apply, and each one blocked makes that hero sturdier for the fight.",
+    "rules": {
+      "unbending": {
+        "def_bp": 100,
+        "max_hp_bp": 100
+      }
+    }
+  },
+  {
+    "id": "riftwalkers_soles",
+    "name": "Riftwalker's Soles",
+    "tier": "boss",
+    "icon": "light_feet",
+    "flavor": "Worn by one who walked the edge and came back.",
+    "text": "Heroes take no damage from crumbled ground, and enemies on it take a share of their max HP every second.",
+    "rules": {
+      "collapse": {
+        "immune": true,
+        "enemy_max_hp_bp": 500
+      }
+    }
+  },
+  {
+    "id": "the_long_watch",
+    "name": "The Long Watch",
+    "tier": "boss",
+    "icon": "pilgrims_lantern",
+    "flavor": "The night is long. So is the watch.",
+    "text": "Fights don't time out at 180s, and from a minute in, every hero grows stronger every few seconds.",
+    "rules": {
+      "long_watch": {
+        "from_ms": 60000,
+        "every_ms": 10000,
+        "tie_ms": 300000
+      }
+    }
+  }
+]

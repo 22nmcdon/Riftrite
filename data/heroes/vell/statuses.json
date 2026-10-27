@@ -1,0 +1,11 @@
+[
+  {"_note": "Stronger MGK for the rest of the fight, a stack for each enemy her smite kills (Inquisitor; phase 8 part 2).", "id": "zeal", "name": "Zeal", "kind": "boost", "stacking": true, "auras": [{"stat": "mgk_bp", "value": 12000}]},
+  {"_note": "Attacks a little faster for a moment, from Mend or Kindle (Dawnbringer's taste; phase 8 part 2).", "id": "morning_haste", "name": "Morning Haste", "kind": "boost", "duration_ms": 2000, "auras": [{"stat": "atsp", "value": 5}]},
+  {"_note": "Attacks much faster for a while, from Mend or Kindle (Dawnbringer; phase 8 part 2).", "id": "dawnlight", "name": "Dawnlight", "kind": "boost", "duration_ms": 5000, "auras": [{"stat": "atsp", "value": 60}]},
+  {"_note": "Attacks faster for the rest of the fight, a stack for each heal while Dawnlight holds (Dawnbringer; phase 8 part 2).", "id": "first_light", "name": "First Light", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 8}]},
+  {"_note": "Deals a little less damage while in her lantern's light (The Beacon's taste; phase 8 part 2).", "id": "glare", "name": "Glare", "kind": "boost", "duration_ms": 1200, "auras": [{"stat": "damage_bp", "value": 9500}]},
+  {"_note": "Her Shields are larger for the rest of the fight, a stack for each Shield broken (Thornweave; phase 8 part 2).", "id": "woven_thorns", "name": "Woven Thorns", "kind": "boost", "stacking": true, "auras": [{"stat": "shield_bp", "value": 10800}]},
+  {"_note": "More of First Light: attacks faster for the rest of the fight (Dawnbringer's First Light card; phase 8 part 2).", "id": "first_light_more", "name": "First Light (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 3}]},
+  {"_note": "More MGK for the rest of the fight, a stack for each smite kill (Inquisitor's Zeal card; phase 8 part 2).", "id": "zeal_more", "name": "Zeal (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "mgk_bp", "value": 10500}]},
+  {"_note": "Takes less damage for a while after her healing (Dawnbringer's Morning Ward card; phase 8 part 2).", "id": "dawn_ward", "name": "Dawn Ward", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "damage_reduced_bp", "value": 1000}]}
+]

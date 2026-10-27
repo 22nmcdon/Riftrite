@@ -8,7 +8,7 @@ extends GutTest
 func _real_texts() -> Dictionary[String, String]:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in ContentDb.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	return texts
 
 
@@ -41,33 +41,44 @@ func test_real_data_is_valid() -> void:
 
 func test_every_data_file_is_loaded() -> void:
 	assert_eq(ContentDb.FILES, ["tuning.json", "statuses.json", "heroes.json", "enemies.json", "encounters.json", "tactics.json", "paths.json", "enemy_upgrades.json"] as Array[String])
-	var files: PackedStringArray = DirAccess.get_files_at("res://data")
+	var files: Array[String] = _json_files("res://data", "")
 	files.sort()
-	var expected: Array = ContentDb.FILES + RunContent.FILES + ["act2.json", "act3.json"]
-	expected.sort()
-	assert_eq(Array(files), expected, "every file in data/ is one ContentDb or RunContent loads")
+	var read: Array[String] = DataLayout.all_files("res://data")
+	read.sort()
+	assert_eq(files, read, "every file in data/ is one DataLayout names, so ContentDb or RunContent loads it")
+	for kind: String in ContentDb.FILES + RunContent.FILES + ["act2.json", "act3.json"]:
+		assert_false(DataLayout.files("res://data", kind).is_empty(), "%s has a file" % kind)
+
+
+## Every .json file under `dir`, relative to the data folder.
+static func _json_files(dir: String, under: String) -> Array[String]:
+	var found: Array[String] = []
+	for file_name: String in DirAccess.get_files_at(dir):
+		if file_name.get_extension() == "json":
+			found.append(under + file_name)
+	for sub: String in DirAccess.get_directories_at(dir):
+		found.append_array(_json_files(dir.path_join(sub), under + sub + "/"))
+	return found
 
 
 func test_real_statuses() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "sunder", "veiled_haste", "storm_call", "frenzy", "quickened", "vigilant", "iron_garden", "unbending", "long_watch", "surge", "surge_2", "last_breath", "purified",
-		"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "blood_frenzy", "vengeance", "festering", "ember_blind", "watched_over",
-		"ambush", "ambush_2", "rear_guard", "late_surge", "hobbled", "weighed_down", "cowed", "parting_shot", "first_blood", "scarred", "hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom", "briar_torn", "gatekeeper", "brand", "war_call", "rally", "oathbound", "gale", "first_light_more", "zeal_more", "shield_wall", "dawn_ward",
-		"bulwark_layer", "shatter_echo", "grinder_feed", "undertow_tide", "deep_current", "thorn_crown", "hidden", "shadow_dance", "garroted", "garrote_veil", "assassins_haste", "swift_step", "death_mark",
-		"phantom_veil", "phantom_edge", "phantom_edge_more", "veiled", "veil_haste", "veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more", "pealing", "kindled", "cracked", "rung", "grand_note", "wellspring_swell", "long_wind_gust", "long_wind_gust_more", "rising_pitch", "great_bell", "great_bell_more", "deafened", "requiem_toll",
-		"iron_maiden", "nova_hunger", "gluttony", "plague_weak", "pestilence", "epidemic", "wasting", "blood_tide", "blood_offering", "blood_rite", "sacred_blood", "sacrament", "shared_blood",
-		"collection", "sanctified", "bright_offering", "hallowed_ground", "bastion", "choir",
-		"smoldering", "blessed", "hymn", "slow_coals", "smoke", "fervor", "singed",
-		"blast_furnace", "roaring_bellows", "crucible", "living_flame", "choking_smoke", "ringed", "ring_heat", "cinder_saint", "rising_choir", "crowned_in_flame", "iron_embers",
-		"fire_vial", "venom_vial", "tonic_vial", "tonic_rush", "elixir", "sticky", "fumes", "corroded", "fizz", "bracing", "choir_vial",
-		"grand_reaction", "dissolved", "potent_draught", "potent_more", "mana_flood", "potent_elixir",
-		"pack_fury", "howl", "numbed", "viper_bitten",
-		"hellhound", "inferno_hound", "viper_slow", "viper_queen", "queens_venom", "alpha_fury", "alpha_blood", "pack_blood",
-		"shrouded", "vanished", "sure_strike", "dance", "glimmer_dazzle",
-		"unseen_host", "knife_in_the_dark", "veil_confused", "veil_exposed", "grand_dance", "puppet_thread", "puppet_exposed",
-		"marionette", "marionette_exposed", "puppet_cut", "puppet_master",
-		"bounty", "compounding", "cut_purse", "slippery_exit",
-		"idol_fury", "compounding_more", "idol_gaze", "silver_cut", "silver_cut_deep", "silver_tongue", "bounty_slow", "bounty_lesser"] as Array[String])
+	assert_eq(db.status_ids, [
+		"burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "sunder", "veiled_haste", "storm_call", "frenzy", "quickened",
+		"vigilant", "iron_garden", "unbending", "long_watch", "surge", "surge_2", "last_breath", "purified", "grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged",
+		"blood_frenzy", "vengeance", "festering", "ember_blind", "watched_over", "ambush", "ambush_2", "rear_guard", "late_surge", "hobbled", "weighed_down", "cowed", "parting_shot", "tailwind", "dazzled",
+		"iron_loom", "briar_torn", "brand", "oathbound", "gale", "hidden", "shadow_dance", "garroted", "garrote_veil", "phantom_veil", "veiled", "blood_scent", "kindled", "blood_tide", "blood_rite",
+		"living_flame", "tonic_vial", "choir_vial", "viper_bitten", "shrouded", "vanished", "veil_exposed", "puppet_exposed", "marionette_exposed", "bounty", "scarred", "gatekeeper", "war_call", "rally",
+		"shield_wall", "first_blood", "hailstorm", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "woven_thorns", "first_light_more", "zeal_more", "dawn_ward", "bulwark_layer",
+		"shatter_echo", "grinder_feed", "undertow_tide", "deep_current", "thorn_crown", "iron_maiden", "assassins_haste", "swift_step", "death_mark", "phantom_edge", "phantom_edge_more", "veil_haste",
+		"veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more", "pealing",
+		"cracked", "rung", "grand_note", "wellspring_swell", "long_wind_gust", "long_wind_gust_more", "rising_pitch", "great_bell", "great_bell_more", "deafened", "requiem_toll", "nova_hunger", "gluttony",
+		"plague_weak", "pestilence", "epidemic", "wasting", "blood_offering", "sacred_blood", "sacrament", "shared_blood", "collection", "sanctified", "bright_offering", "hallowed_ground", "bastion",
+		"choir", "smoldering", "blessed", "hymn", "slow_coals", "smoke", "fervor", "singed", "blast_furnace", "roaring_bellows", "crucible", "choking_smoke", "ringed", "ring_heat", "cinder_saint",
+		"rising_choir", "crowned_in_flame", "iron_embers", "fire_vial", "venom_vial", "tonic_rush", "elixir", "sticky", "fumes", "corroded", "fizz", "bracing", "grand_reaction", "dissolved",
+		"potent_draught", "potent_more", "mana_flood", "potent_elixir", "pack_fury", "howl", "numbed", "hellhound", "inferno_hound", "viper_slow", "viper_queen", "queens_venom", "alpha_fury",
+		"alpha_blood", "pack_blood", "sure_strike", "dance", "glimmer_dazzle", "unseen_host", "knife_in_the_dark", "veil_confused", "grand_dance", "puppet_thread", "marionette", "puppet_cut",
+		"puppet_master", "compounding", "cut_purse", "slippery_exit", "idol_fury", "compounding_more", "idol_gaze", "silver_cut", "silver_cut_deep", "silver_tongue", "bounty_slow", "bounty_lesser"])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")

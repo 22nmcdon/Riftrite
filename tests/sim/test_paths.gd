@@ -17,7 +17,7 @@ func before_all() -> void:
 static func _real_texts() -> Dictionary[String, String]:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in ContentDb.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	return texts
 
 

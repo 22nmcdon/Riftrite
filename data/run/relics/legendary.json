@@ -1,0 +1,416 @@
+[
+  {
+    "id": "rift_fed_blades",
+    "name": "Rift-Fed Blades",
+    "tier": "legendary",
+    "icon": "steady_hands",
+    "flavor": "They're never full.",
+    "text": "Heroes' ATK grows with all the basic-attack damage the team deals this run.",
+    "grows": {
+      "counts": {
+        "counts": "damage",
+        "from_basic": true
+      },
+      "per": 1000,
+      "each": {
+        "stats_bp": {
+          "atk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "reliquary_lamp",
+    "name": "Reliquary Lamp",
+    "tier": "legendary",
+    "icon": "pilgrims_lantern",
+    "flavor": "Each relic feeds the flame.",
+    "text": "Heroes' basic stats rise for every relic you hold.",
+    "per_relic_bp": 200
+  },
+  {
+    "id": "gilded_rift",
+    "name": "Gilded Rift",
+    "tier": "legendary",
+    "icon": "hollow_crown",
+    "flavor": "Gold calls to gold.",
+    "text": "Heroes' ATK and MGK rise with the shards you hold.",
+    "per_shards": {
+      "per": 5,
+      "bp": 100
+    }
+  },
+  {
+    "id": "hollow_crown",
+    "name": "Hollow Crown",
+    "tier": "legendary",
+    "icon": "hollow_crown",
+    "flavor": "Whoever wore it wanted more.",
+    "text": "Each hero gets a fourth loadout slot.",
+    "slots_add": 1
+  },
+  {
+    "id": "widened_offering",
+    "name": "Widened Offering",
+    "tier": "legendary",
+    "icon": "opener",
+    "flavor": "Take what's given.",
+    "text": "The after-fight pick shows one more card.",
+    "pick_cards_add": 1
+  },
+  {
+    "id": "reliquary",
+    "name": "Reliquary",
+    "tier": "legendary",
+    "icon": "hollow_crown",
+    "flavor": "Small things, kept well, grow heavy.",
+    "text": "Every common relic you hold counts twice.",
+    "doubles_commons": true
+  },
+  {
+    "id": "wardens_engine",
+    "name": "Warden's Engine",
+    "tier": "legendary",
+    "icon": "unbroken_wall",
+    "flavor": "The wall remembers every blow it turned.",
+    "text": "Shields heroes give are larger, and Shielded heroes' ATK and MGK rise with their Shield.",
+    "mod": {
+      "passives": [
+        {
+          "id": "wardens_engine",
+          "name": "Warden's Engine",
+          "kind": "aura",
+          "text": "Its Shields are larger.",
+          "aura": {
+            "target": "holder",
+            "stat": "shield_bp",
+            "value": 13000
+          }
+        },
+        {
+          "id": "wardens_engine_atk",
+          "name": "Warden's Engine",
+          "kind": "aura",
+          "text": "Its ATK rises with its Shield.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "per_shield_bp": 5
+          }
+        },
+        {
+          "id": "wardens_engine_mgk",
+          "name": "Warden's Engine",
+          "kind": "aura",
+          "text": "Its MGK rises with its Shield.",
+          "aura": {
+            "target": "holder",
+            "stat": "mgk_bp",
+            "per_shield_bp": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_engine",
+    "name": "Hunter's Engine",
+    "tier": "legendary",
+    "icon": "rift_glass_eye",
+    "flavor": "The mark deepens with every look.",
+    "text": "Marks heroes apply stack, crits hit harder for each Mark on the enemy, and a crit on a Marked enemy Marks the enemies around it.",
+    "rules": {
+      "marks_stack": true
+    },
+    "mod": {
+      "passives": [
+        {
+          "id": "hunters_engine",
+          "name": "Hunter's Engine",
+          "kind": "aura",
+          "text": "Its crits hit harder for each Mark on the enemy.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 2000,
+            "per_target_stacks": "marked"
+          }
+        },
+        {
+          "id": "hunters_engine_spread",
+          "name": "Hunter's Engine",
+          "kind": "ability",
+          "text": "A crit on a Marked enemy Marks every enemy within 1 hex of it.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "apply_status",
+              "status": "marked",
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shadow_engine",
+    "name": "Shadow Engine",
+    "tier": "legendary",
+    "icon": "light_feet",
+    "flavor": "What the dark takes, it gives back sharpened.",
+    "text": "While hidden, heroes' basic attacks hit far harder and steal life, and lifesteal past full HP strikes their target.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shadow_engine",
+          "name": "Shadow Engine",
+          "kind": "aura",
+          "text": "While Stealthed, its basic attacks deal more damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 20000,
+            "from_basic": true,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "stealthed"
+              ]
+            }
+          }
+        },
+        {
+          "id": "shadow_engine_leech",
+          "name": "Shadow Engine",
+          "kind": "aura",
+          "text": "While Stealthed, its basic attacks steal life.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 500,
+            "from_basic": true,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "stealthed"
+              ]
+            }
+          }
+        },
+        {
+          "id": "shadow_engine_strike",
+          "name": "Shadow Engine",
+          "kind": "aura",
+          "text": "While Stealthed, lifesteal past full HP hits its target.",
+          "aura": {
+            "target": "holder",
+            "stat": "overheal_strike_bp",
+            "value": 50000,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "stealthed"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "quickening",
+    "name": "Quickening",
+    "tier": "legendary",
+    "icon": "fletched_for_wings",
+    "flavor": "Every blow comes sooner than the last.",
+    "text": "Every hit makes the hero attack faster for the rest of the fight, with no cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "quickening",
+          "name": "Quickening",
+          "kind": "ability",
+          "text": "Every hit makes it attack faster for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "type": "apply_status",
+              "status": "quickened",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "crown_of_stars",
+    "name": "Crown of Stars",
+    "tier": "legendary",
+    "icon": "hollow_crown",
+    "flavor": "Each point of light a wound.",
+    "text": "Heroes' crits can crit again, many times in a row, each roll a little less likely and a little weaker.",
+    "rules": {
+      "crit_chain": {
+        "steps": 10,
+        "fade_bp": 500
+      }
+    }
+  },
+  {
+    "id": "shared_pain",
+    "name": "Shared Pain",
+    "tier": "legendary",
+    "icon": "casters_first",
+    "flavor": "What one feels, all feel.",
+    "text": "Damage heroes deal to an enemy echoes to the other enemies sharing its keyword, weaker each step.",
+    "rules": {
+      "echo_keywords": {
+        "share_bp": 9000,
+        "steps": 3
+      }
+    }
+  },
+  {
+    "id": "the_hungering_rift",
+    "name": "The Hungering Rift",
+    "tier": "legendary",
+    "icon": "echo",
+    "flavor": "Nothing it takes is wasted.",
+    "text": "Damage past an enemy's last HP carries to the nearest enemy, and keeps carrying until it runs out.",
+    "rules": {
+      "carry_overkill": {
+        "steps": 8
+      }
+    }
+  },
+  {
+    "id": "overcharge",
+    "name": "Overcharge",
+    "tier": "legendary",
+    "icon": "purifying_light",
+    "flavor": "The vessel cracks. The light keeps pouring.",
+    "text": "Heroes' mana keeps filling past a full bar, and each extra bar fires the signature again, stronger each time.",
+    "rules": {
+      "overcharge": {
+        "power_bp": 2500,
+        "steps": 8
+      }
+    }
+  },
+  {
+    "id": "second_dawn",
+    "name": "Second Dawn",
+    "tier": "legendary",
+    "icon": "pilgrims_lantern",
+    "flavor": "The rift is not the end. Not yet.",
+    "text": "The first time each hero falls in a fight, it rises again a little later; if every hero is down at once, the fight is lost.",
+    "rules": {
+      "second_dawn": {
+        "after_ms": 5000,
+        "hp_bp": 5000
+      }
+    }
+  },
+  {
+    "id": "unending_vigil",
+    "name": "Unending Vigil",
+    "tier": "legendary",
+    "icon": "pilgrims_lantern",
+    "flavor": "The longer the watch, the sharper the eye.",
+    "text": "Every second a hero spends near full HP makes them hit harder for the rest of the fight, with no cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "unending_vigil",
+          "name": "Unending Vigil",
+          "kind": "ability",
+          "text": "Every second above 75% HP, it hits harder for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "holder": {
+                "above_hp_pct": 75
+              },
+              "type": "apply_status",
+              "status": "vigilant",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_garden",
+    "name": "Iron Garden",
+    "tier": "legendary",
+    "icon": "braced",
+    "flavor": "What grows here holds everything still.",
+    "text": "Every time a hero Roots or Stuns an enemy, every hero hits harder for the rest of the fight, with no cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "iron_garden",
+          "name": "Iron Garden",
+          "kind": "ability",
+          "text": "Every Root or Stun it puts on an enemy makes every hero hit harder for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "root",
+                "stun",
+                "garroted"
+              ],
+              "type": "apply_status",
+              "status": "iron_garden",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "stillwater_seal",
+    "name": "Stillwater Seal",
+    "tier": "legendary",
+    "icon": "ember_heart",
+    "flavor": "Held still, it burns forever.",
+    "text": "Burn on a Rooted or Stunned enemy doesn't fade, and heroes' crits against it hit harder.",
+    "rules": {
+      "held_keeps_burn": true
+    },
+    "mod": {
+      "passives": [
+        {
+          "id": "stillwater_seal",
+          "name": "Stillwater Seal",
+          "kind": "aura",
+          "text": "Its crits hit Rooted or Stunned enemies harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 3000,
+            "vs": {
+              "statuses": [
+                "root",
+                "stun",
+                "garroted"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+]

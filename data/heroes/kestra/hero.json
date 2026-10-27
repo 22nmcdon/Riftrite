@@ -1,0 +1,35 @@
+{
+  "_note": "Hero 11 (docs/plans/rebuild-heroes.md section 8k; rebuild-phase8-last-heroes.md 8f-3). DEF, CRIT, speed, range, mana, Sic 'Em, Bond, and Grit's shares are the design's; HP 250 and ATK 15 (the design's 300 and 18) keep her team within the base-kit band (+10); Spear Jab's 1.2s cooldown and Grit's DEF, speed, and 0.8s bite are first numbers. She can't be drafted until her paths come.",
+  "id": "kestra",
+  "name": "Kestra Fenn",
+  "title": "the beastwarden",
+  "role": "damage",
+  "kit": {
+    "stats": {"hp": 250, "atk": 15, "def": 12, "crit": 8, "speed": 2, "range": 2},
+    "mana": {"max": 50, "per_attack": 8, "regen_per_s": 2},
+    "basic_attack": {
+      "id": "spear_jab", "name": "Spear Jab", "text": "A thrust at the nearest enemy within 2 hexes. Her main source of mana.", "cooldown_ms": 1200,
+      "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+    },
+    "signature": {
+      "id": "sic_em", "name": "Sic 'Em", "text": "Grit leaps on her target within 2 hexes and bites it hard.", "trigger": {"kind": "mana"}, "targeting": "nearest", "by": "companion",
+      "effects": [{"type": "leap", "max_hexes": 6, "target": "target"},
+                  {"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 20000}}]
+    },
+    "passives": [
+      {"id": "bond", "name": "Bond", "kind": "aura", "text": "While Grit stands, she attacks faster.", "aura": {"target": "holder", "stat": "atsp", "value": 10, "while": "ally_standing", "kit": "grit"}}
+    ],
+    "companions": [
+      {
+        "kit": {"id": "grit", "name": "Grit", "stats": {"hp": 1, "atk": 1, "def": 8, "speed": 3, "range": 1},
+          "basic_attack": {
+            "id": "bite", "name": "Bite", "text": "A fast bite at the enemy in front of him.", "cooldown_ms": 800,
+            "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+          },
+          "passives": [{"id": "bond", "name": "Bond", "kind": "aura", "text": "Beside Kestra, he attacks faster.", "aura": {"target": "holder", "stat": "atsp", "value": 10}}]
+        },
+        "hp_pct": 40, "atk_pct": 60, "return_ms": 10000
+      }
+    ]
+  }
+}

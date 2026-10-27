@@ -12,7 +12,7 @@ const FORMATION: Dictionary[String, Vector2i] = {"ranger": Vector2i(3, 0), "ward
 func _content(scale_bp: int = 10000) -> ContentDb:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in [ContentDb.TUNING_FILE, ContentDb.STATUSES_FILE]:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	var caller: Dictionary = Units.kit({"signature": {"id": "call", "name": "Call", "trigger": {"kind": "fight_start"}, "targeting": "self",
 		"effects": [{"type": "summon", "kit": "brood", "placement": "adjacent"}]}})
 	var brood: Dictionary = Units.kit({"signature": {"id": "split", "name": "Split", "trigger": {"kind": "fight_start"}, "targeting": "self",

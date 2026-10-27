@@ -18,7 +18,7 @@ var _run: RunContent
 static func stand_in_acts() -> RunContent:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in RunContent.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	var act1: Dictionary = JSON.parse_string(texts[RunContent.ACT_FILE])
 	var act2: Dictionary = act1.duplicate(true)
 	act2["act"] = 2
@@ -107,7 +107,7 @@ func test_the_acts_load_in_order() -> void:
 func test_an_act_file_must_say_its_number() -> void:
 	var texts: Dictionary[String, String] = {}
 	for file_name: String in RunContent.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[file_name] = DataLayout.read("res://data", file_name)
 	var act2: Dictionary = JSON.parse_string(texts[RunContent.ACT_FILE])
 	act2["fights_act"] = 5
 	texts["act2.json"] = JSON.stringify(act2)

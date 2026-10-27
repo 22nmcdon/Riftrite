@@ -1,0 +1,14 @@
+[
+  {
+    "_note": "More DEF for the rest of the fight, a stack each second its holder spends below 30% HP (Scar Tissue, Last Watch's path upgrade; phase 5c step 7c).",
+    "id": "scarred",
+    "name": "Scarred",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "def", "value": 2}]
+  },
+  {"_note": "More DEF for the rest of the fight, a stack for each attack his wall blocks (The Unbroken Gate, Hearthwall's apex; phase 8 part 2).", "id": "gatekeeper", "name": "Gatekeeper", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 1}]},
+  {"_note": "Hits a little harder for a moment after his slam (Warlord's taste; phase 8 part 2).", "id": "war_call", "name": "War Call", "kind": "boost", "duration_ms": 2000, "auras": [{"stat": "atk_bp", "value": 10500}]},
+  {"_note": "Hits harder and faster after his slam, more with each slam (Warlord; phase 8 part 2).", "id": "rally", "name": "Rally", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}, {"stat": "atsp", "value": 20}]},
+  {"_note": "Takes less damage while rallied (Warlord's Shield Wall card; phase 8 part 2).", "id": "shield_wall", "name": "Shield Wall", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "damage_reduced_bp", "value": 1000}]}
+]

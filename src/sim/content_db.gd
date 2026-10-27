@@ -66,16 +66,17 @@ var enemy_upgrade_ids: Array[String] = []
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
 
-## Loads every content file from a directory such as "res://data".
+## Loads every kind of content from a directory such as "res://data", from
+## the files DataLayout names.
 static func load_dir(dir: String) -> ContentDb:
 	var texts: Dictionary[String, String] = {}
 	var missing: Array[String] = []
 	for file_name: String in FILES:
-		var file_path: String = dir.path_join(file_name)
-		if FileAccess.file_exists(file_path):
-			texts[file_name] = FileAccess.get_file_as_string(file_path)
+		var text: String = DataLayout.read(dir, file_name, missing)
+		if not text.is_empty():
+			texts[file_name] = text
 		else:
-			missing.append("%s: file not found" % file_path)
+			missing.append("%s: file not found under %s (DataLayout)" % [file_name, dir])
 	var db: ContentDb = load_texts(texts)
 	# Missing-file errors go first, before whatever they caused.
 	missing.append_array(db.errors)
@@ -86,12 +87,12 @@ static func load_dir(dir: String) -> ContentDb:
 ## Loads content from file name -> JSON text. Used by load_dir and by tests.
 static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 	var db := ContentDb.new()
-	var tuning_data: Variant = db._parse(texts, TUNING_FILE)
+	var tuning_data: Variant = DataLayout.parse(texts, TUNING_FILE, db.errors)
 	if tuning_data != null:
 		var reader: DataReader = DataReader.from_value(tuning_data, TUNING_FILE, db.errors)
 		if reader != null:
 			db.tuning = TuningDef.read(reader)
-	for reader: DataReader in db._entries(db._parse(texts, STATUSES_FILE), STATUSES_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, STATUSES_FILE, db.errors), STATUSES_FILE, db.errors):
 		var status: StatusDef = StatusDef.read(reader)
 		if db._claim_id(status.id, reader, db.status_ids):
 			db.statuses[status.id] = status
@@ -111,11 +112,11 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		var instead: String = db.statuses[id].instead_for_ranks
 		if not instead.is_empty() and (not db.statuses.has(instead) or db.statuses[instead].turns()):
 			db.errors.append("%s (%s): instead_for_ranks names \"%s\", which isn't a status that can stand in" % [STATUSES_FILE, id, instead])
-	for reader: DataReader in db._entries(db._parse(texts, HEROES_FILE), HEROES_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, HEROES_FILE, db.errors), HEROES_FILE, db.errors):
 		var hero: HeroDef = HeroDef.read(reader)
 		if db._claim_id(hero.id, reader, db.hero_ids):
 			db.heroes[hero.id] = hero
-	for reader: DataReader in db._entries(db._parse(texts, ENEMIES_FILE), ENEMIES_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, ENEMIES_FILE, db.errors), ENEMIES_FILE, db.errors):
 		var enemy: EnemyDef = EnemyDef.read(reader)
 		if db.heroes.has(enemy.id):
 			reader.error("\"%s\" is already a hero's id" % enemy.id)
@@ -124,15 +125,15 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 			for spec: SpecializationDef in enemy.specializations:
 				if db._claim_id(spec.id, reader, db.specialization_ids):
 					db.specializations[spec.id] = spec
-	for reader: DataReader in db._entries(db._parse(texts, ENCOUNTERS_FILE), ENCOUNTERS_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, ENCOUNTERS_FILE, db.errors), ENCOUNTERS_FILE, db.errors):
 		var encounter: EncounterDef = EncounterDef.read(reader)
 		if db._claim_id(encounter.id, reader, db.encounter_ids):
 			db.encounters[encounter.id] = encounter
-	for reader: DataReader in db._entries(db._parse(texts, TACTICS_FILE), TACTICS_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, TACTICS_FILE, db.errors), TACTICS_FILE, db.errors):
 		var tactic: TacticDef = TacticDef.read(reader)
 		if db._claim_id(tactic.id, reader, db.tactic_ids):
 			db.tactics[tactic.id] = tactic
-	for reader: DataReader in db._entries(db._parse(texts, PATHS_FILE), PATHS_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, PATHS_FILE, db.errors), PATHS_FILE, db.errors):
 		var path: PathDef = PathDef.read(reader)
 		if db._claim_id(path.id, reader, db.path_ids):
 			db.paths[path.id] = path
@@ -141,7 +142,7 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		for apex: ApexDef in path.apexes:
 			if db._claim_id(apex.id, reader, db.apex_ids):
 				db.apexes[apex.id] = apex
-	for reader: DataReader in db._entries(db._parse(texts, ENEMY_UPGRADES_FILE), ENEMY_UPGRADES_FILE):
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, ENEMY_UPGRADES_FILE, db.errors), ENEMY_UPGRADES_FILE, db.errors):
 		var upgrade: EnemyUpgradeDef = EnemyUpgradeDef.read(reader)
 		if db._claim_id(upgrade.id, reader, db.enemy_upgrade_ids):
 			db.enemy_upgrades[upgrade.id] = upgrade
@@ -362,37 +363,6 @@ func _check_kit(kit: UnitDef, where: String, grid: HexGrid) -> void:
 
 func is_valid() -> bool:
 	return errors.is_empty()
-
-
-func _parse(texts: Dictionary[String, String], file_name: String) -> Variant:
-	if not texts.has(file_name):
-		errors.append("%s: missing" % file_name)
-		return null
-	var json := JSON.new()
-	if json.parse(texts[file_name]) != OK:
-		errors.append("%s: invalid JSON on line %d: %s" % [file_name, json.get_error_line(), json.get_error_message()])
-		return null
-	return json.data
-
-
-## Wraps each element of a top-level list. Paths look like
-## `statuses.json[1] (poison)` so errors name the entry.
-func _entries(data: Variant, file_name: String) -> Array[DataReader]:
-	var readers: Array[DataReader] = []
-	if data == null:
-		return readers
-	if typeof(data) != TYPE_ARRAY:
-		errors.append("%s: expected a list of entries" % file_name)
-		return readers
-	var entries: Array = data
-	for i: int in entries.size():
-		var label: String = "%s[%d]" % [file_name, i]
-		if typeof(entries[i]) == TYPE_DICTIONARY and typeof(entries[i].get("id")) == TYPE_STRING:
-			label += " (%s)" % entries[i]["id"]
-		var reader: DataReader = DataReader.from_value(entries[i], label, errors)
-		if reader != null:
-			readers.append(reader)
-	return readers
 
 
 ## Records an id in `ids` if it is well-formed and not taken. Returns false

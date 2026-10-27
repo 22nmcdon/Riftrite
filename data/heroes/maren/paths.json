@@ -1,0 +1,1134 @@
+[
+  {
+    "_note": "The sniper (rebuild-heroes.md, section 6, path 1). Numbers are placeholders for the paths report to tune.",
+    "id": "deadeye",
+    "hero": "maren",
+    "name": "Deadeye",
+    "title": "the sniper",
+    "fantasy": "She plants her feet and makes one shot count.",
+    "placement": "A corner with a long sightline.",
+    "vowed": {
+      "taste": "Steady: after 1.5s without moving, she reaches 1 hex farther and crits more often.",
+      "cost": "She shoots 2% slower.",
+      "patch": {
+        "passives": [
+          {
+            "id": "steady",
+            "name": "Steady",
+            "text": "After 1.5s without moving, she reaches 1 hex farther.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "range",
+              "value": 1,
+              "while": "planted",
+              "after_ms": 1500
+            }
+          },
+          {
+            "id": "steady_aim",
+            "name": "Steady Aim",
+            "text": "After 1.5s without moving, she crits more often.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_chance_bp",
+              "value": 1000,
+              "while": "planted",
+              "after_ms": 1500
+            }
+          },
+          {
+            "id": "unsteady",
+            "name": "Unsteady",
+            "text": "She shoots 2% slower.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "cooldown_bp",
+              "value": 200
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Planted for 1.5s, she reaches 2 hexes farther (6) and crits more. Heartseeker replaces Marking Shot: a charged shot that pierces every enemy in its line. Shots from 5 hexes or more give her more mana. Her ATK and HP rise.",
+      "cost": "After she moves, she needs 1.5s to plant before she can shoot again.",
+      "patch": {
+        "stats_bp": {
+          "atk": 18700,
+          "atsp": 7000,
+          "hp": 17850,
+          "mgk": 10500
+        },
+        "stats_add": {
+          "crit": 2
+        },
+        "plant_ms": 1500,
+        "mana": {
+          "max": 60,
+          "per_attack": 10,
+          "regen_per_s": 2,
+          "far_hexes": 5,
+          "per_far_attack": 12
+        },
+        "signature": {
+          "id": "heartseeker",
+          "name": "Heartseeker",
+          "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 6 hexes long.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "cast_ms": 800,
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "line",
+                "length": 6
+              },
+              "anchor": "target_direction",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 20,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 16000
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "planted",
+            "name": "Planted",
+            "text": "After 1.5s without moving, she reaches 2 hexes farther.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "range",
+              "value": 2,
+              "while": "planted",
+              "after_ms": 1500
+            }
+          },
+          {
+            "id": "sure_aim",
+            "name": "Sure Aim",
+            "text": "After 1.5s without moving, she crits more often.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_chance_bp",
+              "value": 1000,
+              "while": "planted",
+              "after_ms": 1500
+            }
+          },
+          {
+            "id": "marking_shot",
+            "name": "Marking Shot",
+            "kind": "ability",
+            "text": "A habit: every 8th Longshot, she Marks her target, so it takes more damage from everyone for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Damage dealt from beyond 4 hexes (her reach without Steady)",
+      "counts": "damage",
+      "beyond_hexes": 4,
+      "threshold": 900
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "eagle_eye",
+        "name": "Eagle Eye",
+        "title": "the finisher",
+        "fantasy": "Nothing she sights walks away.",
+        "vowed": {
+          "taste": "Heartseeker deals 10% more damage to enemies below half their HP.",
+          "patch": {
+            "passives": [
+              {
+                "id": "keen_eye",
+                "name": "Keen Eye",
+                "kind": "aura",
+                "text": "Heartseeker deals more damage to enemies below half their HP.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 11000,
+                  "vs": {
+                    "below_hp_pct": 50
+                  },
+                  "from_signature": true
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Heartseeker finishes any enemy it leaves below 20% HP, and she crits more. Each enemy Heartseeker finishes refills her mana, so one kill can lead straight into the next. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_add": {
+              "crit": 10
+            },
+            "signature": {
+              "id": "heartseeker",
+              "name": "Heartseeker",
+              "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 6 hexes long, and finishes any it leaves below 20% HP.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "cast_ms": 800,
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 6
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 20,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 26000
+                      },
+                      "execute_below_pct": 20
+                    }
+                  ]
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "hunters_return",
+                "name": "Hunter's Return",
+                "kind": "ability",
+                "text": "Each enemy Heartseeker finishes refills her mana.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "from_signature": true,
+                    "executed": true,
+                    "type": "gain_mana",
+                    "amount_bp_of_max_mana": 10000,
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Kills with Heartseeker",
+          "counts": "kills",
+          "from_ability": [
+            "heartseeker"
+          ],
+          "threshold": 5
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "stormline",
+        "name": "Stormline",
+        "title": "the line across the field",
+        "fantasy": "One shot, and the whole line falls.",
+        "vowed": {
+          "taste": "Heartseeker's line reaches 2 hexes farther.",
+          "patch": {
+            "signature": {
+              "id": "heartseeker",
+              "name": "Heartseeker",
+              "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 8 hexes long.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "cast_ms": 800,
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 8
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 20,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 16000
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Heartseeker's line crosses the whole board, and each enemy it passes through makes it hit the next one 20% harder. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "signature": {
+              "id": "heartseeker",
+              "name": "Heartseeker",
+              "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 10 hexes long; each enemy it passes through makes it hit the next harder.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "cast_ms": 800,
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 10
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 20,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 22000
+                      }
+                    }
+                  ],
+                  "per_enemy_bp": 2000
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies hit by Heartseeker",
+          "counts": "hits",
+          "from_ability": [
+            "heartseeker"
+          ],
+          "threshold": 40
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Control (rebuild-heroes.md, section 6, path 2). Transformed, you place her first 2 snares before the fight.",
+    "id": "trapper",
+    "hero": "maren",
+    "name": "Trapper",
+    "title": "the snarer",
+    "fantasy": "Enemies walk into her plan.",
+    "placement": "Near the front, where her snares go.",
+    "vowed": {
+      "taste": "Snare: once a fight, 2s in, she drops a snare in her target's path; it roots whoever steps in it.",
+      "cost": "Her shots deal 2% less.",
+      "patch": {
+        "passives": [
+          {
+            "id": "snare",
+            "name": "Snare",
+            "kind": "ability",
+            "text": "Once a fight, 2s in, she drops a snare 1 hex ahead of her target, in its path; the first enemy to step in it is rooted.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 2000,
+                "once": true,
+                "type": "snare",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "root",
+                    "target": "target",
+                    "duration_ms": 2000
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "loose_draw",
+            "name": "Loose Draw",
+            "text": "Her shots deal 2% less.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 9800
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Her snares root for 2.5s and make the enemy Bleed. Bramble Field replaces Marking Shot: it drops a snare in an enemy's path, up to 3 at once. You place her first 2 snares before the fight. Her ATK and HP rise.",
+      "cost": "She reaches only 3 hexes.",
+      "patch": {
+        "stats_bp": {
+          "def": 13000,
+          "atk": 12750,
+          "hp": 14200,
+          "mgk": 10500
+        },
+        "stats_add": {
+          "range": -1
+        },
+        "placed_snares": 2,
+        "basic_attack": {
+          "id": "longshot",
+          "name": "Longshot",
+          "text": "Shoots her target from up to 3 hexes away.",
+          "cooldown_ms": 1000,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            }
+          ]
+        },
+        "signature": {
+          "id": "bramble_field",
+          "name": "Bramble Field",
+          "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds. Up to 3 stand at once.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "effects": [
+            {
+              "type": "snare",
+              "max_standing": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "target": "target",
+                  "duration_ms": 2500
+                },
+                {
+                  "type": "apply_status",
+                  "status": "bleed",
+                  "stacks": 6,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "marking_shot",
+            "name": "Marking Shot",
+            "kind": "ability",
+            "text": "A habit: every 8th Longshot, she Marks her target, so it takes more damage from everyone for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Time enemies spend rooted by her",
+      "counts": "rooted_ms",
+      "threshold": 8000
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "warden_of_thorns",
+        "name": "Warden of Thorns",
+        "title": "the thicket's keeper",
+        "fantasy": "Every snare she sets grows a hedge of thorns.",
+        "vowed": {
+          "taste": "A sprung snare grows a briar 2 hexes wide in the enemy's way for 3s; enemies touching it are torn.",
+          "patch": {
+            "signature": {
+              "id": "bramble_field",
+              "name": "Bramble Field",
+              "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds, and a briar 2 hexes wide grows 1 hex ahead of it, in its way, for 3s. Up to 3 snares stand at once.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "effects": [
+                {
+                  "type": "snare",
+                  "max_standing": 3,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "root",
+                      "target": "target",
+                      "duration_ms": 2500
+                    },
+                    {
+                      "type": "apply_status",
+                      "status": "bleed",
+                      "stacks": 6,
+                      "target": "target"
+                    },
+                    {
+                      "type": "wall",
+                      "at": "target",
+                      "width_hexes": 2,
+                      "ahead_hexes": 1,
+                      "blocks_movement": true,
+                      "duration_ms": 3000,
+                      "effects": [
+                        {
+                          "type": "apply_status",
+                          "status": "briar_torn",
+                          "stacks": 1,
+                          "target": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "A sprung snare grows a briar wall 3 hexes wide for 4s that blocks enemies' way; enemies touching it are torn by thorns. Up to 6 briars stand at once, so she can wall enemies in. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "signature": {
+              "id": "bramble_field",
+              "name": "Bramble Field",
+              "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds, and a briar wall 3 hexes wide grows 1 hex ahead of it, across its way, for 4s, tearing at enemies touching it. Up to 3 snares and 6 briars stand at once.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "effects": [
+                {
+                  "type": "snare",
+                  "max_standing": 3,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "root",
+                      "target": "target",
+                      "duration_ms": 2500
+                    },
+                    {
+                      "type": "apply_status",
+                      "status": "bleed",
+                      "stacks": 6,
+                      "target": "target"
+                    },
+                    {
+                      "type": "wall",
+                      "at": "target",
+                      "width_hexes": 3,
+                      "ahead_hexes": 1,
+                      "blocks_movement": true,
+                      "duration_ms": 4000,
+                      "max_standing": 6,
+                      "effects": [
+                        {
+                          "type": "apply_status",
+                          "status": "briar_torn",
+                          "stacks": 2,
+                          "target": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies torn by her briars",
+          "counts": "applied",
+          "statuses": [
+            "briar_torn"
+          ],
+          "threshold": 9
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "huntmaster",
+        "name": "Huntmaster",
+        "title": "the one who calls the kill",
+        "fantasy": "What she pins down, the pack tears apart.",
+        "vowed": {
+          "taste": "Allies deal 5% more damage to Rooted enemies.",
+          "patch": {
+            "passives": [
+              {
+                "id": "quarry",
+                "name": "Quarry",
+                "kind": "aura",
+                "text": "Her allies hit Rooted enemies a little harder.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 10500,
+                  "vs": {
+                    "keywords": [
+                      "rooted"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Allies deal 60% more damage to Rooted enemies. A Rooted enemy that falls leaves a snare where it fell. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "quarry",
+                "name": "Quarry",
+                "kind": "aura",
+                "text": "Her allies hit Rooted enemies much harder.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 16000,
+                  "vs": {
+                    "keywords": [
+                      "rooted"
+                    ]
+                  }
+                }
+              },
+              {
+                "id": "pack_snares",
+                "name": "Pack Snares",
+                "kind": "ability",
+                "text": "A Rooted enemy that falls leaves one of her snares where it fell.",
+                "effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "keywords": [
+                        "rooted"
+                      ]
+                    },
+                    "type": "snare",
+                    "at": "named",
+                    "max_standing": 3,
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "root",
+                        "target": "target",
+                        "duration_ms": 2500
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "bleed",
+                        "stacks": 6,
+                        "target": "target"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage her team deals to Rooted enemies",
+          "counts": "damage",
+          "by_allies": true,
+          "vs_keywords": [
+            "rooted"
+          ],
+          "threshold": 2700
+        }
+      }
+    ]
+  },
+  {
+    "_note": "Area and mobility (rebuild-heroes.md, section 6, path 3).",
+    "id": "volley",
+    "hero": "maren",
+    "name": "Volley",
+    "title": "the storm of arrows",
+    "fantasy": "Always moving, filling the air with arrows.",
+    "placement": "A loose spot with room to move.",
+    "vowed": {
+      "taste": "Split Shot: every 4th shot also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
+      "cost": "Her shots deal 5% less.",
+      "patch": {
+        "passives": [
+          {
+            "id": "light_draw",
+            "name": "Light Draw",
+            "text": "Her shots deal 5% less.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 9500
+            }
+          }
+        ],
+        "basic_attack": {
+          "id": "longshot",
+          "name": "Longshot",
+          "text": "Shoots her target from up to 4 hexes away. Every 4th shot splits: it also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
+          "cooldown_ms": 1000,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "enemy_near_target",
+              "scaling": {
+                "atk": 3000
+              },
+              "within_hexes": 1,
+              "every": 4
+            }
+          ]
+        },
+        "signature": {
+          "id": "marking_shot",
+          "name": "Marking Shot",
+          "text": "Marks the nearest enemy within 4 hexes, so it takes more damage from everyone for a while.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 4000,
+              "target": "target"
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "Every shot splits to the enemy nearest her target and gives her mana, and she shoots whatever is in reach while she walks. Arrow Storm replaces Marking Shot: arrows rain on a circle for 3s. Her ATK and HP rise.",
+      "cost": "Each arrow deals less.",
+      "patch": {
+        "stats_bp": {
+          "atsp": 11000,
+          "atk": 12250,
+          "hp": 18900,
+          "mgk": 10500
+        },
+        "add_traits": [
+          "fires_moving"
+        ],
+        "basic_attack": {
+          "id": "longshot",
+          "name": "Longshot",
+          "text": "Shoots her target from up to 4 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana.",
+          "cooldown_ms": 1000,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "enemy_near_target",
+              "scaling": {
+                "atk": 5000
+              },
+              "within_hexes": 1
+            },
+            {
+              "type": "gain_mana",
+              "amount": 3,
+              "target": "self"
+            }
+          ]
+        },
+        "signature": {
+          "id": "arrow_storm",
+          "name": "Arrow Storm",
+          "text": "Rains arrows on a circle 1 hex around the biggest group of enemies within 4 hexes: for 3s, every enemy inside is hit twice a second.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "largest_group",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "duration_ms": 3000,
+              "every_ms": 500,
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 3,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 3500
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "marking_shot",
+            "name": "Marking Shot",
+            "kind": "ability",
+            "text": "A habit: every 8th Longshot, she Marks her target, so it takes more damage from everyone for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Extra enemies hit by her shots",
+      "counts": "extra_hits",
+      "from_ability": [
+        "longshot"
+      ],
+      "threshold": 7
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md, Decision 6): replaced Rain of Ash. Numbers are placeholders for the --apexes report to tune.",
+        "id": "hailstorm",
+        "name": "Hailstorm",
+        "title": "the endless hail",
+        "fantasy": "The sky over the enemy never clears.",
+        "vowed": {
+          "taste": "Arrow Storm fires 1 more volley.",
+          "patch": {
+            "signature": {
+              "id": "arrow_storm",
+              "name": "Arrow Storm",
+              "text": "Rains arrows on a circle 1 hex around the biggest group of enemies within 4 hexes: for 3.5s, every enemy inside is hit twice a second.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "largest_group",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "duration_ms": 3500,
+                  "every_ms": 500,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 3,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 3500
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Arrow Storm covers a circle 2 hexes around, and every 4th shot she fires drops a volley of it on her target. Each enemy Arrow Storm hits makes her deal 1% more damage for the rest of the fight, with no cap. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "basic_attack": {
+              "id": "longshot",
+              "name": "Longshot",
+              "text": "Shoots her target from up to 4 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana. Every 4th shot also drops a volley of arrows on a circle 2 hexes around her target.",
+              "cooldown_ms": 1000,
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 10000
+                  }
+                },
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "enemy_near_target",
+                  "scaling": {
+                    "atk": 5000
+                  },
+                  "within_hexes": 1
+                },
+                {
+                  "type": "gain_mana",
+                  "amount": 3,
+                  "target": "self"
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "every": 4,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 3,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 3500
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "signature": {
+              "id": "arrow_storm",
+              "name": "Arrow Storm",
+              "text": "Rains arrows on a circle 2 hexes around the biggest group of enemies within 4 hexes: for 3.5s, every enemy inside is hit twice a second.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "largest_group",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "duration_ms": 3500,
+                  "every_ms": 500,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 3,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 3500
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "gathering_hail",
+                "name": "Gathering Hail",
+                "kind": "ability",
+                "text": "Each enemy Arrow Storm hits makes her deal a little more damage for the rest of the fight, with no cap.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "arrow_storm"
+                    ],
+                    "type": "apply_status",
+                    "status": "hailstorm",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies hit by Arrow Storm",
+          "counts": "hits",
+          "from_ability": [
+            "arrow_storm"
+          ],
+          "threshold": 470
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "windrunner",
+        "name": "Windrunner",
+        "title": "the one you can't pin down",
+        "fantasy": "Always a step ahead, and never still.",
+        "vowed": {
+          "taste": "Her hop away comes back 1s sooner.",
+          "patch": {
+            "hop_cooldown_ms": 5000
+          }
+        },
+        "apex": {
+          "text": "Every 3rd shot she hops a hex away from the nearest enemy, still shooting. Each hop makes her attack 7% faster for the rest of the fight, with no cap. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "basic_attack": {
+              "id": "longshot",
+              "name": "Longshot",
+              "text": "Shoots her target from up to 4 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana. Every 3rd shot, she hops a hex away from the nearest enemy.",
+              "cooldown_ms": 1000,
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 10000
+                  }
+                },
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "enemy_near_target",
+                  "scaling": {
+                    "atk": 5000
+                  },
+                  "within_hexes": 1
+                },
+                {
+                  "type": "gain_mana",
+                  "amount": 3,
+                  "target": "self"
+                },
+                {
+                  "type": "hop",
+                  "target": "self",
+                  "every": 3
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "tailwind",
+                "name": "Tailwind",
+                "kind": "ability",
+                "text": "Each hop makes her attack a little faster for the rest of the fight, with no cap.",
+                "effects": [
+                  {
+                    "trigger": "on_hop",
+                    "type": "apply_status",
+                    "status": "tailwind",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 12650,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Hits from her shots within 1s of a hop",
+          "counts": "hits",
+          "from_ability": [
+            "longshot"
+          ],
+          "within_ms_of_hop": 1000,
+          "threshold": 8
+        }
+      }
+    ]
+  }
+]

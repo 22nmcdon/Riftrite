@@ -1,0 +1,182 @@
+[
+  {
+    "_note": "The Act 1 encounters (docs/plans/rebuild-phase2-heroes-enemies.md, section 6). Enemies stand on rows 4 (front) to 6 (back); row 3 is no one's. Placements, rocks, and days are first choices for step 7 to tune: single questions come early, combinations later, and every day from 1 to 6 offers at least two (the elites join on two days in phase 5, and day 7 is the boss's).",
+    "id": "pup_warren",
+    "name": "Pup Warren",
+    "tests": "closing lanes against a swarm",
+    "act": 1,
+    "scale_bp": 11250,
+    "days": [2],
+    "enemies": [
+      {"enemy": "rift_pup", "hex": [0, 4]}, {"enemy": "rift_pup", "hex": [2, 4]}, {"enemy": "rift_pup", "hex": [5, 4]},
+      {"enemy": "rift_pup", "hex": [7, 4]}
+    ],
+    "rocks": [[2, 3], [5, 3]]
+  },
+  {
+    "id": "ash_nest",
+    "name": "Ash Nest",
+    "tests": "not fighting in a crowd",
+    "act": 1,
+    "scale_bp": 9200,
+    "days": [2],
+    "enemies": [
+      {"enemy": "ashling", "hex": [3, 4]}, {"enemy": "ashling", "hex": [4, 4]},
+      {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ]
+  },
+  {
+    "_note": "The day-1 fights (docs/plans/easy-start.md, Decisions 1, 2, 9, 10): Pup Warren and Ash Nest with fewer enemies at the same strength, sized so the weakest team (the Glass stand-in: Maren, Vell, Aldous) wins on every vow set even with the enemies 20% stronger. No flankers and no harder fight on day 1; the Glass check (tests/tools/test_easy_start.gd) keeps them there.",
+    "id": "warren_mouth",
+    "name": "Warren Mouth",
+    "tests": "how a fight works, against a few pups",
+    "act": 1,
+    "scale_bp": 11250,
+    "days": [1],
+    "enemies": [
+      {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ],
+    "rocks": [[2, 3], [5, 3]]
+  },
+  {
+    "id": "smouldering_den",
+    "name": "Smouldering Den",
+    "tests": "an Ashling's last flare",
+    "act": 1,
+    "scale_bp": 11500,
+    "days": [1],
+    "enemies": [
+      {"enemy": "ashling", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ]
+  },
+  {
+    "id": "the_pack",
+    "name": "The Pack",
+    "tests": "protecting the back line",
+    "act": 1,
+    "scale_bp": 10125,
+    "days": [2],
+    "enemies": [
+      {"enemy": "rift_hound", "hex": [1, 4]}, {"enemy": "rift_hound", "hex": [6, 4]}
+    ],
+    "rocks": [[3, 3]]
+  },
+  {
+    "id": "moth_cloud",
+    "name": "Moth Cloud",
+    "tests": "spreading out",
+    "act": 1,
+    "scale_bp": 12300,
+    "days": [2],
+    "enemies": [
+      {"enemy": "cinder_moth", "hex": [2, 6]}, {"enemy": "cinder_moth", "hex": [6, 6]},
+      {"enemy": "rift_pup", "hex": [2, 4]}, {"enemy": "rift_pup", "hex": [5, 4]}
+    ]
+  },
+  {
+    "id": "hollow_line",
+    "name": "Hollow Line",
+    "tests": "closing distance",
+    "act": 1,
+    "scale_bp": 15300,
+    "days": [4],
+    "enemies": [
+      {"enemy": "hollow_archer", "hex": [2, 6]}, {"enemy": "hollow_archer", "hex": [4, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}
+    ],
+    "rocks": [[3, 5], [5, 5]]
+  },
+  {
+    "_note": "Day 2's own copies of fights that come back full-size on day 4 (docs/plans/easy-start.md, ES-2, Decisions 6 and 13): the first archers, with one fewer. Day 2's fights are sized so the Glass stand-in wins at least 85% even with the enemies 10% stronger (tests/tools/test_easy_start.gd), and like day 1's they're exempt from the sim runner's 30-point split.",
+    "id": "hollow_watch",
+    "name": "Hollow Watch",
+    "tests": "the first archers: closing distance",
+    "act": 1,
+    "scale_bp": 11450,
+    "days": [2],
+    "enemies": [
+      {"enemy": "hollow_archer", "hex": [2, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}
+    ],
+    "rocks": [[3, 5], [5, 5]]
+  },
+  {
+    "id": "bog_crossing",
+    "name": "Bog Crossing",
+    "tests": "back-line safety",
+    "act": 1,
+    "scale_bp": 14250,
+    "days": [3, 4],
+    "enemies": [
+      {"enemy": "bog_lurker", "hex": [3, 5]},
+      {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ],
+    "rocks": [[1, 3], [6, 3]]
+  },
+  {
+    "id": "sentinel_gate",
+    "name": "Sentinel Gate",
+    "tests": "going around a wall",
+    "act": 1,
+    "scale_bp": 15950,
+    "days": [4, 5, 6],
+    "enemies": [
+      {"enemy": "rift_worn_sentinel", "hex": [3, 4]},
+      {"enemy": "hollow_archer", "hex": [1, 6]}, {"enemy": "hollow_archer", "hex": [5, 6]}
+    ],
+    "rocks": [[2, 4], [4, 4]]
+  },
+  {
+    "id": "cairn_road",
+    "name": "Cairn Road",
+    "tests": "a tank knocked out of place, then flankers",
+    "act": 1,
+    "scale_bp": 16300,
+    "days": [4, 5, 6],
+    "enemies": [
+      {"enemy": "cairn_guardian", "hex": [3, 4]},
+      {"enemy": "rift_hound", "hex": [1, 5]}, {"enemy": "rift_hound", "hex": [6, 5]}
+    ]
+  },
+  {
+    "id": "witch_circle",
+    "name": "Witch Circle",
+    "tests": "target priority",
+    "act": 1,
+    "scale_bp": 21500,
+    "days": [5, 6],
+    "enemies": [
+      {"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "cinder_moth", "hex": [5, 5]}
+    ]
+  },
+  {
+    "_note": "Phase 5: a Hunt's small packs (camp: a fight right away for shards; losing it isn't a loss). Not placement questions, so the sim runner's gate leaves them out.",
+    "id": "stray_pups",
+    "name": "Stray Pups",
+    "tests": "a quick fight for shards",
+    "tier": "hunt",
+    "act": 1,
+    "days": [1, 2, 3, 4, 5, 6],
+    "enemies": [{"enemy": "rift_pup", "hex": [2, 4]}, {"enemy": "rift_pup", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [5, 4]}]
+  },
+  {
+    "id": "lone_hounds",
+    "name": "Lone Hounds",
+    "tests": "a quick fight for shards",
+    "tier": "hunt",
+    "act": 1,
+    "days": [2, 3, 4, 5, 6],
+    "enemies": [{"enemy": "rift_hound", "hex": [2, 5]}, {"enemy": "rift_hound", "hex": [5, 5]}]
+  },
+  {"_note": "Phase 5's harder fights (Decision 3): each combines two threats, and pays more. First placements, for the sim runner's gate.", "id": "hounds_and_archers", "name": "Hounds and Archers", "tests": "the back line, from two sides at once", "tier": "harder", "act": 1, "scale_bp": 7560, "days": [2], "enemies": [{"enemy": "rift_hound", "hex": [1, 4]}, {"enemy": "rift_hound", "hex": [6, 4]}, {"enemy": "hollow_archer", "hex": [5, 6]}]},
+  {"id": "lurker_and_ashlings", "name": "Lurker's Kindling", "tests": "being dragged into a crowd that burns", "tier": "harder", "act": 1, "scale_bp": 13900, "days": [4], "enemies": [{"enemy": "bog_lurker", "hex": [3, 5]}, {"enemy": "ashling", "hex": [2, 4]}, {"enemy": "ashling", "hex": [4, 4]}, {"enemy": "ashling", "hex": [5, 4]}]},
+  {"_note": "Day 2's harder copy of Lurker's Kindling (docs/plans/easy-start.md, ES-2, Decision 6): one Ashling, weaker.", "id": "lurkers_spark", "name": "Lurker's Spark", "tests": "being dragged toward a flare", "tier": "harder", "act": 1, "scale_bp": 9360, "days": [2], "enemies": [{"enemy": "bog_lurker", "hex": [3, 5]}, {"enemy": "ashling", "hex": [4, 4]}]},
+  {"id": "sentinel_and_moths", "name": "Sentinel Under Moths", "tests": "going around a wall without bunching up", "tier": "harder", "act": 1, "scale_bp": 34150, "days": [4, 6], "enemies": [{"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "cinder_moth", "hex": [2, 6]}, {"enemy": "cinder_moth", "hex": [5, 6]}], "rocks": [[2, 4], [4, 4]]},
+  {"id": "witch_and_pups", "name": "Witch's Brood", "tests": "reaching the witch through a swarm", "tier": "harder", "act": 1, "scale_bp": 15650, "days": [4, 6], "enemies": [{"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}]},
+  {"id": "guardian_and_witch", "name": "The Warded Charge", "tests": "a charging tank the witch keeps Shielded", "tier": "harder", "act": 1, "scale_bp": 31100, "days": [6], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}]},
+  {"_note": "Phase 5's elites (rebuild-enemies.md, section 3): each built around one mechanic, and its tests line says what answers it.", "id": "the_hunt", "name": "The Hunt", "tests": "an elite: when the Alpha pounces, the pack pounces on the same hero; guard your weakest back-liner, or bait it", "tier": "elite", "act": 1, "scale_bp": 15000, "days": [5], "enemies": [{"enemy": "hound_alpha", "hex": [3, 6]}, {"enemy": "hunt_hound", "hex": [1, 5]}, {"enemy": "hunt_hound", "hex": [6, 5]}]},
+  {"_note": "Day 3's own elites (docs/plans/easy-start.md, ES-4, Decision 15): each full elite's mechanic with one fewer of its second kind, sized like day 2 (the Glass stand-in wins at least 85%, and at least half with the enemies 10% stronger; tests/tools/test_easy_start.gd). The full elites come on day 5.", "id": "alphas_trail", "name": "Alpha's Trail", "tests": "a first elite: when the Alpha pounces, its hound pounces on the same hero; guard your weakest back-liner, or bait it", "tier": "elite", "act": 1, "scale_bp": 7770, "days": [3], "enemies": [{"enemy": "hound_alpha", "hex": [3, 6]}, {"enemy": "hunt_hound", "hex": [1, 5]}]},
+  {"id": "witch_coven", "name": "Witch Coven", "tests": "an elite: the Gloam Totem Shields everything near it until it's broken; get past the Sentinel and break it first", "tier": "elite", "act": 1, "scale_bp": 12050, "days": [5], "enemies": [{"enemy": "gloam_totem", "hex": [3, 6]}, {"enemy": "gloam_witch", "hex": [2, 6]}, {"enemy": "gloam_witch", "hex": [5, 6]}, {"enemy": "rift_worn_sentinel", "hex": [3, 4]}]},
+  {"id": "witchs_ward", "name": "Witch's Ward", "tests": "a first elite: the Gloam Totem Shields everything near it until it's broken; get past the Sentinel and break it first", "tier": "elite", "act": 1, "scale_bp": 8200, "days": [3], "enemies": [{"enemy": "gloam_totem", "hex": [3, 6]}, {"enemy": "gloam_witch", "hex": [2, 6]}, {"enemy": "rift_worn_sentinel", "hex": [3, 4]}]},
+  {"id": "cairn_watch", "name": "Cairn Watch", "tests": "an elite: a Cairn Guardian charges while two Archers fire from behind rocks; leave room behind your tank, and reach the Archers", "tier": "elite", "act": 1, "scale_bp": 18400, "days": [5], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "hollow_archer", "hex": [1, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}], "rocks": [[1, 5], [6, 5]]},
+  {"id": "cairn_sentry", "name": "Cairn Sentry", "tests": "a first elite: a Cairn Guardian charges while an Archer fires from behind a rock; leave room behind your tank, and reach the Archer", "tier": "elite", "act": 1, "scale_bp": 12285, "days": [3], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "hollow_archer", "hex": [6, 6]}], "rocks": [[1, 5], [6, 5]]},
+  {"_note": "Act 1's boss (rebuild-enemies.md, section 4).", "id": "old_mother_ash", "name": "Old Mother Ash", "tests": "the boss: guard the back line from her hounds, weather her brood, then spread out as the rift closes", "tier": "boss", "act": 1, "scale_bp": 14850, "days": [7], "enemies": [{"enemy": "old_mother_ash", "hex": [3, 6]}, {"enemy": "ash_hound", "hex": [2, 5]}, {"enemy": "ash_hound", "hex": [5, 5]}]}
+]

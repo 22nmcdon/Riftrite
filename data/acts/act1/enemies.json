@@ -1,0 +1,956 @@
+[
+  {
+    "_note": "The Act 1 enemies (docs/plans/rebuild-phase2-heroes-enemies.md, sections 5 and 7; docs/plans/rebuild-enemies.md). Kits are the plan's; HP, ATK, Cinder Burst, Drag, and Ward are from step 7's first tuning pass (tools/sim_runner.gd), the rest first numbers. Rift Pup's ATK (10 to 8) and Pack Bite's bonus (25% to 20%) were retuned when units shrank to 0.2 hex wide (playtest gate 1), since six pups can now all bite at once; then Ashling's ATK (18 to 22) and Bog Lurker's HP and ATK (640 to 760, 24 to 32), since their encounters got easier with weaker pups. Later that day, pups slowed to speed 2 and Maren gained Stealth on her hop, which made fights easier again: Rift Hound ATK 16 to 18, Gloam Witch HP and ATK 300 to 360, 18 to 22, Ashling ATK 22 to 25.",
+    "id": "rift_pup",
+    "name": "Rift Pup",
+    "archetype": "swarm",
+    "threat": "Swarms, stronger in packs",
+    "specializations": [
+      {
+        "id": "burrowing_pup",
+        "name": "Burrowing",
+        "text": "It burrows as the fight starts and comes up beside your hindmost hero a few seconds later.",
+        "mod": {"gambit": {"label": "Burrow", "arrive_ms": 3000, "arrive_at": "back_line"}}
+      },
+      {
+        "id": "gnawing_pup",
+        "name": "Gnawing",
+        "text": "Its bites make you Bleed, and the Bleed stacks.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "apply_status",
+                  "status": "bleed",
+                  "stacks": 2,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 210, "atk": 8, "speed": 2, "range": 1},
+      "basic_attack": {
+        "id": "pack_bite", "name": "Pack Bite", "text": "Bites harder for each other Rift Pup within 1 hex of it.", "cooldown_ms": 1000,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000},
+          "bonus_per_ally": {"bp": 2000, "within_hexes": 1, "kit": "rift_pup"}}]
+      }
+    }
+  },
+  {
+    "id": "ashling",
+    "name": "Ashling",
+    "archetype": "swarm",
+    "threat": "Bursts into flame when it falls",
+    "specializations": [
+      {
+        "id": "smoldering_ashling",
+        "name": "Smoldering",
+        "text": "Where it falls, the ground keeps burning within 1 hex for a while.",
+        "mod": {
+          "passives": [
+            {
+              "id": "smolder",
+              "name": "Smolder",
+              "text": "Where it falls, the ground keeps burning: heroes within 1 hex catch Burn while it lasts.",
+              "kind": "ability",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "duration_ms": 3000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 3,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "steaming_ashling",
+        "name": "Steaming",
+        "text": "If it falls on water, it bursts into steam that slows the heroes within 1 hex instead of burning them.",
+        "mod": {
+          "on": [{"slot": "passive:cinder_burst", "holder": {"on_water": false}}],
+          "passives": [
+            {
+              "id": "steam_burst",
+              "name": "Steam Burst",
+              "text": "If it falls on water, it bursts into steam: heroes within 1 hex are Slowed.",
+              "kind": "ability",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "holder": {"on_water": true},
+                  "type": "area",
+                  "shape": {"kind": "circle", "radius": 1},
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [{"type": "apply_status", "status": "slow", "duration_ms": 3000, "target": "target"}]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 220, "atk": 25, "speed": 2, "range": 1},
+      "basic_attack": {
+        "id": "scorch", "name": "Scorch", "text": "Scorches the hero in front of it.", "cooldown_ms": 1200,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "passives": [
+        {"_note": "Every unit within 1 hex, its own side included (decided for now).",
+          "id": "cinder_burst", "name": "Cinder Burst", "text": "When it falls, it bursts: every unit within 1 hex, its own side included, catches Burn.", "kind": "ability",
+          "effects": [{"trigger": "on_fall", "type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "all",
+            "effects": [{"type": "apply_status", "status": "burn", "stacks": 6, "target": "target"}]}]}
+      ]
+    }
+  },
+  {
+    "id": "rift_hound",
+    "name": "Rift Hound",
+    "archetype": "flanker",
+    "threat": "Pounces on your weakest back-liner",
+    "specializations": [
+      {
+        "id": "ashback_hound",
+        "name": "Ashback",
+        "text": "Where its Pounce lands, the ground burns within 1 hex for a while.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "duration_ms": 3000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 3,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "gloam_hound",
+        "name": "Gloam",
+        "text": "Three seconds after each Pounce it leaps back to where it started, and every 8 seconds it Pounces again.",
+        "mod": {
+          "also_fires": [
+            {
+              "kind": "every",
+              "every_ms": 8000
+            }
+          ],
+          "passives": [
+            {
+              "id": "gloam_return",
+              "name": "Back into the Gloam",
+              "kind": "ability",
+              "text": "A moment after it Pounces, it leaps back to where it started the fight.",
+              "effects": [
+                {
+                  "trigger": "on_ability",
+                  "delay_ms": 3000,
+                  "type": "leap",
+                  "to": "start",
+                  "target": "self"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 420, "atk": 18, "def": 4, "speed": 3, "range": 1},
+      "basic_attack": {
+        "id": "bite", "name": "Bite", "text": "Bites the hero in front of it.", "cooldown_ms": 1000,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "id": "pounce", "name": "Pounce", "text": "As the fight starts, it leaps onto your weakest back-liner within 4 hexes and bites.", "trigger": {"kind": "fight_start"}, "targeting": "weakest_backliner", "max_range": 4,
+        "effects": [{"type": "leap", "max_hexes": 4, "target": "target"},
+          {"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      }
+    }
+  },
+  {
+    "id": "cinder_moth",
+    "name": "Cinder Moth",
+    "archetype": "caster",
+    "threat": "Burns whoever stands together",
+    "specializations": [
+      {
+        "id": "drifting_moth",
+        "name": "Drifting",
+        "text": "Its Ember Dust drifts toward the nearest hero for 2 seconds, burning whoever it passes over.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "duration_ms": 2000,
+                  "every_ms": 500,
+                  "follows": "nearest",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 1,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "dazzling_moth",
+        "name": "Dazzling",
+        "text": "Heroes caught in its Ember Dust miss part of their attacks for a few seconds.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_to_areas": [
+                {
+                  "type": "apply_status",
+                  "status": "ember_blind",
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 260, "atk": 8, "speed": 2, "range": 3},
+      "traits": ["flying"],
+      "mana": {"max": 40, "per_attack": 10, "regen_per_s": 2},
+      "basic_attack": {
+        "id": "ember_flick", "name": "Ember Flick", "text": "Flicks embers at its target from up to 3 hexes away.", "cooldown_ms": 1500,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "_note": "Aimed at the hero with the most of the heroes within 2 hexes of it; the circle's radius matches.",
+        "id": "ember_dust", "name": "Ember Dust", "text": "Throws ember dust at the thickest group of heroes within 5 hexes. After a second's warning, everyone within 2 hexes of where it lands catches Burn.", "trigger": {"kind": "mana"}, "targeting": "largest_group", "max_range": 5,
+        "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "target", "warning_ms": 1000, "hits": "enemies",
+          "effects": [{"type": "apply_status", "status": "burn", "stacks": 4, "target": "target"}]}]
+      }
+    }
+  },
+  {
+    "id": "hollow_archer",
+    "name": "Hollow Archer",
+    "archetype": "ranged",
+    "threat": "Outranges your archers",
+    "specializations": [
+      {
+        "id": "pinning_archer",
+        "name": "Pinning",
+        "text": "Its shots Root the hero they hit for a moment.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 500,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "volley_archer",
+        "name": "Volley",
+        "text": "Its shots also tear through every hero in a line toward its target, within 5 hexes.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 5
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 0,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 5000
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 460, "atk": 18, "def": 4, "speed": 2, "range": 5},
+      "traits": ["hop_away"],
+      "hop_cooldown_ms": 4000,
+      "basic_attack": {
+        "id": "hollow_shot", "name": "Hollow Shot", "text": "Shoots its target from up to 5 hexes away.", "cooldown_ms": 1200,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      }
+    }
+  },
+  {
+    "id": "rift_worn_sentinel",
+    "name": "Rift-Worn Sentinel",
+    "archetype": "anchor",
+    "threat": "Holds the line and draws your attacks",
+    "specializations": [
+      {
+        "id": "warden_sentinel",
+        "name": "Warden",
+        "text": "Its Engage holds heroes within 2 hexes, not only those beside it.",
+        "mod": {
+          "engage": {
+            "reach_add": 1
+          }
+        }
+      },
+      {
+        "id": "shattered_sentinel",
+        "name": "Shattered",
+        "text": "When it falls, it bursts and Slows the heroes within 2 hexes.",
+        "mod": {
+          "passives": [
+            {
+              "id": "shatter_burst",
+              "name": "Shatter Burst",
+              "kind": "ability",
+              "text": "When it falls, it bursts: heroes within 2 hexes are Slowed.",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "slow",
+                      "duration_ms": 3000,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 520, "atk": 10, "def": 25, "speed": 1, "range": 1},
+      "traits": ["engage"],
+      "mana": {"max": 60, "per_attack": 4, "per_10_damage_taken": 3},
+      "basic_attack": {
+        "id": "stone_fist", "name": "Stone Fist", "text": "Pounds the hero in front of it.", "cooldown_ms": 1400,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "id": "bulwark", "name": "Bulwark", "text": "Taunts every hero within 2 hexes of it, so they turn on it instead.", "trigger": {"kind": "mana"}, "targeting": "self",
+        "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "self", "hits": "enemies",
+          "effects": [{"type": "apply_status", "status": "taunt", "target": "target"}]}]
+      }
+    }
+  },
+  {
+    "id": "cairn_guardian",
+    "name": "Cairn Guardian",
+    "archetype": "charger",
+    "threat": "Charges through your front line",
+    "specializations": [
+      {
+        "id": "avalanche_guardian",
+        "name": "Avalanche",
+        "text": "Its charge carries every hero in its line, not just the first.",
+        "mod": {"on": [{"slot": "signature", "carries": true}]}
+      },
+      {
+        "id": "bulwark_guardian",
+        "name": "Bulwark",
+        "text": "After it charges, it gains a Shield.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "shield",
+                  "amount_bp_of_max_hp": 2000,
+                  "target": "self"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 440, "atk": 16, "def": 20, "speed": 2, "range": 1},
+      "mana": {"max": 60, "per_attack": 10, "regen_per_s": 3},
+      "basic_attack": {
+        "id": "cairn_slam", "name": "Cairn Slam", "text": "Slams the hero in front of it.", "cooldown_ms": 1400,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "_note": "Runs up to 3 hexes at its target and knocks the first hero in the way back 2 hexes.",
+        "id": "rampart_charge", "name": "Rampart Charge", "text": "Charges at the nearest hero within 3 hexes and knocks back the first one in its way.", "trigger": {"kind": "mana"}, "targeting": "nearest", "max_range": 3,
+        "effects": [{"type": "charge", "hexes": 3, "knockback": 2, "target": "target"}]
+      }
+    }
+  },
+  {
+    "id": "bog_lurker",
+    "name": "Bog Lurker",
+    "archetype": "disruptor",
+    "threat": "Drags your back line forward",
+    "specializations": [
+      {
+        "id": "deep_lurker",
+        "name": "Deep",
+        "text": "Its Drag pulls a hero farther.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "types": [
+                "pull"
+              ],
+              "amount_bp": 15000
+            }
+          ]
+        }
+      },
+      {
+        "id": "rot_lurker",
+        "name": "Rot",
+        "text": "A hero it drags is Poisoned.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "apply_status",
+                  "status": "poison",
+                  "stacks": 6,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 760, "atk": 32, "def": 8, "speed": 1, "range": 1},
+      "mana": {"max": 50, "per_attack": 10, "regen_per_s": 8},
+      "basic_attack": {
+        "id": "grasp", "name": "Grasp", "text": "Grasps the hero in front of it.", "cooldown_ms": 1400,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "_note": "Every 6s or so (mostly regen); Root for 3s, twice its own.",
+        "id": "drag", "name": "Drag", "text": "Drags the farthest hero within 5 hexes toward it and roots them there.", "trigger": {"kind": "mana"}, "targeting": "farthest", "max_range": 5,
+        "effects": [{"type": "pull", "hexes": 2, "target": "target"}, {"type": "apply_status", "status": "root", "duration_ms": 3000, "target": "target"}]
+      }
+    }
+  },
+  {
+    "id": "gloam_witch",
+    "name": "Gloam Witch",
+    "archetype": "support",
+    "threat": "Shields her allies and silences your casters",
+    "specializations": [
+      {
+        "id": "veil_witch",
+        "name": "Veil",
+        "text": "Instead of Shields, it hides its most hurt ally within 6 hexes for a moment, again and again.",
+        "mod": {
+          "drops_passives": ["ward"],
+          "passives": [
+            {
+              "id": "veil",
+              "name": "Veil",
+              "text": "Every few seconds, it hides its most hurt ally within 6 hexes: Stealthed for a moment.",
+              "kind": "ability",
+              "effects": [{"trigger": "on_interval", "interval_ms": 8000, "type": "apply_status", "status": "stealth", "duration_ms": 2000, "target": "lowest_hp_ally", "within_hexes": 6}]
+            }
+          ]
+        }
+      },
+      {
+        "id": "hex_witch",
+        "name": "Hex",
+        "text": "Its Hush silences the two heroes with the most mana.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "targets_add": 1
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {"hp": 360, "atk": 22, "def": 4, "speed": 2, "range": 4},
+      "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},
+      "basic_attack": {
+        "id": "gloam_bolt", "name": "Gloam Bolt", "text": "Throws a bolt at its target from up to 4 hexes away.", "cooldown_ms": 1300,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "_note": "Silence lasts its own 3s. Heroes with no mana bar are never picked.",
+        "id": "hush", "name": "Hush", "text": "Silences the hero with the most mana within 6 hexes: no mana while it lasts.", "trigger": {"kind": "mana"}, "targeting": "highest_mana", "max_range": 6,
+        "effects": [{"type": "apply_status", "status": "silence", "target": "target"}]
+      },
+      "passives": [
+        {"id": "ward", "name": "Ward", "text": "Every third bolt, it gives all its allies a Shield.", "kind": "ability",
+          "effects": [{"trigger": "on_basic_attack", "every": 3, "type": "shield", "amount": 30, "target": "all_allies"}]}
+      ]
+    }
+  },
+  {
+    "_note": "Phase 5's elites and boss (docs/plans/rebuild-phase5-run.md, section 10; docs/plans/rebuild-enemies.md, sections 3 and 4). First numbers, for the sim runner to tune.",
+    "id": "hound_alpha",
+    "name": "Hound Alpha",
+    "archetype": "flanker", "rank": "elite",
+    "threat": "Leads the Hunt: when it pounces, its whole pack pounces on the same hero",
+    "kit": {
+      "stats": {
+        "hp": 900,
+        "atk": 24,
+        "def": 6,
+        "speed": 3,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "bite",
+        "name": "Bite",
+        "text": "Bites the hero in front of it.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "pounce",
+        "name": "Pounce",
+        "text": "As the fight starts, it leaps onto your weakest back-liner within 6 hexes and bites; its pack follows.",
+        "trigger": {
+          "kind": "fight_start"
+        },
+        "targeting": "weakest_backliner",
+        "max_range": 6,
+        "effects": [
+          {
+            "type": "leap",
+            "max_hexes": 6,
+            "target": "target"
+          },
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "hunt_hound",
+    "name": "Hunting Hound",
+    "archetype": "flanker",
+    "threat": "Pounces with its Alpha, on the same hero",
+    "kit": {
+      "stats": {
+        "hp": 420,
+        "atk": 18,
+        "def": 4,
+        "speed": 3,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "bite",
+        "name": "Bite",
+        "text": "Bites the hero in front of it.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "join_the_hunt",
+        "name": "Join the Hunt",
+        "text": "When its Alpha pounces, it leaps onto the same hero, as far as 8 hexes away, and bites.",
+        "trigger": {
+          "kind": "ally_fires",
+          "ability": "pounce"
+        },
+        "targeting": "weakest_backliner",
+        "max_range": 8,
+        "effects": [
+          {
+            "type": "leap",
+            "max_hexes": 8,
+            "target": "target"
+          },
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "gloam_totem",
+    "name": "Gloam Totem",
+    "archetype": "support", "rank": "elite",
+    "threat": "Shields every enemy within 2 hexes, again and again, until it's broken",
+    "kit": {
+      "stats": {
+        "hp": 520,
+        "atk": 0,
+        "def": 10,
+        "speed": 0,
+        "range": 1
+      },
+      "traits": [
+        "inert"
+      ],
+      "basic_attack": {
+        "id": "still",
+        "name": "Still",
+        "text": "It never attacks.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 0
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "gloam_ward",
+          "name": "Gloam Ward",
+          "kind": "ability",
+          "text": "Every 2s, it Shields every other enemy within 2 hexes of it.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 2000,
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "other_allies",
+              "effects": [
+                {
+                  "type": "shield",
+                  "amount": 15,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ash_hound",
+    "name": "Ash Hound",
+    "archetype": "flanker",
+    "threat": "Pounces on your back line; while one lives, Old Mother Ash's pack is hardened",
+    "kit": {
+      "stats": {
+        "hp": 520,
+        "atk": 20,
+        "def": 6,
+        "speed": 3,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "bite",
+        "name": "Bite",
+        "text": "Bites the hero in front of it.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "pounce",
+        "name": "Pounce",
+        "text": "As the fight starts, it leaps onto your weakest back-liner within 5 hexes and bites.",
+        "trigger": {
+          "kind": "fight_start"
+        },
+        "targeting": "weakest_backliner",
+        "max_range": 5,
+        "effects": [
+          {
+            "type": "leap",
+            "max_hexes": 5,
+            "target": "target"
+          },
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "old_mother_ash",
+    "name": "Old Mother Ash",
+    "archetype": "caster", "rank": "boss",
+    "threat": "The rift's old mother: guard the back line, then weather her brood, then spread out as the rift closes",
+    "kit": {
+      "stats": {
+        "hp": 2600,
+        "atk": 26,
+        "def": 8,
+        "speed": 1,
+        "range": 4
+      },
+      "basic_attack": {
+        "id": "ash_spit",
+        "name": "Ash Spit",
+        "text": "Spits ash at her target from up to 4 hexes away.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "pack_bond",
+          "name": "Pack Bond",
+          "kind": "aura",
+          "text": "While an Ash Hound stands, her whole pack takes less damage (more DEF).",
+          "aura": {
+            "target": "all_allies",
+            "stat": "def_bp",
+            "value": 16000,
+            "while": "ally_standing",
+            "kit": "ash_hound"
+          }
+        }
+      ],
+      "phases": [
+        {
+          "id": "molt",
+          "name": "Molt",
+          "text": "Below 60% HP she stalks into the fight, and her brood crawls in from the edges.",
+          "below_hp_bp": 6000,
+          "mana": {
+            "max": 100,
+            "regen_per_s": 10
+          },
+          "signature": {
+            "id": "call_the_brood",
+            "name": "Call the Brood",
+            "text": "Every 10s, two Rift Pups crawl in from the arena's edges.",
+            "trigger": {
+              "kind": "mana"
+            },
+            "targeting": "self",
+            "effects": [
+              {
+                "type": "summon",
+                "kit": "rift_pup",
+                "count": 2,
+                "placement": "edges"
+              }
+            ]
+          },
+          "passives": [
+            {
+              "id": "stalk",
+              "name": "Stalk",
+              "kind": "aura",
+              "text": "She stalks into the fight: she reaches only 1 hex, so she walks in.",
+              "aura": {
+                "target": "holder",
+                "stat": "range",
+                "value": -3
+              }
+            }
+          ]
+        },
+        {
+          "id": "last_ember",
+          "name": "Last Ember",
+          "text": "Below 25% HP the rift closes early, and she breathes fire at your largest group.",
+          "below_hp_bp": 2500,
+          "mana": {
+            "max": 60,
+            "start": 60,
+            "regen_per_s": 12
+          },
+          "signature": {
+            "id": "ember_breath",
+            "name": "Ember Breath",
+            "text": "The rift closes early; every 5s she breathes a warned cone of fire, 3 hexes deep, at your largest group within 6 hexes.",
+            "trigger": {
+              "kind": "mana"
+            },
+            "targeting": "largest_group",
+            "max_range": 6,
+            "effects": [
+              {
+                "type": "start_collapse"
+              },
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "cone",
+                  "depth": 3
+                },
+                "anchor": "target_direction",
+                "warning_ms": 800,
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 40,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 5000
+                    }
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 3,
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

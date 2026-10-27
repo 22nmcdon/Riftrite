@@ -1,0 +1,31 @@
+{
+  "_note": "Hero 10 (docs/plans/rebuild-heroes.md section 8i; rebuild-phase8-last-heroes.md 8f-2). Volatile Flask and Brewing are the design's; MGK 16, not 18, keeps her team within the base-kit band (+9; 18 was +12, and a slower Toss barely moved it).",
+  "id": "ottilie",
+  "name": "Ottilie Brack",
+  "title": "the alchemist",
+  "role": "damage",
+  "kit": {
+    "stats": {"hp": 300, "atk": 8, "mgk": 21, "def": 10, "speed": 2, "range": 3},
+    "mana": {"max": 60, "per_attack": 10, "regen_per_s": 2},
+    "basic_attack": {
+      "id": "toss", "name": "Toss", "text": "A vial thrown at the nearest enemy within 3 hexes. Her main source of mana.", "cooldown_ms": 1200,
+      "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"mgk": 10000}}]
+    },
+    "signature": {
+      "id": "volatile_flask", "name": "Volatile Flask", "text": "A flask bursts around an enemy within 3 hexes: every enemy within 1 hex of it is hit, set Burning, and Poisoned.", "trigger": {"kind": "mana"},
+      "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "hits": "enemies",
+                   "effects": [{"type": "damage", "amount": 0, "scaling": {"mgk": 12000}, "target": "target"},
+                               {"type": "apply_status", "status": "burn", "stacks": 0, "scaling": {"mgk": 2000}, "target": "target"},
+                               {"type": "apply_status", "status": "poison", "stacks": 0, "scaling": {"mgk": 2000}, "target": "target"}]}]
+    },
+    "passives": [
+      {
+        "id": "brewing", "name": "Brewing", "kind": "ability", "text": "Every 4s her next Toss carries a vial, fire and venom in turn: it sets the enemy it hits Burning or Poisoned. With nothing within 3 hexes, no vial flies.",
+        "effects": [{"trigger": "on_interval", "interval_ms": 8000, "first_ms": 4000, "type": "apply_status", "status": "fire_vial", "target": "self"},
+                    {"trigger": "on_interval", "interval_ms": 8000, "type": "apply_status", "status": "venom_vial", "target": "self"},
+                    {"trigger": "on_holder_hit", "from_ability": ["toss"], "spends": "fire_vial", "type": "apply_status", "status": "burn", "stacks": 0, "scaling": {"mgk": 2000}, "target": "hit_target"},
+                    {"trigger": "on_holder_hit", "from_ability": ["toss"], "spends": "venom_vial", "type": "apply_status", "status": "poison", "stacks": 0, "scaling": {"mgk": 2000}, "target": "hit_target"}]
+      }
+    ]
+  }
+}

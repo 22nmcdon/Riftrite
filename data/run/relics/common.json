@@ -1,0 +1,475 @@
+[
+  {
+    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The whole pool: 44 from step 5a, 20 from 5b, 11 from 5c-1, 11 from 5c-2, and the 3 bond relics from 5d (tier bond: free, only in shops once their duo bond is on). Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
+    "id": "whetstone_of_the_fallen",
+    "name": "Whetstone of the Fallen",
+    "tier": "common",
+    "icon": "steady_hands",
+    "flavor": "Worn hollow by blades that didn't come back.",
+    "text": "Every hero hits harder.",
+    "mod": {
+      "stats_add": {
+        "atk": 6
+      }
+    }
+  },
+  {
+    "id": "bloodstone",
+    "name": "Bloodstone",
+    "tier": "common",
+    "icon": "ember_heart",
+    "flavor": "It drinks the light around it.",
+    "text": "Every hero's ATK rises.",
+    "mod": {
+      "stats_bp": {
+        "atk": 10800
+      }
+    }
+  },
+  {
+    "id": "iron_filings",
+    "name": "Iron Filings",
+    "tier": "common",
+    "icon": "unbroken_wall",
+    "flavor": "A pouch of what was left of a shield wall.",
+    "text": "Every hero's DEF rises.",
+    "mod": {
+      "stats_add": {
+        "def": 6
+      }
+    }
+  },
+  {
+    "id": "wardens_chain",
+    "name": "Warden's Chain",
+    "tier": "common",
+    "icon": "unbroken_wall",
+    "flavor": "Each link was someone's oath.",
+    "text": "Every hero's DEF rises.",
+    "mod": {
+      "stats_bp": {
+        "def": 11000
+      }
+    }
+  },
+  {
+    "id": "hearthstone_shard",
+    "name": "Hearthstone Shard",
+    "tier": "common",
+    "icon": "purifying_light",
+    "flavor": "Still warm from a hearth that isn't there.",
+    "text": "Every hero's max HP rises.",
+    "mod": {
+      "stats_bp": {
+        "hp": 11000
+      }
+    }
+  },
+  {
+    "id": "quickened_pulse",
+    "name": "Quickened Pulse",
+    "tier": "common",
+    "icon": "light_feet",
+    "flavor": "It beats a little faster than you'd like.",
+    "text": "Every hero attacks faster.",
+    "mod": {
+      "stats_add": {
+        "atsp": 8
+      }
+    }
+  },
+  {
+    "id": "bone_dice",
+    "name": "Bone Dice",
+    "tier": "common",
+    "icon": "fletched_for_wings",
+    "flavor": "They always land the way the rift wants.",
+    "text": "Every hero crits more often.",
+    "mod": {
+      "stats_add": {
+        "crit": 6
+      }
+    }
+  },
+  {
+    "id": "rift_candle",
+    "name": "Rift Candle",
+    "tier": "common",
+    "icon": "opener",
+    "flavor": "It burns down, never out.",
+    "text": "Heroes with mana fill their bars faster.",
+    "mod": {
+      "mana": {
+        "regen_add": 1
+      }
+    }
+  },
+  {
+    "id": "brand_of_guilt",
+    "name": "Brand of Guilt",
+    "tier": "common",
+    "icon": "casters_first",
+    "flavor": "It knows who struck first.",
+    "text": "The first enemy each hero hits in a fight is Marked.",
+    "mod": {
+      "passives": [
+        {
+          "id": "brand_of_guilt",
+          "name": "Brand of Guilt",
+          "kind": "ability",
+          "text": "The first enemy it hits in a fight is Marked.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "once": true,
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 3000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "headsmans_coin",
+    "name": "Headsman's Coin",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "Paid in advance.",
+    "text": "Heroes deal more damage to enemies near death.",
+    "mod": {
+      "passives": [
+        {
+          "id": "headsmans_coin",
+          "name": "Headsman's Coin",
+          "kind": "aura",
+          "text": "More damage to enemies near death.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11000,
+            "vs": {
+              "below_hp_pct": 30
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "rusted_fetter",
+    "name": "Rusted Fetter",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "It still remembers how to hold.",
+    "text": "Heroes deal more damage to Engaged enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "rusted_fetter",
+          "name": "Rusted Fetter",
+          "kind": "aura",
+          "text": "More damage to Engaged enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11000,
+            "vs": {
+              "statuses": [
+                "engaged"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hollow_drum",
+    "name": "Hollow Drum",
+    "tier": "common",
+    "icon": "echo",
+    "flavor": "Beat it once and something answers.",
+    "text": "Signatures cost less mana.",
+    "mod": {
+      "mana": {
+        "max_bp": 9200
+      }
+    }
+  },
+  {
+    "id": "gravediggers_coin",
+    "name": "Gravedigger's Coin",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "For the next one to dig.",
+    "text": "More shards for every won fight.",
+    "pay_add": 3
+  },
+  {
+    "id": "menders_purse",
+    "name": "Mender's Purse",
+    "tier": "common",
+    "icon": "deep_mend",
+    "flavor": "Thread, salve, and a little coin.",
+    "text": "Treating a wound costs less.",
+    "wound_price_add": -2
+  },
+  {
+    "id": "tinkers_purse",
+    "name": "Tinker's Purse",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "Always one more coin than you remember.",
+    "text": "The first reroll in every shop is free.",
+    "free_reroll": true
+  },
+  {
+    "id": "bounty_hunters_tag",
+    "name": "Bounty Hunter's Tag",
+    "tier": "common",
+    "icon": "the_tank_first",
+    "flavor": "Someone paid for every notch.",
+    "text": "Elites pay more shards.",
+    "elite_pay_add": 6
+  },
+  {
+    "id": "loose_change",
+    "name": "Loose Change",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "It finds its way into your hand.",
+    "text": "Shards at every shop.",
+    "shop_shards": 2
+  },
+  {
+    "id": "bramble_seed",
+    "name": "Bramble Seed",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "It sprouts in blood.",
+    "text": "As a fight starts, the enemies nearest your heroes are Rooted.",
+    "at_start": [
+      {
+        "type": "apply_status",
+        "status": "root",
+        "duration_ms": 1500,
+        "target": "nearest_enemies",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "ember_bauble",
+    "name": "Ember Bauble",
+    "tier": "common",
+    "icon": "ember_heart",
+    "flavor": "Still warm from a pyre nobody lit.",
+    "text": "As a fight starts, every enemy catches Burn.",
+    "at_start": [
+      {
+        "type": "apply_status",
+        "status": "burn",
+        "stacks": 3,
+        "target": "all_enemies"
+      }
+    ]
+  },
+  {
+    "id": "tithe_of_iron",
+    "name": "Tithe of Iron",
+    "tier": "common",
+    "icon": "unbroken_wall",
+    "flavor": "Paid in rivets.",
+    "text": "Heroes start every fight with a Shield of a share of their max HP.",
+    "at_start": [
+      {
+        "type": "shield",
+        "amount_bp_of_max_hp": 800,
+        "target": "all_allies"
+      }
+    ]
+  },
+  {
+    "id": "smoke_pouch",
+    "name": "Smoke Pouch",
+    "tier": "common",
+    "icon": "light_feet",
+    "flavor": "Smells of burnt hair.",
+    "text": "Heroes are hidden by Stealth as every fight starts.",
+    "at_start": [
+      {
+        "type": "apply_status",
+        "status": "stealth",
+        "duration_ms": 1000,
+        "target": "all_allies"
+      }
+    ]
+  },
+  {
+    "id": "leech_tooth",
+    "name": "Leech Tooth",
+    "tier": "common",
+    "icon": "deep_mend",
+    "flavor": "Pulled from something that was still feeding.",
+    "text": "Heroes heal a share of the damage their hits deal.",
+    "mod": {
+      "passives": [
+        {
+          "id": "leech_tooth",
+          "name": "Leech Tooth",
+          "kind": "aura",
+          "text": "Heals a share of the damage its hits deal.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 100
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "red_thirst",
+    "name": "Red Thirst",
+    "tier": "common",
+    "icon": "ember_heart",
+    "flavor": "The weaker they get, the sweeter.",
+    "text": "Heroes heal a share of the damage their hits deal to enemies below half HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "red_thirst",
+          "name": "Red Thirst",
+          "kind": "aura",
+          "text": "Heals a share of the damage its hits deal to enemies below half HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 200,
+            "vs": {
+              "below_hp_pct": 50
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "moth_eaten_banner",
+    "name": "Moth-Eaten Banner",
+    "tier": "common",
+    "icon": "hold_the_middle",
+    "flavor": "Nobody remembers the house. They still stand under it.",
+    "text": "Heroes standing close to another hero take less damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "moth_eaten_banner",
+          "name": "Moth-Eaten Banner",
+          "kind": "aura",
+          "text": "Takes less damage while an ally is within 1 hex.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_reduced_bp",
+            "value": 800,
+            "while": "ally_near",
+            "within_hexes": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "salt_circle",
+    "name": "Salt Circle",
+    "tier": "common",
+    "icon": "purifying_light",
+    "flavor": "Poured in a hurry, still unbroken.",
+    "text": "The first enemy area each fight lands on nothing.",
+    "salt_circle": true
+  },
+  {
+    "id": "soothing_salve",
+    "name": "Soothing Salve",
+    "tier": "common",
+    "icon": "deep_mend",
+    "flavor": "It stings, then it doesn't.",
+    "text": "Healing heroes give is stronger.",
+    "mod": {
+      "passives": [
+        {
+          "id": "soothing_salve",
+          "name": "Soothing Salve",
+          "kind": "aura",
+          "text": "Its heals are stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 11000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "weighted_net",
+    "name": "Weighted Net",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "Cast once, and it never lets go.",
+    "text": "The first time each hero fires their signature in a fight, the first enemy it hits is Rooted.",
+    "mod": {
+      "passives": [
+        {
+          "id": "weighted_net",
+          "name": "Weighted Net",
+          "kind": "ability",
+          "text": "The first enemy its signature hits in a fight is Rooted.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_signature": true,
+              "once": true,
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "snare_wire",
+    "name": "Snare Wire",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "Strung low, where the rift's things walk.",
+    "text": "The first time each enemy comes within 1 hex of a hero, it's Rooted for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "snare_wire",
+          "name": "Snare Wire",
+          "kind": "ability",
+          "text": "The first time each enemy comes within 1 hex of a hero, it's Rooted for a moment.",
+          "effects": [
+            {
+              "trigger": "on_enemy_near",
+              "near_hexes": 1,
+              "once_per_enemy": true,
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]
