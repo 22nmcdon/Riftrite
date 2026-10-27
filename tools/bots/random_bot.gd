@@ -185,7 +185,7 @@ func shrine(flow: RunFlow) -> Array:
 		if hero.wounds < flow.run.content.tuning.max_wounds:
 			options.append(["wound", hero.id])
 	for relic_id: String in flow.state.relics:
-		if flow.shrine_tier(relic_id).is_empty():
+		if not flow.shrine_tier(relic_id).is_empty():
 			options.append(["relic", relic_id])
 	var chosen: int = rng.range_int(options.size() + 1)
 	return options[chosen] if chosen < options.size() else []

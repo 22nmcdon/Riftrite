@@ -22,7 +22,7 @@ func _named() -> Dictionary[String, Dictionary]:
 func test_the_variants() -> void:
 	var names: Array = PathReport.variants_for(_content).map(func(variant: PathReport.Variant) -> String: return PathReport.variant_name(_content, variant))
 	assert_eq(names.size(), 89)
-	assert_eq(names.slice(0, 3), ["all base", "Maren, Deadeye (vowed)", "Maren, Deadeye (transformed)"])
+	assert_eq(names.slice(0, 3), ["all base", "Brannoc, Hearthwall (vowed)", "Brannoc, Hearthwall (transformed)"], "the old three's paths in roster order")
 	assert_eq(names.slice(19, 22), ["all base, with Garrow", "Garrow, Aegisfang (vowed)", "Garrow, Aegisfang (transformed)"],
 		"a hero outside the old three fights in their team in place of the one of its role, against that team's own base")
 	var garrow: PathReport.Variant = PathReport.variants_for(_content)[20]
@@ -52,7 +52,7 @@ func test_a_small_run() -> void:
 	guarded.assign(named["guarded"])
 	var errors: Array[String] = []
 	var result: FightResult = CombatSim.run(Encounters.setup(_content, "the_pack", guarded, 1, errors, {}, {"brannoc": "ironbrand"} as Dictionary[String, String]), _content)
-	var ironbrand: PathReport.Variant = report.variants[9]
+	var ironbrand: PathReport.Variant = report.variants[3]
 	assert_eq(PathReport.variant_name(_content, ironbrand), "Brannoc, Ironbrand (vowed)")
 	assert_eq(ironbrand.formation_wins[0], 0 if result.outcome == FightResult.Outcome.DEFEAT else 1, "a variant fights on its path")
 	assert_gt(ironbrand.deeds.get("brannoc/ironbrand", 0), 0, "and counts its deeds")
