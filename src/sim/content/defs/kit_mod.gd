@@ -427,224 +427,9 @@ static func make() -> KitMod:
 	return mod
 
 
+## The kit mod `reader` holds, checked (KitModReader).
 static func read(reader: DataReader) -> KitMod:
-	var mod: KitMod = make()
-	if reader.has("stats_bp"):
-		var bp_reader: DataReader = reader.req_object("stats_bp")
-		if bp_reader != null:
-			for stat: UnitStats.Stat in KitPatch.BP_STATS:
-				mod.stats_bp[stat] = bp_reader.opt_int(UnitStats.STAT_NAMES[stat], FixedMath.BP_ONE, 1000, 50000)
-			bp_reader.finish()
-	if reader.has("stats_add"):
-		var add_reader: DataReader = reader.req_object("stats_add")
-		if add_reader != null:
-			for stat: UnitStats.Stat in ADD_STATS:
-				mod.stats_add[stat] = add_reader.opt_int(UnitStats.STAT_NAMES[stat], 0, -100, 1000)
-			add_reader.finish()
-	for part_reader: DataReader in reader.opt_object_array("passives"):
-		mod.passives.append(PartDef.read(part_reader))
-	for change_reader: DataReader in reader.opt_object_array("on"):
-		mod.changes.append(_read_change(change_reader))
-	if reader.has("mana"):
-		var mana_reader: DataReader = reader.req_object("mana")
-		if mana_reader != null:
-			mod.mana_max_add = mana_reader.opt_int("max_add", 0, -100, 100)
-			mod.mana_start_add = mana_reader.opt_int("start_add", 0, -100, 100)
-			mod.mana_per_attack_add = mana_reader.opt_int("per_attack_add", 0, -20, 20)
-			mod.mana_regen_add = mana_reader.opt_int("regen_add", 0, -20, 20)
-			mod.mana_max_bp = mana_reader.opt_int("max_bp", FixedMath.BP_ONE, 5000, 20000)
-			mod.mana_start_bp = mana_reader.opt_int("start_bp", 0, 0, FixedMath.BP_ONE)
-			mod.mana_taken_bp = mana_reader.opt_int("taken_bp", FixedMath.BP_ONE, 1000, 50000)
-			mana_reader.finish()
-	mod.plant_add_ticks = _signed_ticks(reader, "plant_add_ms")
-	mod.shard_cap_add = reader.opt_int("shard_cap_add", 0, -100, 100)
-	for companion_reader: DataReader in reader.opt_object_array("companions"):
-		var change := CompanionChange.new()
-		change.kit_id = companion_reader.opt_string("kit", "")
-		change.hp_add_bp = companion_reader.opt_int("hp_add_pct", 0, -100, 100) * 100
-		change.atk_add_bp = companion_reader.opt_int("atk_add_pct", 0, -100, 100) * 100
-		change.return_add_ticks = _signed_ticks(companion_reader, "return_add_ms")
-		if companion_reader.has("mod"):
-			var inner: DataReader = companion_reader.req_object("mod")
-			change.mod = read(inner) if inner != null else null
-		if change.hp_add_bp == 0 and change.atk_add_bp == 0 and change.return_add_ticks == 0 and change.mod == null:
-			companion_reader.error("a companion change needs hp_add_pct, atk_add_pct, return_add_ms, or a mod")
-		companion_reader.finish()
-		mod.companion_changes.append(change)
-	mod.places_lantern = reader.opt_bool("places_lantern", false)
-	mod.drops_signature = reader.opt_bool("drops_signature", false)
-	if reader.has("drops_passives"):
-		mod.drops_passives = reader.req_string_array("drops_passives")
-	if reader.has("engage"):
-		var engage_reader: DataReader = reader.req_object("engage")
-		if engage_reader != null:
-			mod.break_free_add_ticks = _signed_ticks(engage_reader, "break_free_add_ms")
-			mod.engage_reach_add = engage_reader.opt_int("reach_add", 0, 0, 3) * HexGrid.HEX
-			engage_reader.finish()
-	if reader.has("prefer"):
-		var prefer_reader: DataReader = reader.req_object("prefer")
-		if prefer_reader != null:
-			mod.prefer_label = prefer_reader.req_string("label")
-			mod.prefer = UnitCondition.read(prefer_reader.req_object("vs"))
-			mod.prefer_reach = prefer_reader.opt_int("within_hexes", 0, 0, 20) * HexGrid.HEX
-			prefer_reader.finish()
-	if reader.has("gambit"):
-		var gambit: DataReader = reader.req_object("gambit")
-		if gambit != null:
-			mod.gambit_label = gambit.req_string("label")
-			mod.place_rule = gambit.opt_string_choice("place", "", Gambits.PLACES)
-			mod.arrive_ticks = gambit.opt_ticks("arrive_ms", 0)
-			mod.arrive_at = gambit.opt_string_choice("arrive_at", "", Gambits.ARRIVE_AT)
-			if not mod.arrive_at.is_empty() and mod.arrive_ticks == 0:
-				gambit.error("arrive_at needs arrive_ms")
-			mod.swap_ticks = gambit.opt_ticks("swap_ms", 0)
-			mod.swap_shield_bp = gambit.opt_int("swap_shield_bp", 0, 0, FixedMath.BP_ONE)
-			mod.swap_choice = gambit.opt_bool("swap_choice", false)
-			gambit.finish()
-	if reader.has("hop"):
-		var hop_reader: DataReader = reader.req_object("hop")
-		if hop_reader != null:
-			mod.hop_within_add = hop_reader.opt_int("within_add", 0, 0, 2 * HexGrid.HEX)
-			mod.hop_cooldown_add_ticks = _signed_ticks(hop_reader, "cooldown_add_ms")
-			hop_reader.finish()
-	for trigger_reader: DataReader in reader.opt_object_array("also_fires"):
-		var trigger: TriggerDef = TriggerDef.read(trigger_reader)
-		if not TriggerDef.ALSO_KINDS.has(trigger.kind):
-			reader.error("also_fires: a signature can also fire on hp_below, ally_falls, or every, not %s" % TriggerDef.KIND_NAMES[trigger.kind])
-		mod.also_fires.append(trigger)
-	if reader.has("echo"):
-		var echo_reader: DataReader = reader.req_object("echo")
-		if echo_reader != null:
-			mod.echo_ticks = echo_reader.req_ticks("after_ms", FixedMath.MS_PER_TICK)
-			mod.echo_bp = echo_reader.req_int("share_pct", 1, 100) * 100
-			echo_reader.finish()
-	if not mod.changes_anything():
-		reader.error("a mod needs stats_bp, stats_add, passives, on, mana, also_fires, or echo")
-	reader.finish()
-	return mod
-
-
-static func _read_change(reader: DataReader) -> AbilityChange:
-	var change := AbilityChange.new()
-	change.slot = reader.req_string("slot")
-	if not change.slot in [SLOT_BASIC, SLOT_SIGNATURE, SLOT_ABILITIES] and not change.slot.begins_with(PASSIVE_PREFIX):
-		reader.error("slot: expected basic_attack, signature, abilities, or passive:<id>, got \"%s\"" % change.slot)
-	if reader.has("types"):
-		for type_name: String in reader.opt_choice_array("types", EffectDef.TYPE_NAMES):
-			change.types.append(EffectDef.TYPE_NAMES.find(type_name) as EffectDef.Type)
-	if reader.has("statuses"):
-		change.statuses = reader.req_string_array("statuses")
-		if change.statuses.is_empty():
-			reader.error("statuses: name at least one")
-		if not change.types.is_empty():
-			reader.error("an \"on\" entry takes types or statuses, not both")
-	change.amount_bp = reader.opt_int("amount_bp", FixedMath.BP_ONE, 1000, 50000)
-	change.duration_bp = reader.opt_int("duration_bp", FixedMath.BP_ONE, 1000, 50000)
-	change.duration_add_ticks = _signed_ticks(reader, "duration_add_ms")
-	change.radius_add = reader.opt_int("radius_add", 0, -3, 3)
-	change.cooldown_bp = reader.opt_int("cooldown_bp", FixedMath.BP_ONE, 1000, 50000)
-	for effect_reader: DataReader in reader.opt_object_array("add_effects"):
-		change.add_effects.append(EffectDef.read(effect_reader))
-	change.after_add_ticks = _signed_ticks(reader, "after_add_ms")
-	change.cast_bp = reader.opt_int("cast_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
-	change.targets_add = reader.opt_int("targets_add", 0, 0, 5)
-	change.one_of = reader.opt_bool("one_of", false)
-	for target_name: String in reader.opt_choice_array("at", EffectDef.TARGET_NAMES):
-		change.at.append(EffectDef.TARGET_NAMES.find(target_name) as EffectDef.Target)
-	change.every_add = reader.opt_int("every_add", 0, -10, 10)
-	change.times_add = reader.opt_int("times_add", 0, 0, 5)
-	change.max_standing_add = reader.opt_int("max_standing_add", 0, 0, 5)
-	change.overheal_add_bp = reader.opt_int("overheal_shield_add_bp", 0, 0, FixedMath.BP_ONE)
-	change.width_add = reader.opt_int("width_add", 0, 0, 3)
-	for effect_reader: DataReader in reader.opt_object_array("add_to_areas"):
-		change.add_to_areas.append(EffectDef.read(effect_reader, false, true))
-	change.value_add = reader.opt_int("value_add", 0, -100000, 100000)
-	change.strength_add_bp = reader.opt_int("strength_add_bp", 0, 0, FixedMath.BP_ONE)
-	var follow_rule: String = reader.opt_string_choice("follows", "", ["largest_group", "holder"])
-	change.follows = follow_rule == "largest_group"
-	change.follows_holder = follow_rule == "holder"
-	change.ricochet_add = reader.opt_int("ricochet_add", 0, 0, 5)
-	change.reflect_bp = reader.opt_int("reflect_bp", 0, 0, FixedMath.BP_ONE)
-	change.snags = reader.opt_bool("snags", false)
-	change.per_enemy_add_bp = reader.opt_int("per_enemy_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.overheal_max_hp_add = reader.opt_int("overheal_max_hp_add", 0, -100, 100)
-	change.at_stacks_add = reader.opt_int("at_stacks_add", 0, -10, 10)
-	change.per_taken_add_bp = reader.opt_int("per_taken_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.grows_add_bp = reader.opt_int("grows_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.grows_boosts_add_bp = reader.opt_int("grows_boosts_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.rise_add_bp = reader.opt_int("rise_add_pct", 0, -99, 99) * 100
-	change.per_shared_bp = reader.opt_int("per_shared_bp", FixedMath.BP_ONE, 1000, 50000)
-	if (change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0) and change.slot != SLOT_SIGNATURE:
-		reader.error("grows_add_bp and grows_boosts_add_bp change a signature (\"slot\": \"signature\")")
-	if reader.has("guard"):
-		var guard: DataReader = reader.req_object("guard")
-		if guard != null:
-			change.guard_share_add = guard.opt_int("share_add", 0, -100, 100) * 100
-			change.guard_within_add = guard.opt_int("within_add", 0, -3, 3) * HexGrid.HEX
-			change.guard_covers_all = guard.opt_bool("covers_all", false)
-			guard.finish()
-	if reader.has("prefer"):
-		change.prefer = UnitCondition.read(reader.req_object("prefer"))
-	if reader.has("holder"):
-		change.holder = UnitCondition.read(reader.req_object("holder"))
-	change.carries = reader.opt_bool("carries", false)
-	change.ability_id = reader.opt_string("ability", "")
-	change.mana_max_add = reader.opt_int("mana_max_add", 0, -100, 100)
-	change.ignores_def = reader.opt_bool("ignores_def", false)
-	change.lifesteal_add_bp = reader.opt_int("lifesteal_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.plus_max_hp_add_bp = reader.opt_int("plus_max_hp_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.raise_grow_add_bp = reader.opt_int("raise_grow_add_pct", 0, -100, 100) * 100
-	change.hp_cost_add_bp = reader.opt_int("hp_cost_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.per_stack_add_bp = reader.opt_int("per_stack_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	if reader.has("per_twice"):
-		change.per_twice = UnitCondition.read(reader.req_object("per_twice"))
-	change.reach_add = reader.opt_int("reach_add", 0, -3, 9)
-	change.within_add = reader.opt_int("within_add", 0, -3, 3) * HexGrid.HEX
-	change.count_add = reader.opt_int("count_add", 0, 0, 4)
-	change.share_add_bp = reader.opt_int("share_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.copy_grow_add_bp = reader.opt_int("per_copy_add_pct", 0, -100, 100) * 100
-	change.grow_every_add_ticks = reader.opt_ticks("grow_every_add_ms", 0, -10000)
-	change.grow_max_add = reader.opt_int("grow_max_add", 0, -3, 3)
-	change.per_stacks_add = reader.opt_int("per_stacks_add", 0, -10, 10)
-	change.cap_add_bp = reader.opt_int("cap_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
-	change.per_stack_amount_add = reader.opt_int("per_stack_amount_add", 0, -10, 10)
-	change.per_shards_add = reader.opt_int("per_shards_add", 0, -20, 20)
-	change.per_shards_max_add = reader.opt_int("per_shards_max_add", 0, -20, 50)
-	if reader.has("heal_cap"):
-		var cap: DataReader = reader.req_object("heal_cap")
-		if cap != null:
-			change.heal_cap_bp = cap.req_int("pct", 1, 99) * 100
-			if cap.has("vs"):
-				change.heal_cap_vs = UnitCondition.read(cap.req_object("vs"))
-			cap.finish()
-	if reader.has("grip_fast_vs"):
-		change.grip_fast_vs = UnitCondition.read(reader.req_object("grip_fast_vs"))
-	if (change.reach_add != 0 or change.grip_fast_vs != null) and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
-		reader.error("reach_add and grip_fast_vs change a signature (\"slot\": \"signature\", or a named \"ability\")")
-	if not change.ability_id.is_empty() and change.slot != SLOT_ABILITIES:
-		reader.error("\"ability\" names one of its abilities (\"slot\": \"abilities\")")
-	if change.mana_max_add != 0 and change.ability_id.is_empty():
-		reader.error("mana_max_add changes what a named ability costs (\"ability\")")
-	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0) and change.slot != SLOT_SIGNATURE \
-			or change.prefer != null and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
-		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\"; prefer also a named \"ability\")")
-	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
-		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, per_twice, per_stacks_add, cap_add_bp, per_shards_add, and per_shards_max_add change a named passive (\"slot\": \"passive:<id>\")")
-	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
-			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null
-			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0 or change.reach_add != 0 or change.grip_fast_vs != null
-			or change.hp_cost_add_bp != 0):
-		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, targets_add, or one of step 7b's knobs")
-	reader.finish()
-	return change
-
-
-## A signed duration in ms (whole ticks), as ticks.
-static func _signed_ticks(reader: DataReader, key: String) -> int:
-	var ms: int = reader.opt_int(key, 0, -60000, 60000)
-	if ms % FixedMath.MS_PER_TICK != 0:
-		reader.error("%s: must be a multiple of %d ms (one tick)" % [key, FixedMath.MS_PER_TICK])
-	return FixedMath.ms_to_ticks(ms)
+	return KitModReader.read(reader)
 
 
 ## Why this mod can't be a growing card's step ("" if it can): a step may
@@ -800,9 +585,9 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 				return true
 			if change.reach_add != 0 and ability.is_signature() or change.grip_fast_vs != null and not ability.grip_status.is_empty():
 				return true
-			if change.targets_add > 0 and not _extra_targets(ability, change).is_empty():
+			if change.targets_add > 0 and not KitModChanges.extra_targets(ability, change).is_empty():
 				return true
-			if change.touches_effects() and (_any_effect(ability.effects, change) or _any_effect(ability.grip_effects, change)):
+			if change.touches_effects() and (KitModChanges.any_effect(ability.effects, change) or KitModChanges.any_effect(ability.grip_effects, change)):
 				return true
 		if change.after_add_ticks != 0 and _slot_aura(kit, change.slot) != null:
 			return true
@@ -909,7 +694,7 @@ static func make_echo(signature: AbilityDef, share_bp: int) -> AbilityDef:
 	change.amount_bp = share_bp
 	change.as_power = false
 	change.duration_bp = share_bp
-	echo.effects = _changed_effects(signature.effects, change)
+	echo.effects = KitModChanges.changed_effects(signature.effects, change)
 	return echo
 
 
@@ -918,9 +703,9 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 		problems.append("it has no passive \"%s\"" % change.slot.trim_prefix(PASSIVE_PREFIX))
 		return
 	if change.slot in [SLOT_BASIC, SLOT_ABILITIES] and change.reaches(built.basic_attack.id):
-		built.basic_attack = _changed_ability(built.basic_attack, change)
+		built.basic_attack = KitModChanges.changed_ability(built.basic_attack, change)
 	if change.slot in [SLOT_SIGNATURE, SLOT_ABILITIES] and built.signature != null and change.reaches(built.signature.id):
-		built.signature = _changed_ability(built.signature, change)
+		built.signature = KitModChanges.changed_ability(built.signature, change)
 		if change.mana_max_add != 0 and built.mana != null:
 			# What the named signature costs (phase 8 part 4, Swift Haul).
 			var mana: ManaDef = DefCopy.shallow(built.mana) as ManaDef
@@ -937,14 +722,14 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 			# 4: "costs less mana" fires one attack sooner).
 			var habit: AbilityChange = _as_habit(change)
 			var habit_copy: PartDef = DefCopy.shallow(part) as PartDef
-			habit_copy.ability = _changed_ability(part.ability, habit)
+			habit_copy.ability = KitModChanges.changed_ability(part.ability, habit)
 			built.passives[i] = habit_copy
 			continue
 		if part.ability == null and not (named and (change.after_add_ticks != 0 or change.changes_part() or change.radius_add != 0 or change.within_add != 0)):
 			continue
 		var copy: PartDef = DefCopy.shallow(part) as PartDef
 		if part.ability != null:
-			copy.ability = _changed_ability(part.ability, change)
+			copy.ability = KitModChanges.changed_ability(part.ability, change)
 		if named and (change.after_add_ticks != 0 or change.value_add != 0 or change.per_stacks_add != 0 or change.cap_add_bp != 0
 				or change.per_shards_add != 0 or change.per_shards_max_add != 0) and part.aura != null:
 			copy.aura = DefCopy.shallow(part.aura) as AuraDef
@@ -986,258 +771,6 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 		built.passives[i] = copy
 
 
-static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> AbilityDef:
-	var copy: AbilityDef = DefCopy.shallow(ability) as AbilityDef
-	if change.cooldown_bp != FixedMath.BP_ONE:
-		copy.cooldown_ticks = maxi(FixedMath.apply_bp(copy.cooldown_ticks, change.cooldown_bp), 1)
-	if change.cast_bp != FixedMath.BP_ONE:
-		copy.cast_ticks = FixedMath.apply_bp(copy.cast_ticks, change.cast_bp)
-	if change.prefer != null:
-		copy.prefer = change.prefer
-	if change.reach_add != 0 and ability.is_signature():
-		# From the unit's own reach when it has none (a melee unit's: 1).
-		copy.max_range = maxi((copy.max_range if copy.max_range > 0 else 1) + change.reach_add, 1)
-	if change.grip_fast_vs != null and not ability.grip_status.is_empty():
-		copy.grip_fast_vs = change.grip_fast_vs
-	if change.grows_add_bp != 0 and ability.grows_bp > 0:
-		copy.grows_bp = maxi(ability.grows_bp + change.grows_add_bp, 0)
-	if change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:
-		copy.grows_boosts_bp = maxi(ability.grows_boosts_bp + change.grows_boosts_add_bp, 0)
-	if change.hp_cost_add_bp != 0 and ability.hp_cost_bp > 0:
-		copy.hp_cost_bp = clampi(ability.hp_cost_bp + change.hp_cost_add_bp, 1, 9000)
-	if change.touches_effects():
-		copy.effects = _changed_effects(ability.effects, change)
-		# A grip's effects too (phase 8 part 4, Tightening Cord).
-		if not ability.grip_effects.is_empty():
-			copy.grip_effects = _changed_effects(ability.grip_effects, change)
-	else:
-		copy.effects = copy.effects.duplicate()
-	if change.targets_add > 0:
-		copy.effects.append_array(_extra_targets(ability, change))
-	# Added effects go before the ability spends its Shield, so they still
-	# read it (phase 8 part 4, Shared Ward).
-	var spends: int = -1
-	for i: int in copy.effects.size():
-		if copy.effects[i].type == EffectDef.Type.SPEND_SHIELD:
-			spends = i
-			break
-		# And before mana to the lowest-mana ally, so they reach the ally the
-		# mana does (phase 8 part 6, Fizzing Vial).
-		if copy.effects[i].type == EffectDef.Type.GAIN_MANA and copy.effects[i].target == EffectDef.Target.LOWEST_MANA_ALLY:
-			spends = i
-			break
-	if spends < 0 or change.add_effects.is_empty():
-		copy.effects.append_array(change.add_effects)
-	else:
-		var before: Array[EffectDef] = copy.effects.slice(0, spends)
-		before.append_array(change.add_effects)
-		before.append_array(copy.effects.slice(spends))
-		copy.effects = before
-	for effect: EffectDef in change.add_effects:
-		copy.has_hit_effects = copy.has_hit_effects or effect.trigger != EffectDef.Trigger.ON_FIRE
-	return copy
-
-
-## Wide's extra targets (phase 5c step 6b): a copy of each of `ability`'s
-## effects on its target, reaching the `targets_add` units nearest that
-## target of its side (an ally for a signature that picks allies). None for
-## one aimed at itself, or (`one_of`) one with an area.
-static func _extra_targets(ability: AbilityDef, change: AbilityChange) -> Array[EffectDef]:
-	var extra: Array[EffectDef] = []
-	if ability.targeting == "self" or (change.one_of and ability.effects.any(func(effect: EffectDef) -> bool: return effect.type == EffectDef.Type.AREA)):
-		return extra
-	for effect: EffectDef in ability.effects:
-		if effect.trigger != EffectDef.Trigger.ON_FIRE or effect.target != EffectDef.Target.TARGET or not COPIED_TYPES.has(effect.type):
-			continue
-		var copy: EffectDef = DefCopy.shallow(effect) as EffectDef
-		copy.target = EffectDef.Target.ALLY_NEAR_TARGET if ability.targeting == "lowest_hp_ally" else EffectDef.Target.ENEMY_NEAR_TARGET
-		copy.count = change.targets_add
-		copy.near_range = 0
-		extra.append(copy)
-	return extra
-
-
-## The effects Wide copies onto more targets.
-const COPIED_TYPES: Array[EffectDef.Type] = [EffectDef.Type.DAMAGE, EffectDef.Type.HEAL, EffectDef.Type.SHIELD, EffectDef.Type.APPLY_STATUS,
-	EffectDef.Type.CLEANSE, EffectDef.Type.MANA_DRAIN, EffectDef.Type.KNOCKBACK, EffectDef.Type.PULL, EffectDef.Type.EXTEND_STATUS]
-
-
-static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -> Array[EffectDef]:
-	var result: Array[EffectDef] = []
-	for effect: EffectDef in effects:
-		var copy: EffectDef = DefCopy.shallow(effect) as EffectDef
-		if change.touches(effect) and change.amount_bp != FixedMath.BP_ONE and change.as_power and POWER_TYPES.has(effect.type):
-			copy.power_bp += change.amount_bp - FixedMath.BP_ONE
-		elif change.touches(effect):
-			copy.amount = FixedMath.apply_bp(copy.amount, change.amount_bp)
-			if change.moves(effect):
-				copy.hexes = FixedMath.apply_bp(copy.hexes, change.amount_bp)
-			copy.amount_bp_of_damage = FixedMath.apply_bp(copy.amount_bp_of_damage, change.amount_bp)
-			for stat: int in copy.scaling.size():
-				copy.scaling[stat] = FixedMath.apply_bp(copy.scaling[stat], change.amount_bp)
-		if change.touches(effect):
-			if change.cooldown_bp != FixedMath.BP_ONE:
-				if copy.interval_ticks > 0:
-					copy.interval_ticks = maxi(FixedMath.apply_bp(copy.interval_ticks, change.cooldown_bp), 1)
-					if copy.first_ticks > 0:
-						copy.first_ticks = maxi(FixedMath.apply_bp(copy.first_ticks, change.cooldown_bp), 1)
-				if copy.cooldown_ticks > 0:
-					copy.cooldown_ticks = maxi(FixedMath.apply_bp(copy.cooldown_ticks, change.cooldown_bp), 1)
-				if copy.cooldown_per_unit_ticks > 0:
-					copy.cooldown_per_unit_ticks = maxi(FixedMath.apply_bp(copy.cooldown_per_unit_ticks, change.cooldown_bp), 1)
-			if copy.duration_ticks > 0:
-				copy.duration_ticks = maxi(FixedMath.apply_bp(copy.duration_ticks, change.duration_bp) + change.duration_add_ticks, 1)
-			if copy.zone_ticks > 0:
-				copy.zone_ticks = maxi(FixedMath.apply_bp(copy.zone_ticks, change.duration_bp) + change.duration_add_ticks, 1)
-			if copy.lasts_ticks > 0:
-				# A summon's lifetime too (phase 8 part 6, Long Nest).
-				copy.lasts_ticks = maxi(FixedMath.apply_bp(copy.lasts_ticks, change.duration_bp) + change.duration_add_ticks, 1)
-			if copy.shape != null and change.radius_add != 0:
-				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
-				copy.shape.size = maxi(copy.shape.size + change.radius_add, 1)
-			# Phase 8 part 4's: near targets' reach, and a lowest_mana_ally's count.
-			if change.within_add != 0 and effect.near_range > 0:
-				copy.near_range = maxi(effect.near_range + change.within_add, HexGrid.HEX)
-			if change.count_add != 0 and (effect.target == EffectDef.Target.LOWEST_MANA_ALLY or effect.target == EffectDef.Target.MOST_TARGETED_ALLY):
-				copy.count = mini(effect.count + change.count_add, 5)
-			# Phase 8 part 6 (Ilse's cards): on_status_tick's reach (Fan the
-			# Coals), allies_near_self's nearest (Shared Blessing), a stacks_of
-			# share (Deep Stoke), and a growing zone (Fast and Far Spread).
-			if change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0:
-				copy.near_trigger_range = maxi(effect.near_trigger_range + change.within_add, HexGrid.HEX)
-			if change.within_add != 0 and effect.fell_range > 0:
-				# on_enemy_fell's reach (phase 8 part 6, Wider Pickings).
-				copy.fell_range = maxi(effect.fell_range + change.within_add, HexGrid.HEX)
-			if change.count_add != 0 and effect.nearest > 0:
-				copy.nearest = mini(effect.nearest + change.count_add, 5)
-			if change.share_add_bp != 0 and effect.stacks_share_bp > 0:
-				copy.stacks_share_bp = clampi(effect.stacks_share_bp + change.share_add_bp, 1, FixedMath.BP_ONE)
-			if change.share_add_bp != 0 and effect.copy_of != EffectDef.CopyOf.NONE:
-				copy.copy_share_bp = clampi(effect.copy_share_bp + change.share_add_bp, 100, FixedMath.BP_ONE)
-			if change.copy_grow_add_bp != 0 and effect.copy_grows_bp > 0:
-				copy.copy_grows_bp = maxi(effect.copy_grows_bp + change.copy_grow_add_bp, 0)
-			if change.grow_every_add_ticks != 0 and effect.grow_ticks > 0:
-				copy.grow_ticks = maxi(effect.grow_ticks + change.grow_every_add_ticks, 1)
-			if change.grow_max_add != 0 and effect.grow_ticks > 0:
-				copy.grow_max = maxi(effect.grow_max + change.grow_max_add, effect.shape.size + 1)
-			if change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL:
-				copy.heal_cap_bp = change.heal_cap_bp
-				copy.heal_cap_vs = change.heal_cap_vs
-			# Phase 8 part 6 (Heavy Flask): more for each stack.
-			if change.per_stack_amount_add != 0 and effect.amount_per_stack > 0:
-				copy.amount_per_stack = maxi(effect.amount_per_stack + change.per_stack_amount_add, 1)
-			# Step 7b's knobs.
-			if change.every_add != 0 and effect.every > 1:
-				copy.every = maxi(effect.every + change.every_add, 1)
-			if change.times_add != 0 and _runs_times(effect):
-				copy.times = effect.times + change.times_add
-			if change.max_standing_add != 0 and effect.max_standing > 0:
-				copy.max_standing = effect.max_standing + change.max_standing_add
-			# The apex cards' knobs (phase 8 part 2).
-			if change.width_add != 0 and effect.type == EffectDef.Type.WALL:
-				copy.width_range = effect.width_range + change.width_add * HexGrid.HEX
-			if change.per_enemy_add_bp != 0 and effect.per_enemy_bp > 0:
-				copy.per_enemy_bp = maxi(effect.per_enemy_bp + change.per_enemy_add_bp, 0)
-			if change.overheal_max_hp_add != 0 and effect.overheal_max_hp_per > 0:
-				copy.overheal_max_hp_per = maxi(effect.overheal_max_hp_per + change.overheal_max_hp_add, 1)
-			if change.at_stacks_add != 0 and effect.at_stacks > 0:
-				copy.at_stacks = maxi(effect.at_stacks + change.at_stacks_add, 2)
-			if change.per_taken_add_bp != 0 and effect.power_per_taken_bp > 0:
-				copy.power_per_taken_bp = maxi(effect.power_per_taken_bp + change.per_taken_add_bp, 0)
-			if change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0:
-				copy.overheal_shield_bp = effect.overheal_shield_bp + change.overheal_add_bp
-			if change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS:
-				copy.strength_add_bp = effect.strength_add_bp + change.strength_add_bp
-			if change.follows and effect.zone_ticks > 0:
-				copy.follows = true
-			if change.ricochet_add != 0 and effect.type == EffectDef.Type.DAMAGE:
-				copy.ricochet = effect.ricochet + change.ricochet_add
-			if change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL:
-				copy.reflect_bp = effect.reflect_bp + change.reflect_bp
-			if change.snags and effect.type == EffectDef.Type.SNARE:
-				copy.snags = true
-			if change.holder != null and _takes_holder(effect):
-				copy.holder = change.holder
-			if change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0:
-				copy.carries = true
-			if change.ignores_def and effect.type == EffectDef.Type.DAMAGE:
-				copy.ignores_def = true
-			if change.lifesteal_add_bp != 0 and effect.lifesteal_bp > 0:
-				copy.lifesteal_bp = maxi(effect.lifesteal_bp + change.lifesteal_add_bp, 0)
-			if change.plus_max_hp_add_bp != 0 and effect.plus_bp_of_max_hp > 0:
-				copy.plus_bp_of_max_hp = maxi(effect.plus_bp_of_max_hp + change.plus_max_hp_add_bp, 0)
-			if change.raise_grow_add_bp != 0 and effect.type == EffectDef.Type.RAISE:
-				copy.raise_grow_hp_bp = maxi(effect.raise_grow_hp_bp + change.raise_grow_add_bp, 0)
-			if change.follows_holder and effect.zone_ticks > 0:
-				copy.follows = true
-				copy.follows_nearest = false
-				copy.follows_holder = true
-			if change.per_stack_add_bp != 0 and not effect.grows_status.is_empty():
-				copy.grows_stack_bp = maxi(effect.grows_stack_bp + change.per_stack_add_bp, 0)
-			if change.prefer != null and (effect.target == EffectDef.Target.FARTHEST_ENEMIES or effect.target == EffectDef.Target.LOWEST_HP_ALLY):
-				copy.prefer = change.prefer
-			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
-				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
-				copy.shape.width += change.width_add
-		if not effect.area_effects.is_empty():
-			copy.area_effects = _changed_effects(effect.area_effects, change)
-		if not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA and change.touches(effect):
-			copy.area_effects = copy.area_effects.duplicate()
-			copy.area_effects.append_array(change.add_to_areas)
-		result.append(copy)
-	return result
-
-
-## An effect that can take a holder condition: an event's or a timed one.
-static func _takes_holder(effect: EffectDef) -> bool:
-	return EffectDef.EVENT_TRIGGERS.has(effect.trigger) or EffectDef.UNIT_TRIGGERS.has(effect.trigger)
-
-
-## A "once" effect, or on_below_hp's: it runs `times` a fight (times_add).
-static func _runs_times(effect: EffectDef) -> bool:
-	return effect.once or effect.trigger == EffectDef.Trigger.ON_BELOW_HP
-
-
-static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> bool:
-	for effect: EffectDef in effects:
-		if change.touches(effect) and (change.every_add != 0 and effect.every > 1 or change.times_add != 0 and _runs_times(effect)
-				or change.within_add != 0 and effect.near_range > 0 or change.count_add != 0 and (effect.target == EffectDef.Target.LOWEST_MANA_ALLY or effect.target == EffectDef.Target.MOST_TARGETED_ALLY)
-				or change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0
-				or change.within_add != 0 and effect.fell_range > 0
-				or change.count_add != 0 and effect.nearest > 0 or change.share_add_bp != 0 and (effect.stacks_share_bp > 0 or effect.copy_of != EffectDef.CopyOf.NONE)
-				or change.copy_grow_add_bp != 0 and effect.copy_grows_bp > 0
-				or (change.grow_every_add_ticks != 0 or change.grow_max_add != 0) and effect.grow_ticks > 0
-				or change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL
-				or change.per_stack_amount_add != 0 and effect.amount_per_stack > 0
-				or change.max_standing_add != 0 and effect.max_standing > 0
-				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
-				or change.width_add != 0 and effect.type == EffectDef.Type.WALL
-				or change.per_enemy_add_bp != 0 and effect.per_enemy_bp > 0
-				or change.overheal_max_hp_add != 0 and effect.overheal_max_hp_per > 0
-				or change.at_stacks_add != 0 and effect.at_stacks > 0
-				or change.per_taken_add_bp != 0 and effect.power_per_taken_bp > 0
-				or change.width_add != 0 and effect.shape != null and effect.shape.kind == ShapeDef.Kind.LINE
-				or not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA
-				or change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS
-				or change.follows and effect.zone_ticks > 0 or change.ricochet_add != 0 and effect.type == EffectDef.Type.DAMAGE
-				or change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL or change.snags and effect.type == EffectDef.Type.SNARE
-				or change.holder != null and _takes_holder(effect)
-				or change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0 and not effect.carries
-				or change.ignores_def and effect.type == EffectDef.Type.DAMAGE and not effect.ignores_def
-				or change.lifesteal_add_bp != 0 and effect.lifesteal_bp > 0
-				or change.plus_max_hp_add_bp != 0 and effect.plus_bp_of_max_hp > 0
-				or change.raise_grow_add_bp != 0 and effect.type == EffectDef.Type.RAISE
-				or change.follows_holder and effect.zone_ticks > 0 and not effect.follows_holder
-				or change.per_stack_add_bp != 0 and not effect.grows_status.is_empty()
-				or change.prefer != null and (effect.target == EffectDef.Target.FARTHEST_ENEMIES or effect.target == EffectDef.Target.LOWEST_HP_ALLY)):
-			return true
-		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
-				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0 or effect.lasts_ticks > 0)
-				or change.radius_add != 0 and effect.shape != null):
-			return true
-		if _any_effect(effect.area_effects, change):
-			return true
-	return false
 
 
 static func _slot_abilities(kit: UnitDef, slot: String, ability_id: String = "") -> Array[AbilityDef]:
