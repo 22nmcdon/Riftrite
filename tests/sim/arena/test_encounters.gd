@@ -4,7 +4,7 @@ extends GutTest
 
 const Bot = preload("res://tools/run_bot.gd")
 
-const Units = preload("res://tests/sim/test_units_content.gd")
+const Units = preload("res://tests/sim/content/test_units_content.gd")
 
 const FORMATION: Dictionary[String, Vector2i] = {"ranger": Vector2i(3, 0), "warden": Vector2i(3, 2)}
 

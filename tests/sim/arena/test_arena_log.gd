@@ -7,12 +7,12 @@ extends GutTest
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")
-const TacticFights = preload("res://tests/sim/test_tactics.gd")
+const TacticFights = preload("res://tests/sim/units/test_tactics.gd")
 const PathFights = preload("res://tests/sim/path_fights.gd")
-const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
-const WaterTest = preload("res://tests/sim/test_water.gd")
-const IslandsTest = preload("res://tests/sim/test_islands.gd")
-const CopiesTest = preload("res://tests/sim/test_copies.gd")
+const RuleFights = preload("res://tests/sim/units/test_hero_rules.gd")
+const WaterTest = preload("res://tests/sim/arena/test_water.gd")
+const IslandsTest = preload("res://tests/sim/arena/test_islands.gd")
+const CopiesTest = preload("res://tests/sim/units/test_copies.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.

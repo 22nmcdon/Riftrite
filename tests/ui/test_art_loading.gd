@@ -35,14 +35,14 @@ func test_a_png_wins_over_its_svg() -> void:
 
 
 func test_a_figure_at_any_resolution_draws_at_its_canvas() -> void:
-	assert_eq(FigureArt.texture("heroes/fix_base").get_size(), Vector2(1200, 2080), "the 4x PNG master, not the SVG")
-	assert_eq(FigureArt.pixels_per_unit("heroes/fix_base"), 4.0)
-	assert_eq([FigureArt.canvas("heroes/fix_base"), FigureArt.feet("heroes/fix_base")], [FigureArt.CANVAS, FigureArt.FEET])
-	assert_eq(FigureArt.bounds("heroes/fix_base"), Rect2(100, 100, 100, 400), "bounds in canvas units")
-	assert_eq(FigureBounds.measure(FIGURES + "heroes/fix_base.png", FigureArt.CANVAS), [100, 100, 100, 400] as Array[int],
+	assert_eq(FigureArt.texture("heroes/fix/base").get_size(), Vector2(1200, 2080), "the 4x PNG master, not the SVG")
+	assert_eq(FigureArt.pixels_per_unit("heroes/fix/base"), 4.0)
+	assert_eq([FigureArt.canvas("heroes/fix/base"), FigureArt.feet("heroes/fix/base")], [FigureArt.CANVAS, FigureArt.FEET])
+	assert_eq(FigureArt.bounds("heroes/fix/base"), Rect2(100, 100, 100, 400), "bounds in canvas units")
+	assert_eq(FigureBounds.measure(FIGURES + "heroes/fix/base.png", FigureArt.CANVAS), [100, 100, 100, 400] as Array[int],
 		"the PNG measured in canvas units")
 	assert_eq(FigureBounds.to_json(FigureBounds.measure_all()), FileAccess.get_file_as_string(FIGURES + "bounds.json"))
-	var token: UnitToken = _token("heroes/fix_base")
+	var token: UnitToken = _token("heroes/fix/base")
 	assert_eq(token.figure_rect(), Rect2(-25, -200, 50, 200), "drawn as the 1x placeholder would be")
 
 
@@ -57,8 +57,8 @@ func test_a_boss_has_twice_the_canvas() -> void:
 
 
 func test_the_manifest_places_the_bars_and_the_shots() -> void:
-	assert_eq([FigureArt.head("heroes/fix_base"), FigureArt.muzzle("heroes/fix_base")], [Vector2(150, 60), Vector2(210, 250)])
-	var token: UnitToken = _token("heroes/fix_base")
+	assert_eq([FigureArt.head("heroes/fix/base"), FigureArt.muzzle("heroes/fix/base")], [Vector2(150, 60), Vector2(210, 250)])
+	var token: UnitToken = _token("heroes/fix/base")
 	assert_eq(token.head_offset(), Vector2(0, -220), "the bars sit at the manifest's head, above what's drawn")
 	assert_eq(token.muzzle_offset(), Vector2(30, -125))
 	token.facing_left = true
@@ -67,11 +67,11 @@ func test_the_manifest_places_the_bars_and_the_shots() -> void:
 
 
 func test_a_portrait_falls_back_to_the_figure() -> void:
-	assert_eq(Portrait.art_for("heroes/fix_base", FIXTURES + "portraits/").get_size(), Vector2(64, 64))
-	assert_null(Portrait.art_for("heroes/maren_base"), "no portraits are drawn yet")
-	var portrait: Portrait = Portrait.make("heroes/fix_base", Vector2(100, 120))
+	assert_eq(Portrait.art_for("heroes/fix/base", FIXTURES + "portraits/").get_size(), Vector2(64, 64))
+	assert_null(Portrait.art_for("heroes/maren/base"), "no portraits are drawn yet")
+	var portrait: Portrait = Portrait.make("heroes/fix/base", Vector2(100, 120))
 	assert_false(portrait.is_portrait)
-	assert_eq(portrait.texture, FigureArt.texture("heroes/fix_base"), "the figure, cropped")
+	assert_eq(portrait.texture, FigureArt.texture("heroes/fix/base"), "the figure, cropped")
 	portrait.free()
 
 

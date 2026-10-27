@@ -2,8 +2,8 @@ class_name Portrait
 extends Control
 ## A unit's portrait in a box, as the playtester's mock draws them
 ## (docs/mockups/hero-panel-layout.pdf): on a raised navy box, optionally
-## with a soft circle behind. Its portrait (art/portraits/<hero>_<form> or
-## <enemy>; docs/plans/asset-contract.md, section 4) covers the box from the
+## with a soft circle behind. Its portrait (art/portraits/heroes/<hero>/<form>
+## or enemies/<enemy>; docs/plans/asset-contract.md, section 4) covers the box from the
 ## top where it's drawn; else its figure (FigureArt) is cropped to the top
 ## `shown` share (1.0: all of it; 0.6: head and shoulders), scaled to the
 ## box's height and centered across it. Nothing is drawn without art.
@@ -24,7 +24,7 @@ var circle: bool = false
 var radius: int = 6
 
 
-## A portrait for the figure `key` ("heroes/maren_base", "enemies/rift_pup").
+## A portrait for the figure `key` ("heroes/maren/base", "enemies/rift_pup").
 static func make(key: String, min_size: Vector2, shown_share: float = 1.0, with_circle: bool = false) -> Portrait:
 	var portrait := Portrait.new()
 	portrait.texture = art_for(key)
@@ -43,9 +43,9 @@ static func make(key: String, min_size: Vector2, shown_share: float = 1.0, with_
 
 
 ## The portrait drawn for the figure `key` (in `folder`: DIR, or a test's
-## fixtures), or null.
+## fixtures), or null: portraits mirror the figures' names.
 static func art_for(key: String, folder: String = DIR) -> Texture2D:
-	return ArtFile.texture(folder + key.get_file()) if not key.is_empty() else null
+	return ArtFile.texture(folder + key) if not key.is_empty() else null
 
 
 func _draw() -> void:

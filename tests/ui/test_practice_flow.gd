@@ -4,7 +4,7 @@ extends GutTest
 ## placement -> fight -> result -> place again, rematch, watch again, and
 ## back.
 
-const MainScript = preload("res://src/ui/main.gd")
+const MainScript = preload("res://src/ui/app/main.gd")
 const U = preload("res://tests/ui/ui_test_kit.gd")
 const SAVE: String = "user://test_practice_no_save.json"
 

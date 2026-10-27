@@ -1,0 +1,1025 @@
+class_name RunContent
+extends RefCounted
+## The run's data, apart from the sim's (docs/plans/rebuild-phase5-run.md):
+## the acts (act1.json, then act2.json and act3.json where they exist; phase
+## 8 part 3), the upgrades, the items, camp, the relics, and the duo bonds. It sits over the sim's ContentDb, which it cross-checks
+## against: every encounter a day can draw, every path and hero named.
+
+const ACT_FILE: String = "act1.json"
+## Every act after the first is optional, read in order until one is missing.
+const LATER_ACT_FILE: String = "act%d.json"
+const MAX_ACTS: int = 3
+const UPGRADES_FILE: String = "upgrades.json"
+const ITEMS_FILE: String = "items.json"
+const CAMPS_FILE: String = "camps.json"
+const RELICS_FILE: String = "relics.json"
+const BONDS_FILE: String = "bonds.json"
+const EVENTS_FILE: String = "events.json"
+const RIFT_LEARNS_FILE: String = "rift_learns.json"
+const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE, EVENTS_FILE, RIFT_LEARNS_FILE]
+## The items' and relics' glyphs (the UI draws them; phase 5b).
+const GLYPHS: String = "res://art/ui/items/glyphs/%s"
+## Where camp's icons are (camps.json names a file under it).
+const ART_UI: String = "res://art/ui/"
+
+var content: ContentDb
+## In order: Act 1 first (act_of picks the run's).
+var acts: Array[ActDef] = []
+var upgrades: Dictionary[String, UpgradeDef] = {}
+## In the file's order (offers draw in this order).
+var upgrade_ids: Array[String] = []
+var items: Dictionary[String, ItemDef] = {}
+var item_ids: Array[String] = []
+var camps: CampsDef = null
+var relics: Dictionary[String, RelicDef] = {}
+var relic_ids: Array[String] = []
+var bonds: Dictionary[String, BondDef] = {}
+var bond_ids: Array[String] = []
+## The Event node's scenes and oaths (phase 5c step 8c).
+var events: EventDef = null
+## The rift learns (phase 8 part 3; data/rift_learns.json), or null.
+var learns: RiftLearnsDef = null
+var errors: Array[String] = []
+## FOR TESTING ONLY (docs/plans/easy-start.md, ES-4): item and relic id ->
+## how many times as likely the shops and relic choices are to draw it
+## (Offers). Only the tools set it (the run report's test teams, leaning
+## toward their build's items and relics, test-teams.md); the game never
+## does, and tests/run/draws/test_offers_lean.gd checks nothing in src/ writes it.
+## Empty, every draw is as it always was.
+var test_lean: Dictionary[String, int] = {}
+
+
+## Loads the run's files from `dir`, over `content_db` (already loaded).
+static func load_dir(dir: String, content_db: ContentDb) -> RunContent:
+	var texts: Dictionary[String, String] = {}
+	var missing: Array[String] = []
+	for file_name: String in FILES:
+		var text: String = DataLayout.read(dir, file_name, missing)
+		if not text.is_empty():
+			texts[file_name] = text
+		else:
+			missing.append("%s: file not found under %s (DataLayout)" % [file_name, dir])
+	for number: int in range(2, MAX_ACTS + 1):
+		var act_text: String = DataLayout.read(dir, LATER_ACT_FILE % number, missing)
+		if act_text.is_empty():
+			break
+		texts[LATER_ACT_FILE % number] = act_text
+	var run: RunContent = load_texts(texts, content_db)
+	missing.append_array(run.errors)
+	run.errors = missing
+	return run
+
+
+static func load_texts(texts: Dictionary[String, String], content_db: ContentDb) -> RunContent:
+	var run := RunContent.new()
+	run.content = content_db
+	for number: int in range(1, MAX_ACTS + 1):
+		var file_name: String = LATER_ACT_FILE % number
+		if number > 1 and not texts.has(file_name):
+			break
+		var act_data: Variant = DataLayout.parse(texts, file_name, run.errors, false)
+		if act_data == null:
+			break
+		var reader: DataReader = DataReader.from_value(act_data, file_name, run.errors)
+		if reader == null:
+			break
+		var act_def: ActDef = ActDef.read(reader)
+		if act_def.act != number:
+			run.errors.append("%s: \"act\" must be %d" % [file_name, number])
+		run.acts.append(act_def)
+	run._read_upgrades(DataLayout.parse(texts, UPGRADES_FILE, run.errors, false))
+	run._read_items(DataLayout.parse(texts, ITEMS_FILE, run.errors, false))
+	var camps_data: Variant = DataLayout.parse(texts, CAMPS_FILE, run.errors, false)
+	if camps_data != null:
+		var camps_reader: DataReader = DataReader.from_value(camps_data, CAMPS_FILE, run.errors)
+		if camps_reader != null:
+			run.camps = CampsDef.read(camps_reader)
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, RELICS_FILE, run.errors, false), RELICS_FILE, run.errors):
+		var relic: RelicDef = RelicDef.read(reader)
+		if run._claim(relic.id, reader, run.relic_ids):
+			run.relics[relic.id] = relic
+	for reader: DataReader in DataLayout.entries(DataLayout.parse(texts, BONDS_FILE, run.errors, false), BONDS_FILE, run.errors):
+		var bond: BondDef = BondDef.read(reader)
+		if run._claim(bond.id, reader, run.bond_ids):
+			run.bonds[bond.id] = bond
+	var events_data: Variant = DataLayout.parse(texts, EVENTS_FILE, run.errors, false)
+	if events_data != null:
+		var events_reader: DataReader = DataReader.from_value(events_data, EVENTS_FILE, run.errors)
+		if events_reader != null:
+			run.events = EventDef.read(events_reader)
+	var learns_data: Variant = DataLayout.parse(texts, RIFT_LEARNS_FILE, run.errors, false)
+	if learns_data != null:
+		var learns_reader: DataReader = DataReader.from_value(learns_data, RIFT_LEARNS_FILE, run.errors)
+		if learns_reader != null:
+			run.learns = RiftLearnsDef.read(learns_reader)
+	run._check()
+	return run
+
+
+func is_valid() -> bool:
+	return errors.is_empty() and content != null and content.is_valid()
+
+
+## The act the run is in (phase 8 part 3).
+func act_of(state: RunState) -> ActDef:
+	return acts[clampi(state.act, 1, acts.size()) - 1]
+
+
+## The act after the run's, or null if it's in the last.
+func next_act(state: RunState) -> ActDef:
+	return acts[state.act] if state.act < acts.size() else null
+
+
+## The encounters of `tier` that day `day` of `act_def` can draw.
+func encounters_for(act_def: ActDef, tier: String, day: int) -> Array[String]:
+	var found: Array[String] = []
+	for id: String in content.encounter_ids:
+		var encounter: EncounterDef = content.encounters[id]
+		if encounter.act == act_def.fights_act and encounter.tier == tier and encounter.days.has(day):
+			found.append(id)
+	return found
+
+
+## A day's kind ("normal", "elite", or "boss"): the act's days, then, in an
+## endless run (phase 8 part 1), the floor's; "" for a day there's none of.
+func day_kind(state: RunState, day: int) -> String:
+	var act_def: ActDef = act_of(state)
+	if day >= 1 and day <= act_def.days.size():
+		return act_def.days[day - 1]
+	if state.endless and act_def.endless != null and day > act_def.days.size():
+		return act_def.endless.kind(day - act_def.days.size())
+	return ""
+
+
+## The floor `day` is in an endless run (0 for the act's days).
+func floor_of(state: RunState, day: int) -> int:
+	return maxi(day - act_of(state).days.size(), 0) if state.endless else 0
+
+
+## The fights an endless floor of `kind` draws from (Decision 1): the run's
+## act's easier and harder fights allowed from endless.from_day on for a
+## normal floor, its elites, or its boss.
+func floor_pool(state: RunState, kind: String) -> Array[String]:
+	var act_def: ActDef = act_of(state)
+	var found: Array[String] = []
+	var tiers: Array[String] = [kind]
+	if kind == "normal":
+		tiers.assign(["easier", "harder"])
+	for id: String in content.encounter_ids:
+		var encounter: EncounterDef = content.encounters[id]
+		if encounter.act != act_def.fights_act or not tiers.has(encounter.tier):
+			continue
+		if kind == "normal" and act_def.endless != null and not encounter.days.any(func(d: int) -> bool: return d >= act_def.endless.from_day):
+			continue
+		found.append(id)
+	return found
+
+
+## Every easier and harder encounter of `act_def`, whatever its days.
+func normal_encounters(act_def: ActDef) -> Array[String]:
+	var found: Array[String] = []
+	for id: String in content.encounter_ids:
+		var encounter: EncounterDef = content.encounters[id]
+		if encounter.act == act_def.fights_act and encounter.tier in ["easier", "harder"]:
+			found.append(id)
+	return found
+
+
+## The upgrades `hero` can be offered now (phase 5c step 7, section 15.3):
+## its hero cards always, its vowed path's taste cards until it transforms,
+## and that path's cards once it has; none it has taken but a stacking card,
+## and none that would change nothing on its kit now (Decision 37).
+func upgrades_for(hero: RunState.Hero) -> Array[String]:
+	var found: Array[String] = []
+	for id: String in upgrade_ids:
+		var upgrade: UpgradeDef = upgrades[id]
+		if upgrade.hero != hero.id or (hero.upgrades.has(id) and not upgrade.stacks()):
+			continue
+		if upgrade.layer == UpgradeDef.Layer.TASTE and (upgrade.path != hero.path or hero.transformed):
+			continue
+		if upgrade.layer == UpgradeDef.Layer.PATH and (upgrade.path != hero.path or not hero.transformed):
+			continue
+		# An apex card once that apex is earned (phase 8 part 2).
+		if upgrade.layer == UpgradeDef.Layer.APEX and (upgrade.apex != hero.apex or not hero.apex_earned):
+			continue
+		if not changes_something(upgrade, hero.transformed, hero_kit(hero)):
+			continue
+		found.append(id)
+	return found
+
+
+## True if `upgrade` changes something on `kit` (a hero `transformed` or
+## not): its mod touches it, and an added passive can fire on it; a growing
+## card's counting can count there; a stacking card always does.
+func changes_something(upgrade: UpgradeDef, transformed: bool, kit: UnitDef) -> bool:
+	if upgrade.stacks() or upgrade.tithe != null or upgrade.transmute != null or upgrade.shop != null or upgrade.snowball_bp > 0 or upgrade.holding_less > 0:
+		return true
+	var mod: KitMod = upgrade.mod_for(transformed)
+	if mod != null and (mod.affects_besides_passives(kit) or mod.passives.any(func(part: PartDef) -> bool: return _passive_can_fire(part, kit))):
+		return true
+	return upgrade.grows != null and _can_count(upgrade.grows.counts, kit)
+
+
+## An added passive's events must be able to happen on `kit`: one that waits
+## on statuses the kit applies (on_status), or on hopping (on_hop). Auras and
+## other events always can.
+func _passive_can_fire(part: PartDef, kit: UnitDef) -> bool:
+	if part.kind != PartDef.Kind.ABILITY:
+		return true
+	var applied: Array[String] = kit.status_ids()
+	for effect: EffectDef in part.ability.effects:
+		if effect.trigger == EffectDef.Trigger.ON_HOP and kit.hop_cooldown_ticks <= 0:
+			continue
+		if effect.trigger == EffectDef.Trigger.ON_STATUS and not effect.statuses.is_empty() \
+				and not effect.statuses.any(func(status_id: String) -> bool: return applied.has(status_id)):
+			continue
+		return true
+	return false
+
+
+## A growing card's counting can count on `kit`: what it names is there (its
+## abilities, the keywords of the statuses it applies).
+func _can_count(counts: DeedDef, kit: UnitDef) -> bool:
+	if not counts.from_ability.is_empty() and not counts.from_ability.any(func(ability_id: String) -> bool: return kit.ability_ids_with_companions().has(ability_id)):
+		return false
+	if counts.counts == DeedDef.Counts.APPLIED and not counts.keywords.is_empty():
+		for status_id: String in kit.status_ids():
+			if content.statuses.has(status_id) and counts.keywords.has(content.statuses[status_id].keyword):
+				return true
+		return false
+	return true
+
+
+## The kit mods `hero`'s upgrades give it now, in the order taken (a taste
+## or path card only while the hero is on that path); a growing one's, its
+## steps so far (phase 5c step 4); a stacking one's, each take's locked
+## amount (step 7).
+func upgrade_mods(hero: RunState.Hero, shards: int = -1) -> Array[KitMod]:
+	var mods: Array[KitMod] = []
+	var takes: Dictionary[String, int] = {}
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		# Ward Tax (phase 8 part 5): only while the run holds its shards
+		# (`shards` -1: as if it does, for what the card would change).
+		if upgrade.needs_shards > 0 and shards >= 0 and shards < upgrade.needs_shards:
+			continue
+		if upgrade.stacks():
+			var take: int = takes.get(upgrade.id, 0)
+			takes[upgrade.id] = take + 1
+			var locked: Array = hero.locked.get(upgrade.id, [])
+			if take < locked.size():
+				mods.append(upgrade.locked_mod(int(locked[take])))
+			continue
+		var mod: KitMod = upgrade.mod_for(hero.transformed)
+		if mod != null:
+			mods.append(mod)
+		if upgrade.grows != null and not upgrade.grows.team:
+			var grown: KitMod = upgrade.grows.mod_for(hero.growth.get(upgrade.id, 0))
+			if grown != null:
+				mods.append(grown)
+	# Its transformed path's run snowball, if it's its own (phase 8 part 6).
+	var stage_grown: KitMod = path_grown(hero, false)
+	if stage_grown != null:
+		mods.append(stage_grown)
+	# Its earned apex's run snowball, if it's its own (phase 8 part 5).
+	var apex: ApexDef = earned_apex(hero)
+	if apex != null and apex.grows != null and not apex.grows.team:
+		var grown: KitMod = apex.grows.mod_for(apex_count(hero, apex))
+		if grown != null:
+			mods.append(grown)
+	return mods
+
+
+## The shards held that make a won fight "won_holding" for `hero`'s cards and
+## apex (phase 8 part 6: RunFlow.WON_HOLDING_SHARDS, less its Low Bar).
+func holding_threshold(hero: RunState.Hero) -> int:
+	var less: int = 0
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		less += upgrade.holding_less
+	return maxi(RunFlow.WON_HOLDING_SHARDS - less, 1)
+
+
+## What `hero`'s earned `apex`'s run snowball has counted, its apex cards'
+## snowball_bp added on (phase 8 part 6, Deep Vault: half again).
+func apex_count(hero: RunState.Hero, apex: ApexDef) -> int:
+	return FixedMath.apply_bp(hero.growth.get(apex_growth_key(apex), 0), FixedMath.BP_ONE + _snowball_bp(hero, UpgradeDef.Layer.APEX))
+
+
+## Its held cards' snowball_bp of one layer, summed (phase 8 part 6): path
+## cards' reach its path's snowball, apex cards' its apex's.
+func _snowball_bp(hero: RunState.Hero, layer: UpgradeDef.Layer) -> int:
+	var more_bp: int = 0
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.layer == layer:
+			more_bp += upgrade.snowball_bp
+	return more_bp
+
+
+## The apex `hero` has earned, or null.
+func earned_apex(hero: RunState.Hero) -> ApexDef:
+	if not hero.transformed or hero.apex.is_empty() or not hero.apex_earned:
+		return null
+	return content.paths[hero.path].apex(hero.apex)
+
+
+## Where an apex's run snowball keeps its count (RunState.Hero.growth).
+static func apex_growth_key(apex: ApexDef) -> String:
+	return "apex:" + apex.id
+
+
+## Where a transformed path's run snowball keeps its count (phase 8 part 6).
+static func path_growth_key(path: PathDef) -> String:
+	return "path:" + path.id
+
+
+## What `hero`'s transformed path's run snowball gives now, if it's the
+## team's (`team`) or its own, or null (phase 8 part 6, Fence).
+func path_grown(hero: RunState.Hero, team: bool) -> KitMod:
+	if not hero.transformed or not content.paths.has(hero.path):
+		return null
+	var path: PathDef = content.paths[hero.path]
+	if path.transformed_grows == null or path.transformed_grows.team != team:
+		return null
+	# Big Spender: its count goes further (every card's share added up).
+	var more_bp: int = _snowball_bp(hero, UpgradeDef.Layer.PATH)
+	return path.transformed_grows.mod_for(FixedMath.apply_bp(hero.growth.get(path_growth_key(path), 0), FixedMath.BP_ONE + more_bp))
+
+
+## `hero`'s Tithe now (phase 8 part 5, TitheDef), or null: its path's at its
+## stage (its vowed apex's taste added on, or its earned apex's own in its
+## place), with its held cards' added on.
+func tithe(hero: RunState.Hero) -> TitheDef:
+	var path: PathDef = content.paths[hero.path]
+	var stage: TitheDef = path.transformed_tithe if hero.transformed else path.vowed_tithe
+	var apex: ApexDef = path.apex(hero.apex) if hero.transformed and not hero.apex.is_empty() else null
+	if apex != null and hero.apex_earned:
+		stage = apex.apex_tithe if apex.apex_tithe != null else stage
+	elif apex != null and apex.vowed_tithe != null:
+		stage = apex.vowed_tithe.merged(stage)
+	# A card's Tithe counts without a stage's too (phase 8 part 6, Ottilie's
+	# Ledger).
+	var sum: TitheDef = stage.merged(null) if stage != null else null
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.tithe != null:
+			sum = upgrade.tithe.merged(sum)
+	return sum
+
+
+## `hero`'s transmuting now (phase 8 part 6, TransmuteDef), or null: its
+## path's at its stage (its vowed apex's taste added on, or its earned apex's
+## own in its place), with its held cards' added on.
+func transmute(hero: RunState.Hero) -> TransmuteDef:
+	var path: PathDef = content.paths[hero.path]
+	var stage: TransmuteDef = path.transformed_transmute if hero.transformed else path.vowed_transmute
+	var apex: ApexDef = path.apex(hero.apex) if hero.transformed and not hero.apex.is_empty() else null
+	if apex != null and hero.apex_earned:
+		stage = apex.apex_transmute if apex.apex_transmute != null else stage
+	elif apex != null and apex.vowed_transmute != null:
+		stage = apex.vowed_transmute.merged(stage)
+	if stage == null:
+		return null
+	var sum: TransmuteDef = stage.merged(null)
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.transmute != null:
+			sum = sum.merged(upgrade.transmute)
+	return sum
+
+
+## `hero`'s shop rules now (phase 8 part 6, ShopRulesDef), or null: its
+## path's at its stage (its vowed apex's taste added on, or its earned apex's
+## own in its place), with its held cards' added on.
+func shop_rules(hero: RunState.Hero) -> ShopRulesDef:
+	var path: PathDef = content.paths[hero.path]
+	var stage: ShopRulesDef = path.transformed_shop if hero.transformed else path.vowed_shop
+	var apex: ApexDef = path.apex(hero.apex) if hero.transformed and not hero.apex.is_empty() else null
+	if apex != null and hero.apex_earned:
+		stage = apex.apex_shop if apex.apex_shop != null else stage
+	elif apex != null and apex.vowed_shop != null:
+		stage = apex.vowed_shop.merged(stage)
+	var sum: ShopRulesDef = stage.merged(null) if stage != null else null
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.shop != null:
+			sum = upgrade.shop.merged(sum)
+	return sum
+
+
+## The shards `hero`'s Tithe cards' growth adds a win (Ledger of Debts: its
+## per_step for each step so far).
+func tithe_steps(hero: RunState.Hero) -> int:
+	var paid: int = 0
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.tithe != null and upgrade.tithe.per_step > 0 and upgrade.grows != null:
+			paid += upgrade.tithe.per_step * upgrade.grows.steps(hero.growth.get(upgrade.id, 0))
+	return paid
+
+
+## What taking stacking card `upgrade` now locks in for `hero` (section
+## 15.4): its share of the hero's stat now (its kit at its stage with the
+## upgrades it holds; not wounds, items, relics, or auras), rounded to the
+## nearest point, at least 1. Attack speed's share is of 100 + ATSP, since
+## ATSP is a bonus in points, not a rate.
+func stack_amount(hero: RunState.Hero, upgrade: UpgradeDef) -> int:
+	var kit: UnitDef = hero_kit(hero)
+	for mod: KitMod in upgrade_mods(hero):
+		kit = mod.apply(kit)
+	var stat: int = kit.stats.values[upgrade.stack_stat]
+	if upgrade.stack_stat == UnitStats.Stat.ATSP:
+		stat += 100
+	return maxi(1, (stat * upgrade.stack_pct + 50) / 100)
+
+
+## The upgrades that count for `hero` now, in the order taken (a taste or
+## path card only while the hero is on that path; a stacking card once per
+## take).
+func held_upgrades(hero: RunState.Hero) -> Array[UpgradeDef]:
+	var found: Array[UpgradeDef] = []
+	for id: String in hero.upgrades:
+		var upgrade: UpgradeDef = upgrades.get(id)
+		if upgrade == null:
+			continue
+		if upgrade.layer == UpgradeDef.Layer.APEX:
+			if upgrade.apex == hero.apex and hero.apex_earned:
+				found.append(upgrade)
+		elif upgrade.layer == UpgradeDef.Layer.HERO or upgrade.path == hero.path:
+			found.append(upgrade)
+	return found
+
+
+## What `hero` counts for the growing cards in a fight (phase 5c step 4):
+## "upgrade:<id>" for its own, "relic:<id>" for the team's relics, each with
+## how it counts. Returns [keys, counts].
+func growth_tallies(state: RunState, hero: RunState.Hero) -> Array:
+	var keys: Array[String] = []
+	var counts: Array[DeedDef] = []
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.grows != null:
+			keys.append("upgrade:" + upgrade.id)
+			counts.append(upgrade.grows.counts)
+	for id: String in state.relics:
+		if relics.has(id) and relics[id].grows != null and relics[id].grows.counted_in_fights():
+			keys.append("relic:" + id)
+			counts.append(relics[id].grows.counts)
+	# Its earned apex's snowball, if its fights count it (phase 8 part 6,
+	# Manhunter).
+	var apex: ApexDef = earned_apex(hero)
+	if apex != null and apex.grows != null and apex.grows.counted_in_fights():
+		keys.append(apex_growth_key(apex))
+		counts.append(apex.grows.counts)
+	# Its tactic's and sigils' ranks count in the fight (phase 5c step 6):
+	# the time it stands, and its signature's casts. Charms and gambits count
+	# fights, which the run does.
+	for item_id: String in hero.slots:
+		var item: ItemDef = items.get(item_id)
+		if item == null or state.item_ranks.get(item_id, ItemDef.RANKS) >= ItemDef.RANKS:
+			continue
+		if item.kind == ItemDef.Kind.TACTIC:
+			keys.append("item:" + item_id)
+			counts.append(ITEM_STANDING)
+		elif item.kind == ItemDef.Kind.SIGIL:
+			keys.append("item:" + item_id)
+			counts.append(ITEM_CASTS)
+	return [keys, counts]
+
+
+## What a tactic's and a sigil's ranks count (built once).
+static var ITEM_STANDING: DeedDef = _count_of(DeedDef.Counts.MS_STANDING)
+static var ITEM_CASTS: DeedDef = _count_of(DeedDef.Counts.CASTS)
+
+
+static func _count_of(counts: DeedDef.Counts) -> DeedDef:
+	var deed := DeedDef.new()
+	deed.counts = counts
+	return deed
+
+
+## The kit `hero` fights with before its upgrades and loadout: its path's,
+## at its stage (an apex's once vowed to one, phase 8 part 2).
+func hero_kit(hero: RunState.Hero) -> UnitDef:
+	var path: PathDef = content.paths[hero.path]
+	if hero.transformed and not hero.apex.is_empty() and path.apex(hero.apex) != null:
+		return path.apex(hero.apex).apex_kit if hero.apex_earned else path.apex(hero.apex).vowed_kit
+	return path.transformed_kit if hero.transformed else path.vowed_kit
+
+
+## The kit mods `hero`'s loadout gives it, in slot order, each at the
+## item's rank (a tactic gives none; an item that does nothing on it changes
+## nothing anyway).
+func loadout_mods(state: RunState, hero: RunState.Hero) -> Array[KitMod]:
+	var mods: Array[KitMod] = []
+	for item_id: String in hero.slots:
+		var mod: KitMod = items[item_id].mod_at(state.item_ranks.get(item_id, 1)) if items.has(item_id) else null
+		if mod != null:
+			mods.append(mod)
+	return mods
+
+
+## The mod of the gambit `hero` holds, at its rank, or null (phase 5c step
+## 6d).
+func loadout_gambit(hero: RunState.Hero, state: RunState) -> KitMod:
+	for item_id: String in hero.slots:
+		var item: ItemDef = items.get(item_id)
+		if item != null and item.kind == ItemDef.Kind.GAMBIT:
+			return item.mod_at(state.item_ranks.get(item_id, 1))
+	return null
+
+
+## The tactic `hero`'s loadout gives it: the first tactic item it can
+## follow, or null. One it can't (Wait to heal without a signature that
+## waits) does nothing, with no warning (loadout rule 2).
+## At the item's rank (phase 5c step 6c).
+func loadout_tactic(hero: RunState.Hero, state: RunState = null) -> TacticDef:
+	for item_id: String in hero.slots:
+		var item: ItemDef = items.get(item_id)
+		if item != null and item.tactic != null and can_follow(item.tactic, hero_kit(hero), hero.id):
+			return item.tactic.at_rank(state.item_ranks.get(item_id, 1) if state != null else 1)
+	return null
+
+
+## Whether a hero `hero_id` with `kit` can follow `tactic`.
+static func can_follow(tactic: TacticDef, kit: UnitDef, hero_id: String) -> bool:
+	return tactic.allows(hero_id) and Tactics.can_follow(tactic, kit)
+
+
+## The kit mods the run's relics give every hero, in the order taken; a
+## growing one's, its steps so far (phase 5c step 4). `kit`: the hero's
+## path's kit, for a mod only for some heroes (phase 5c step 5c, mod_for).
+func relic_mods(state: RunState, kit: UnitDef = null) -> Array[KitMod]:
+	var mods: Array[KitMod] = []
+	for id: String in state.relics:
+		if not relics.has(id):
+			continue
+		if relics[id].mod != null and relics[id].mod_fits(kit):
+			mods.append(_doubled(relics[id].mod) if counts_twice(state, relics[id]) else relics[id].mod)
+		if relics[id].grows != null:
+			var grown: KitMod = relics[id].grows.mod_for(state.growth.get(id, 0))
+			if grown != null:
+				mods.append(grown)
+		var worked_out: KitMod = _worked_out(relics[id], state)
+		if worked_out != null:
+			mods.append(worked_out)
+	# Team growths (phase 8 part 5: Golden Aegis's run snowball, Gold Leaf):
+	# a hero's card or earned apex whose steps go to every hero.
+	for hero: RunState.Hero in state.heroes:
+		for upgrade: UpgradeDef in held_upgrades(hero):
+			if upgrade.grows != null and upgrade.grows.team:
+				var grown: KitMod = upgrade.grows.mod_for(hero.growth.get(upgrade.id, 0))
+				if grown != null:
+					mods.append(grown)
+		var apex: ApexDef = earned_apex(hero)
+		if apex != null and apex.grows != null and apex.grows.team:
+			var grown: KitMod = apex.grows.mod_for(apex_count(hero, apex))
+			if grown != null:
+				mods.append(grown)
+		var stage_grown: KitMod = path_grown(hero, true)
+		if stage_grown != null:
+			mods.append(stage_grown)
+	return mods
+
+
+## Whether a relic counts twice (phase 5c step 5b): a common, while
+## Reliquary is held.
+func counts_twice(state: RunState, relic: RelicDef) -> bool:
+	return relic.tier == RelicDef.Tier.COMMON and relic_rule(state, "doubles_commons")
+
+
+## A common's mod under Reliquary: twice over where a step could scale it
+## (stats, amounts, auras); unchanged where it couldn't (Brand of Guilt's
+## ability, Rift Candle's mana).
+static func _doubled(mod: KitMod) -> KitMod:
+	return mod.times(2) if mod.step_problem().is_empty() else mod
+
+
+## The relics' effects as each fight starts (phase 5c step 5b), in the order
+## taken, with the share each runs at (doubled for a common under
+## Reliquary): [relic, scale_bp] pairs for each effect.
+func relic_starts(state: RunState) -> Array[Array]:
+	var starts: Array[Array] = []
+	for id: String in state.relics:
+		if not relics.has(id):
+			continue
+		var scale: int = 2 * FixedMath.BP_ONE if counts_twice(state, relics[id]) else FixedMath.BP_ONE
+		for effect: EffectDef in relics[id].at_start:
+			starts.append([relics[id], effect, scale])
+	return starts
+
+
+## The rules the run's relics give the heroes' side (phase 5c step 5c).
+func hero_rules(state: RunState) -> SideRules:
+	var rules := SideRules.new()
+	for id: String in state.relics:
+		if relics.has(id) and relics[id].rules != null:
+			rules = rules.merged(relics[id].rules)
+	return rules
+
+
+## The stats a relic gives from the run as it stands (phase 5c step 5a):
+## Reliquary Lamp's per relic held, Gilded Rift's per shards held.
+func _worked_out(relic: RelicDef, state: RunState) -> KitMod:
+	var mod: KitMod = null
+	if relic.per_relic_bp > 0:
+		mod = KitMod.make()
+		for stat: UnitStats.Stat in [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF, UnitStats.Stat.CRIT, UnitStats.Stat.ATSP]:
+			mod.stats_bp[stat] = FixedMath.BP_ONE + relic.per_relic_bp * state.relics.size()
+	if relic.per_shards > 0:
+		@warning_ignore("integer_division")
+		var steps: int = state.shards / relic.per_shards
+		if steps > 0:
+			mod = KitMod.make() if mod == null else mod
+			for stat: UnitStats.Stat in [UnitStats.Stat.ATK, UnitStats.Stat.MGK]:
+				mod.stats_bp[stat] += relic.per_shards_bp * steps
+	return mod
+
+
+## The bonds on for the run's heroes: both paths vowed and transformed.
+func active_bonds(state: RunState) -> Array[BondDef]:
+	return _bonds_where(state, true)
+
+
+## The bond relics the shops may show (phase 5c step 5d): those of the bonds
+## on, not yet held, in the bonds' order.
+func bond_relics(state: RunState) -> Array[String]:
+	var found: Array[String] = []
+	for bond: BondDef in active_bonds(state):
+		if not state.relics.has(bond.relic):
+			found.append(bond.relic)
+	return found
+
+
+## The bonds that stir: both paths vowed, not both transformed (shown as "?").
+func stirring_bonds(state: RunState) -> Array[BondDef]:
+	var stirring: Array[BondDef] = _bonds_where(state, false)
+	return stirring.filter(func(bond: BondDef) -> bool: return not active_bonds(state).has(bond))
+
+
+func _bonds_where(state: RunState, transformed: bool) -> Array[BondDef]:
+	var found: Array[BondDef] = []
+	for id: String in bond_ids:
+		var bond: BondDef = bonds[id]
+		var on: bool = true
+		for path_id: String in bond.paths:
+			var hero: RunState.Hero = state.hero(content.paths[path_id].hero) if content.paths.has(path_id) else null
+			if hero == null or hero.path != path_id or (transformed and not hero.transformed):
+				on = false
+		if on:
+			found.append(bond)
+	return found
+
+
+## The run's rules from its relics: the sum of one of RelicDef's numbers (a
+## common's twice under Reliquary).
+func relic_sum(state: RunState, key: String) -> int:
+	var total: int = 0
+	for id: String in state.relics:
+		if relics.has(id):
+			total += int(relics[id].get(key)) * (2 if counts_twice(state, relics[id]) else 1)
+	return total
+
+
+func relic_rule(state: RunState, key: String) -> bool:
+	return state.relics.any(func(id: String) -> bool: return relics.has(id) and bool(relics[id].get(key)))
+
+
+func _claim(id: String, reader: DataReader, ids: Array[String]) -> bool:
+	if id.is_empty():
+		return false
+	if ids.has(id):
+		reader.error("duplicate id \"%s\"" % id)
+		return false
+	ids.append(id)
+	return true
+
+
+func _read_items(data: Variant) -> void:
+	for reader: DataReader in DataLayout.entries(data, ITEMS_FILE, errors):
+		var item: ItemDef = ItemDef.read(reader)
+		if item.id.is_empty():
+			continue
+		if items.has(item.id):
+			reader.error("duplicate id \"%s\"" % item.id)
+			continue
+		items[item.id] = item
+		item_ids.append(item.id)
+
+
+func _read_upgrades(data: Variant) -> void:
+	for reader: DataReader in DataLayout.entries(data, UPGRADES_FILE, errors):
+		var upgrade: UpgradeDef = UpgradeDef.read(reader)
+		if upgrade.id.is_empty():
+			continue
+		if upgrades.has(upgrade.id):
+			reader.error("duplicate id \"%s\"" % upgrade.id)
+			continue
+		upgrades[upgrade.id] = upgrade
+		upgrade_ids.append(upgrade.id)
+
+
+func _check() -> void:
+	if content == null:
+		return
+	if acts.is_empty():
+		errors.append("%s: the run needs Act 1" % ACT_FILE)
+	for act_def: ActDef in acts:
+		if act_def.fights_act < 1 or act_def.fights_act > acts.size():
+			errors.append("%s: fights_act %d isn't an act" % [LATER_ACT_FILE % act_def.act, act_def.fights_act])
+			continue
+		for day: int in range(1, act_def.days.size() + 1):
+			if act_def.days[day - 1] == "normal" and encounters_for(act_def, "easier", day).size() + encounters_for(act_def, "harder", day).size() < 2:
+				errors.append("%s: day %d needs at least two fights to offer" % [LATER_ACT_FILE % act_def.act, day])
+	for path_id: String in content.path_ids:
+		if content.paths[path_id].deed.threshold <= 0:
+			errors.append("paths.json (%s): a run needs the deed's threshold" % path_id)
+	for id: String in upgrade_ids:
+		_check_upgrade(upgrades[id], "%s (%s)" % [UPGRADES_FILE, id])
+	for hero_id: String in content.hero_ids:
+		_check_all_upgrades(hero_id)
+	for id: String in item_ids:
+		_check_item(items[id], "%s (%s)" % [ITEMS_FILE, id])
+		_check_icon(items[id].icon, "%s (%s)" % [ITEMS_FILE, id])
+	var hero_kits: Array[UnitDef] = []
+	for path_id: String in content.path_ids:
+		hero_kits.append_array([content.paths[path_id].vowed_kit, content.paths[path_id].transformed_kit])
+		hero_kits.append_array(content.paths[path_id].apex_kits())
+	var enemy_kits: Array[UnitDef] = []
+	for enemy_id: String in content.enemy_ids:
+		enemy_kits.append(content.enemies[enemy_id].kit)
+	for id: String in relic_ids:
+		var relic: RelicDef = relics[id]
+		_check_icon(relic.icon, "%s (%s)" % [RELICS_FILE, id])
+		if not relic.mod_for_hero.is_empty() and not content.heroes.has(relic.mod_for_hero):
+			errors.append("%s (%s): mod_for names no hero \"%s\"" % [RELICS_FILE, id, relic.mod_for_hero])
+		_check_mod(relic.mod, _kits_for(relic, hero_kits), "%s (%s)" % [RELICS_FILE, id])
+		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
+		for effect: EffectDef in relic.at_start:
+			if effect.type == EffectDef.Type.APPLY_STATUS and not content.statuses.has(effect.status_id):
+				errors.append("%s (%s): at_start: unknown status \"%s\"" % [RELICS_FILE, id, effect.status_id])
+		if relic.grows != null and relic.grows.each.changes_anything():
+			_check_mod(relic.grows.each.times(50), hero_kits, "%s (%s): grows" % [RELICS_FILE, id])
+			if not relic.grows.counts.from_ability.is_empty():
+				errors.append("%s (%s): a relic grows by what the whole team does, so it counts no hero's ability" % [RELICS_FILE, id])
+	if camps != null:
+		for option: CampsDef.Option in camps.options.values() + camps.nodes.values():
+			if not ArtPath.exists(ART_UI + option.icon):
+				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, option.id, option.icon])
+		for place: CampsDef.Place in camps.places:
+			if not ArtPath.exists(ART_UI + place.icon):
+				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, place.id, place.icon])
+		_check_mod(camps.fortify_mod, hero_kits, "%s: fortify_mod" % CAMPS_FILE)
+		_check_mod(camps.rift_tear_mod, enemy_kits, "%s: rift_tear_mod" % CAMPS_FILE)
+		for modifier_id: String in camps.modifier_ids:
+			var modifier: CampsDef.Modifier = camps.modifiers[modifier_id]
+			_check_mod(modifier.mod, enemy_kits, "%s: rift modifier %s" % [CAMPS_FILE, modifier_id])
+			_check_mod(modifier.hero_mod, hero_kits, "%s: rift modifier %s" % [CAMPS_FILE, modifier_id])
+			for mod: KitMod in [modifier.mod, modifier.hero_mod]:
+				if mod == null or hero_kits.is_empty() or hero_kits[0] == null:
+					continue
+				for status_id: String in mod.apply(hero_kits[0]).status_ids():
+					if not content.statuses.has(status_id):
+						errors.append("%s: rift modifier %s: unknown status \"%s\"" % [CAMPS_FILE, modifier_id, status_id])
+		for act_def: ActDef in acts:
+			if act_def.fights_act < 1 or act_def.fights_act > acts.size():
+				continue
+			for day: int in range(1, act_def.days.size()):
+				if act_def.days[day - 1] == "normal" and encounters_for(act_def, "hunt", day).is_empty():
+					errors.append("%s: act %d day %d needs a hunt pack (an encounter of tier hunt)" % [CAMPS_FILE, act_def.act, day])
+	if events != null:
+		for key: String in events.next_fight_mods:
+			_check_mod(events.next_fight_mods[key], hero_kits, "%s: next_fight_mods %s" % [EVENTS_FILE, key])
+		for oath: EventDef.Oath in events.oaths:
+			_check_mod(oath.mod, hero_kits, "%s (%s)" % [EVENTS_FILE, oath.id])
+	if learns != null:
+		for habit: RiftLearnsDef.Habit in learns.habits:
+			for upgrade_id: String in habit.upgrades:
+				if not content.enemy_upgrades.has(upgrade_id):
+					errors.append("%s (%s): unknown enemy upgrade \"%s\"" % [RIFT_LEARNS_FILE, habit.id, upgrade_id])
+			for spec_id: String in habit.specializations:
+				if not content.specializations.has(spec_id):
+					errors.append("%s (%s): unknown specialization \"%s\"" % [RIFT_LEARNS_FILE, habit.id, spec_id])
+	for act_def: ActDef in acts:
+		if act_def.rift_learns and learns == null:
+			errors.append("%s: the rift learns needs %s" % [LATER_ACT_FILE % act_def.act, RIFT_LEARNS_FILE])
+	for id: String in bond_ids:
+		_check_bond(bonds[id], "%s (%s)" % [BONDS_FILE, id])
+	for id: String in relic_ids:
+		if relics[id].tier == RelicDef.Tier.BOND and not bond_ids.any(func(bond_id: String) -> bool: return bonds[bond_id].relic == id):
+			errors.append("%s (%s): a bond relic needs its bond" % [RELICS_FILE, id])
+
+
+## The kits a relic's mod can meet: every hero's, or with mod_for a hero
+## (phase 8 part 6, The Firepit), that hero's; for a bond relic, only its
+## bond path's transformed and apex kits, the only ones it's taken with.
+func _kits_for(relic: RelicDef, hero_kits: Array[UnitDef]) -> Array[UnitDef]:
+	if relic.mod_for_hero.is_empty():
+		return hero_kits
+	var kits: Array[UnitDef] = hero_kits.filter(func(kit: UnitDef) -> bool: return kit != null and relic.mod_fits(kit))
+	if relic.tier != RelicDef.Tier.BOND:
+		return kits
+	for bond_id: String in bond_ids:
+		if bonds[bond_id].relic != relic.id:
+			continue
+		for path_id: String in bonds[bond_id].paths:
+			if content.paths.has(path_id) and content.paths[path_id].hero == relic.mod_for_hero:
+				var path: PathDef = content.paths[path_id]
+				var bonded: Array[UnitDef] = [path.transformed_kit]
+				bonded.append_array(path.apex_kits())
+				return bonded
+	return kits
+
+
+## An icon's glyph must be in the art (docs/plans/rebuild-phase5b-art.md,
+## section 5).
+func _check_icon(icon: String, where: String) -> void:
+	if not ArtPath.exists(GLYPHS % icon):
+		errors.append("%s: no glyph \"%s\" in art/ui/items/glyphs/" % [where, icon])
+
+
+## A mod must be sound on every kit it can meet.
+func _check_mod(mod: KitMod, kits: Array[UnitDef], where: String) -> void:
+	if mod == null:
+		return
+	for change: KitMod.AbilityChange in mod.changes:
+		for status_id: String in change.statuses:
+			if not content.statuses.has(status_id):
+				errors.append("%s: unknown status \"%s\" in an \"on\" entry" % [where, status_id])
+	for kit: UnitDef in kits:
+		if kit == null:
+			continue
+		var problems: Array[String] = []
+		mod.apply(kit, problems)
+		for problem: String in problems:
+			errors.append("%s: on %s, %s" % [where, kit.id, problem])
+
+
+## A bond's two paths must exist and belong to two different heroes, and its
+## relic must be a bond relic (phase 5c step 5d).
+func _check_bond(bond: BondDef, where: String) -> void:
+	if not relics.has(bond.relic):
+		errors.append("%s: unknown relic \"%s\"" % [where, bond.relic])
+	elif relics[bond.relic].tier != RelicDef.Tier.BOND:
+		errors.append("%s: its relic \"%s\" must be of the bond tier" % [where, bond.relic])
+	if bond.paths.size() != 2:
+		return
+	for path_id: String in bond.paths:
+		if not content.paths.has(path_id):
+			errors.append("%s: unknown path \"%s\"" % [where, path_id])
+			return
+	if content.paths[bond.paths[0]].hero == content.paths[bond.paths[1]].hero:
+		errors.append("%s: a bond links two different heroes' paths" % where)
+
+
+## A tactic item's tactic must exist; each rank's mod must be sound on every
+## hero kit it can meet, and change something on some hero's (a check on the
+## data, never shown to players).
+func _check_item(item: ItemDef, where: String) -> void:
+	if item.kind == ItemDef.Kind.TACTIC:
+		if not content.tactics.has(item.tactic_id):
+			errors.append("%s: unknown tactic \"%s\"" % [where, item.tactic_id])
+			return
+		item.tactic = content.tactics[item.tactic_id]
+		return
+	for rank: int in item.ranks.size():
+		var mod: KitMod = item.ranks[rank]
+		var works: bool = false
+		for path_id: String in content.path_ids:
+			var path: PathDef = content.paths[path_id]
+			var kits: Array[UnitDef] = [path.vowed_kit, path.transformed_kit]
+			kits.append_array(path.apex_kits())
+			for kit: UnitDef in kits:
+				if kit == null:
+					continue
+				var problems: Array[String] = []
+				mod.apply(kit, problems)
+				for problem: String in problems:
+					errors.append("%s: rank %s on %s's kit, %s" % [where, ItemDef.RANK_NAMES[rank], path_id, problem])
+				works = works or mod.affects(kit)
+		if not works:
+			errors.append("%s: rank %s does nothing on any hero" % [where, ItemDef.RANK_NAMES[rank]])
+
+
+## An upgrade's hero or path must exist, and its mod must apply soundly to
+## every kit it can meet: a hero card's, the vowed and transformed kits of
+## every path (it must change at least one; Decision 37 keeps it from the
+## pick where it changes nothing); a taste card's, its path's vowed kit and,
+## with its transformed mod, the transformed one, changing both (Decision
+## 35); a path card's, the transformed kit, changing it.
+func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
+	var meets: Array[Array] = []
+	var must_change: bool = true
+	if upgrade.layer == UpgradeDef.Layer.HERO:
+		if not content.heroes.has(upgrade.hero):
+			errors.append("%s: unknown hero \"%s\"" % [where, upgrade.hero])
+			return
+		must_change = false
+		for path: PathDef in content.heroes[upgrade.hero].paths:
+			meets.append([path.id + " vowed", path.vowed_kit, false])
+			meets.append([path.id + " transformed", path.transformed_kit, true])
+			for kit: UnitDef in path.apex_kits():
+				meets.append([path.id + " apex", kit, true])
+			_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit], where)
+	elif upgrade.layer == UpgradeDef.Layer.APEX:
+		if not content.apexes.has(upgrade.apex):
+			errors.append("%s: unknown apex \"%s\"" % [where, upgrade.apex])
+			return
+		var apex: ApexDef = content.apexes[upgrade.apex]
+		upgrade.path = apex.path
+		upgrade.hero = content.paths[apex.path].hero
+		meets.append([apex.id + " apex", apex.apex_kit, true])
+	else:
+		if not content.paths.has(upgrade.path):
+			errors.append("%s: unknown path \"%s\"" % [where, upgrade.path])
+			return
+		var path: PathDef = content.paths[upgrade.path]
+		upgrade.hero = path.hero
+		if upgrade.layer == UpgradeDef.Layer.TASTE:
+			meets.append([path.id + " vowed", path.vowed_kit, false])
+		meets.append([path.id + " transformed", path.transformed_kit, true])
+		for kit: UnitDef in path.apex_kits():
+			meets.append([path.id + " apex", kit, true])
+		_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit] if upgrade.layer == UpgradeDef.Layer.TASTE else [path.transformed_kit], where)
+	if upgrade.stacks():
+		return
+	var changes_any: bool = false
+	for meet: Array in meets:
+		var kit: UnitDef = meet[1]
+		if kit == null:
+			continue
+		var transformed: bool = meet[2]
+		var mods: Array[KitMod] = [upgrade.mod_for(transformed)]
+		if upgrade.grows != null:
+			# A growing card's step, many times over, on every kit it meets.
+			mods.append(upgrade.grows.each.times(50))
+		for mod: KitMod in mods:
+			if mod == null:
+				continue
+			var problems: Array[String] = []
+			mod.apply(kit, problems)
+			for problem: String in problems:
+				errors.append("%s: on %s, %s" % [where, meet[0], problem])
+		var changes: bool = changes_something(upgrade, transformed, kit)
+		changes_any = changes_any or changes
+		if must_change and not changes:
+			errors.append("%s: does nothing on %s" % [where, meet[0]])
+	if not changes_any:
+		errors.append("%s: does nothing on any of its hero's kits" % where)
+
+
+## A growing card's counting names abilities its holder has (in one of
+## `kits`).
+func _check_growth_counts(growth: GrowthDef, kits: Array, where: String) -> void:
+	if growth == null:
+		return
+	for ability_id: String in growth.counts.from_ability:
+		var found: bool = false
+		for kit: Variant in kits:
+			if kit != null and (kit as UnitDef).ability_ids_with_companions().has(ability_id):
+				found = true
+		if not found:
+			errors.append("%s: grows by what \"%s\" does, which its hero doesn't have" % [where, ability_id])
+
+
+## Every upgrade a hero could hold at once, on each path and stage, together.
+func _check_all_upgrades(hero_id: String) -> void:
+	for path: PathDef in content.heroes[hero_id].paths:
+		for transformed: bool in [false, true]:
+			var hero := RunState.Hero.new()
+			hero.id = hero_id
+			hero.path = path.id
+			hero.transformed = transformed
+			# Every card it could hold here: its own, and the path's taste
+			# and path cards (a taste card carries on once transformed), a
+			# stacking card taken twice.
+			for id: String in upgrade_ids:
+				var upgrade: UpgradeDef = upgrades[id]
+				if upgrade.hero == hero_id and (upgrade.layer == UpgradeDef.Layer.HERO or upgrade.layer == UpgradeDef.Layer.TASTE and upgrade.path == path.id
+						or upgrade.path == path.id and transformed and upgrade.layer != UpgradeDef.Layer.APEX):
+					hero.upgrades.append(id)
+					if upgrade.stacks():
+						hero.upgrades.append(id)
+						hero.locked[id] = [1, 1]
+			var kit: UnitDef = path.transformed_kit if transformed else path.vowed_kit
+			if kit == null:
+				continue
+			var problems: Array[String] = []
+			for mod: KitMod in upgrade_mods(hero):
+				kit = mod.apply(kit, problems)
+			for problem: String in problems:
+				errors.append("%s: %s's upgrades together on %s %s: %s" % [UPGRADES_FILE, hero_id, path.id, "transformed" if transformed else "vowed", problem])
+		# At each apex (phase 8 part 2): the transformed set and its apex's cards.
+		for apex: ApexDef in path.apexes:
+			var at_apex := RunState.Hero.new()
+			at_apex.id = hero_id
+			at_apex.path = path.id
+			at_apex.transformed = true
+			at_apex.apex = apex.id
+			at_apex.apex_earned = true
+			for id: String in upgrade_ids:
+				var upgrade: UpgradeDef = upgrades[id]
+				if upgrade.hero == hero_id and (upgrade.layer == UpgradeDef.Layer.HERO or upgrade.path == path.id and upgrade.layer != UpgradeDef.Layer.APEX
+						or upgrade.layer == UpgradeDef.Layer.APEX and upgrade.apex == apex.id):
+					at_apex.upgrades.append(id)
+					if upgrade.stacks():
+						at_apex.locked[id] = [1]
+			var apex_kit: UnitDef = apex.apex_kit
+			var apex_problems: Array[String] = []
+			for mod: KitMod in upgrade_mods(at_apex):
+				apex_kit = mod.apply(apex_kit, apex_problems)
+			for problem: String in apex_problems:
+				errors.append("%s: %s's upgrades together at %s: %s" % [UPGRADES_FILE, hero_id, apex.id, problem])

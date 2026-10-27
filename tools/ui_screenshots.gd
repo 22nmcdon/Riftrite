@@ -23,7 +23,7 @@ func _initialize() -> void:
 			_out = arg.trim_prefix("--out=")
 	DirAccess.make_dir_recursive_absolute(_out)
 	root.size = Vector2i(1920, 1080)
-	_main = (load("res://src/ui/main.gd") as GDScript).new()
+	_main = (load("res://src/ui/app/main.gd") as GDScript).new()
 	# Leave any real save file alone.
 	_main.old_save_path = "user://screenshot_no_save.json"
 	root.add_child(_main)

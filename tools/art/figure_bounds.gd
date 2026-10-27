@@ -15,16 +15,22 @@ func _init() -> void:
 
 
 ## Every figure's covered rect, [x, y, width, height] in its canvas units,
-## by key ("heroes/maren_base"): of its PNG where there is one, else its SVG.
+## by key ("heroes/maren/base"): of its PNG where there is one, else its SVG.
 static func measure_all() -> Dictionary:
 	var bounds: Dictionary = {}
 	for folder: String in ["heroes", "enemies"]:
-		for file_name: String in DirAccess.get_files_at(FigureArt.root + folder):
-			if ArtPath.KINDS.has(file_name.get_extension()):
-				var key: String = "%s/%s" % [folder, file_name.get_basename()]
-				if not bounds.has(key):
-					bounds[key] = measure(ArtPath.resolve(FigureArt.root + key), FigureArt.canvas(key))
+		_measure_in(folder, bounds)
 	return bounds
+
+
+static func _measure_in(folder: String, bounds: Dictionary) -> void:
+	for file_name: String in DirAccess.get_files_at(FigureArt.root + folder):
+		if ArtPath.KINDS.has(file_name.get_extension()):
+			var key: String = "%s/%s" % [folder, file_name.get_basename()]
+			if not bounds.has(key):
+				bounds[key] = measure(ArtPath.resolve(FigureArt.root + key), FigureArt.canvas(key))
+	for sub: String in DirAccess.get_directories_at(FigureArt.root + folder):
+		_measure_in("%s/%s" % [folder, sub], bounds)
 
 
 ## The file's text: one figure a line, sorted.

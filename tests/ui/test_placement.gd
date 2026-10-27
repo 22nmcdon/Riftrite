@@ -3,7 +3,7 @@ extends GutTest
 ## PracticeSession's remembered formation, moving heroes on ArenaScreen by
 ## dragging, legality from the sim, the enemy panel, and the Fight button.
 
-const MainScript = preload("res://src/ui/main.gd")
+const MainScript = preload("res://src/ui/app/main.gd")
 
 var _content: ContentDb
 

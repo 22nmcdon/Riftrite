@@ -3,7 +3,7 @@ extends GutTest
 ## its ways in are the run (phase 5, tested in test_run_screens.gd) and
 ## Practice (phase 3, tested in test_practice_flow.gd).
 
-const MainScript = preload("res://src/ui/main.gd")
+const MainScript = preload("res://src/ui/app/main.gd")
 const SAVE: String = "user://test_old_run.json"
 const RUN_SAVE: String = "user://test_title_run.json"
 
@@ -49,8 +49,8 @@ func test_a_saved_run_can_be_continued() -> void:
 
 
 func test_the_main_scene_is_the_title() -> void:
-	assert_eq(ProjectSettings.get_setting("application/run/main_scene"), "res://src/ui/main.tscn")
-	var scene: Node = (load("res://src/ui/main.tscn") as PackedScene).instantiate()
+	assert_eq(ProjectSettings.get_setting("application/run/main_scene"), "res://src/ui/app/main.tscn")
+	var scene: Node = (load("res://src/ui/app/main.tscn") as PackedScene).instantiate()
 	assert_true(scene is Main)
 	scene.free()
 

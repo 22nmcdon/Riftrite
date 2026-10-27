@@ -119,7 +119,7 @@ func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 		assert_string_contains(text, "no fight yet")
 	await _press_card(screen, "Deadeye", "Vow")
 	assert_eq(screen.session.vows, {"maren": "deadeye"} as Dictionary[String, String])
-	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Deadeye (vow)", "heroes/maren_base"], "a vowed hero keeps her base figure")
+	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Deadeye (vow)", "heroes/maren/base"], "a vowed hero keeps her base figure")
 	text = U.text_of(panel)
 	assert_string_contains(text, HeroPanel.VOWED_TEXT)
 	assert_string_contains(text, "Taste: " + _content.paths["deadeye"].taste)
@@ -127,7 +127,7 @@ func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 	assert_eq(panel.form_tag.text, "Base form", "a vowed hero keeps her base form")
 	await _press_card(screen, "Deadeye", "Transform")
 	assert_eq(screen.session.stage_of("maren"), PathDef.Stage.TRANSFORMED)
-	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Deadeye", "heroes/maren_deadeye"], "transformed: her path's figure")
+	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Deadeye", "heroes/maren/deadeye"], "transformed: her path's figure")
 	text = U.text_of(panel)
 	assert_string_contains(text, HeroPanel.TRANSFORMED_TEXT)
 	assert_string_contains(text, "Transformed: " + _content.paths["deadeye"].transformed_text)
@@ -174,7 +174,7 @@ func test_the_panel_offers_the_transformed_paths_apexes() -> void:
 	assert_eq(screen.view.token("maren").path_label, "Volley (Hailstorm vow)")
 	await _press_card(screen, "Hailstorm", "Reach apex")
 	assert_eq(screen.session.stage_of("maren"), PathDef.Stage.APEX)
-	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Hailstorm", "heroes/maren_volley"],
+	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Hailstorm", "heroes/maren/volley"],
 		"the apex stands as its path's figure until the art comes")
 	assert_eq(panel.form_tag.text, "Hailstorm form")
 	assert_string_contains(U.text_of(panel), HeroPanel.APEX_TEXT)

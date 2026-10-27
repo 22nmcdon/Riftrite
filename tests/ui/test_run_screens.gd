@@ -5,9 +5,9 @@ extends GutTest
 ## the pick after it, a Hunt, the hero bar and panel in a run, and the run's
 ## end. Every action is saved.
 
-const ActsTest = preload("res://tests/run/test_acts.gd")
-const SpecsTest = preload("res://tests/run/test_specializations.gd")
-const MainScript = preload("res://src/ui/main.gd")
+const ActsTest = preload("res://tests/run/days/test_acts.gd")
+const SpecsTest = preload("res://tests/run/draws/test_specializations.gd")
+const MainScript = preload("res://src/ui/app/main.gd")
 const U = preload("res://tests/ui/ui_test_kit.gd")
 const Bot = preload("res://tools/run_bot.gd")
 const SAVE: String = "user://test_run_screens.json"

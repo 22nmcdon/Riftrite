@@ -7,8 +7,8 @@ extends RefCounted
 ## at FEET; a figure the manifest marks `"scale": 2` (a boss) has a canvas
 ## twice the size and is drawn twice as tall. A file may hold any number of
 ## pixels per canvas unit (the SVGs 1, the PNG masters 4): it's drawn
-## stretched to its canvas. A hero has a figure per form ("brannoc_base",
-## one per path, one per apex as they're drawn); an enemy has one
+## stretched to its canvas. A hero has a folder with a figure per form
+## ("brannoc/base", one per path, one per apex as they're drawn); an enemy has one
 ## ("rift_pup"), and may have one per specialization ("rift_hound_ashback").
 ## Summons are enemies, so they have theirs.
 ## What each figure covers of its canvas (what's drawn, not the empty room
@@ -59,10 +59,10 @@ static func _json(path: String) -> Dictionary:
 	return parsed if parsed is Dictionary else {}
 
 
-## The figure's name for a hero or enemy kit: "heroes/<id>_<form>" or
+## The figure's name for a hero or enemy kit: "heroes/<id>/<form>" or
 ## "enemies/<id>".
 static func key_for(kit_id: String, hero: bool, form: String = "base") -> String:
-	return "heroes/%s_%s" % [kit_id, form] if hero else "enemies/%s" % kit_id
+	return "heroes/%s/%s" % [kit_id, form] if hero else "enemies/%s" % kit_id
 
 
 static func has_figure(key: String) -> bool:

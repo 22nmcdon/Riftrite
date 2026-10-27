@@ -2,7 +2,7 @@ extends GutTest
 ## The uploaded art in the game (docs/plans/rebuild-phase5b-art.md): every
 ## piece the data or the UI names is there and loads.
 
-const MainScript = preload("res://src/ui/main.gd")
+const MainScript = preload("res://src/ui/app/main.gd")
 
 var _run: RunContent
 

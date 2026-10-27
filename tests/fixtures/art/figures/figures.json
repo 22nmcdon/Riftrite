@@ -1,4 +1,4 @@
 {
-	"heroes/fix_base": {"head": [150, 60], "muzzle": [210, 250], "hand": [200, 300]},
+	"heroes/fix/base": {"head": [150, 60], "muzzle": [210, 250], "hand": [200, 300]},
 	"enemies/fix_boss": {"scale": 2}
 }
