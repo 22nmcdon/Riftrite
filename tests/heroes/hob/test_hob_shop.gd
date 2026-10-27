@@ -181,11 +181,11 @@ func test_lucky_find_pays_once_an_act() -> void:
 	hob.upgrades.append("lucky_find")
 	flow.choose_fight(0)
 	var result: FightResult = _won(flow)
-	assert_eq(flow._tithes(result, flow.state.chosen).get("hob", 0), 5, "the act's first won fight")
-	assert_eq(flow._tithes(result, flow.state.chosen).get("hob", 0), 0, "not the next")
+	assert_eq(RunRecord._tithes(flow, result, flow.state.chosen).get("hob", 0), 5, "the act's first won fight")
+	assert_eq(RunRecord._tithes(flow, result, flow.state.chosen).get("hob", 0), 0, "not the next")
 	assert_eq(RunState.Hero.from_dict(hob.to_dict()).tithe_act, 1, "the save keeps when it paid")
 	flow.state.act = 2
-	assert_eq(flow._tithes(result, flow.state.chosen).get("hob", 0), 5, "a new act")
+	assert_eq(RunRecord._tithes(flow, result, flow.state.chosen).get("hob", 0), 5, "a new act")
 
 
 func test_the_tithe_s_shards_held_are_spent_last() -> void:
@@ -287,11 +287,11 @@ func test_low_bar_counts_from_25() -> void:
 	var flow: RunFlow = _apexed("hoarder", "dragons_hoard")
 	var hob: RunState.Hero = flow.state.hero("hob")
 	var key: String = RunContent.apex_growth_key(_run.content.apexes["dragons_hoard"])
-	flow._grow_by_run("won_holding", 1, 27)
+	RunRecord._grow_by_run(flow, "won_holding", 1, 27)
 	assert_eq(hob.growth.get(key, 0), 0, "27 isn't 30")
 	hob.upgrades.append("low_bar")
 	assert_eq(_run.holding_threshold(hob), 25)
-	flow._grow_by_run("won_holding", 1, 27)
+	RunRecord._grow_by_run(flow, "won_holding", 1, 27)
 	assert_eq(hob.growth.get(key, 0), 1, "with Low Bar, 25 is enough")
 	hob.upgrades.append("deep_vault")
 	hob.growth[key] = 4
@@ -352,8 +352,8 @@ func test_a_relic_counting_won_holding_counts_from_30() -> void:
 	_run.relics["stand_in_hoard"] = relic
 	var flow: RunFlow = _start("hoarder")
 	flow.state.relics.append("stand_in_hoard")
-	flow._grow_by_run("won_holding", 1, 27)
+	RunRecord._grow_by_run(flow, "won_holding", 1, 27)
 	assert_eq(flow.state.growth.get("stand_in_hoard", 0), 0, "27 held isn't 30")
-	flow._grow_by_run("won_holding", 1, 30)
+	RunRecord._grow_by_run(flow, "won_holding", 1, 30)
 	assert_eq(flow.state.growth.get("stand_in_hoard", 0), 1, "won holding 30")
 	_run.relics.erase("stand_in_hoard")

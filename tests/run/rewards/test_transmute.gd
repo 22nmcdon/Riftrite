@@ -115,7 +115,7 @@ func test_midas_touch_grows_with_the_shards_collected() -> void:
 	hero.apex_earned = true
 	var kit: UnitDef = _run.hero_kit(hero)
 	assert_eq(kit.shard_cap, 12)
-	flow._grow_by_run("shards", 45)
+	RunRecord._grow_by_run(flow, "shards", 45)
 	assert_eq(hero.growth[RunContent.apex_growth_key(_run.content.apexes["midas_touch"])], 45)
 	var mods: Array[KitMod] = _run.upgrade_mods(hero)
 	var errors: Array[String] = []

@@ -30,6 +30,12 @@ extends RefCounted
 ## back, or (the Magpie only) sell or swap a relic; leaving closes it. Phase 5c step 6: a run owns one of each item, at a rank; a
 ## bought copy is a rank up, and fights rank items up by their kind. A fight's kit is the path's,
 ## then its upgrades, then its loadout in slot order.
+## The rules are split by concern (the clean-up, docs/plans/phases/cleanup-and-layout.md):
+## RunEvents (the Event node and oaths), RunShop (the shops and relics bought and
+## sold), RunFightSetup (each fight's kits and enemies), and RunRecord (what a
+## fight leaves behind). RunFlow keeps every action's name and delegates to
+## them; each takes the flow and changes only its state, so RunFlow is still the
+## one way a run changes.
 
 ## Where a relic choice happens (its stream's visit).
 const RELIC_SHRINE: int = 0
@@ -97,7 +103,7 @@ static func resume(run_content: RunContent, run_state: RunState) -> RunFlow:
 	return flow
 
 
-# --- the day's start, the shop, and the nodes --------------------------------------
+# --- the day's start --------------------------------------------------------------
 
 ## A day begins (a new one, or one replayed after a loss): the route. An
 ## endless floor (phase 8 part 1) first draws its fight (and the next two
@@ -189,7 +195,7 @@ func _draw_floors() -> void:
 		state.options.append(Offers.endless_floor(run, state, state.options.size() + 1))
 
 
-# --- endless (phase 8 part 1) -----------------------------------------------------
+# --- the day's end, the acts, and endless (phase 8 part 1) ------------------------
 
 ## The floor the run is on (0 before endless).
 func floor_number() -> int:
@@ -277,7 +283,7 @@ func _skip_sealed() -> void:
 	state.shards += act.pay[run.content.encounters[encounter_id].tier] / 2
 	state.chosen = encounter_id
 	state.phase = RunState.Phase.AFTER
-	state.pick = _pick_cards(0)
+	state.pick = RunRecord._pick_cards(self, 0)
 
 
 ## Moves on from after the fight once nothing there is waiting: to the shop
@@ -397,223 +403,46 @@ func choose_node(index: int) -> String:
 	return ""
 
 
-# --- events (phase 5c step 8c) ---------------------------------------------------
+# --- events (RunEvents) and the nodes ---------------------------------------------
 
-## The scene of the event node the day is in, or null.
+## The scene of the event node the day is in, or null (RunEvents).
 func event_scene() -> EventDef.Scene:
-	if state.phase != RunState.Phase.NODE or not state.node.begins_with("event:"):
-		return null
-	return run.events.scene(state.node.trim_prefix("event:"))
+	return RunEvents.event_scene(self)
 
 
 ## Why the event's choice `index` can't be made with `target` (a hero id, an
-## item id, or "<hero id>:<path id>" for the mirror; "" when it needs none),
-## or "". A choice that needs a target, asked with none, says whether any
-## target would do.
+## item id, or "<hero id>:<path id>" for the mirror; "" when it needs none), or
+## "" (RunEvents).
 func event_problem(index: int, target: String = "") -> String:
-	var scene: EventDef.Scene = event_scene()
-	if scene == null:
-		return _not_now("choose in an event")
-	if state.event_done:
-		return "the choice is made"
-	if index < 0 or index >= scene.choices.size():
-		return "there's no choice %d" % index
-	var choice: EventDef.Choice = scene.choices[index]
-	var needs: EventDef.Needs = choice.needs()
-	if needs != EventDef.Needs.NOTHING and target.is_empty():
-		for candidate: String in event_targets(choice):
-			if _choice_problem(choice, candidate).is_empty():
-				return ""
-		return "no one it fits" if needs != EventDef.Needs.ITEM else "no item it fits"
-	return _choice_problem(choice, target)
+	return RunEvents.event_problem(self, index, target)
 
 
 ## Every target a choice could take (the heroes, the run's items, or each
-## hero's other paths), fitting or not.
+## hero's other paths), fitting or not (RunEvents).
 func event_targets(choice: EventDef.Choice) -> Array[String]:
-	var targets: Array[String] = []
-	match choice.needs():
-		EventDef.Needs.HERO:
-			targets.append_array(state.hero_ids())
-		EventDef.Needs.ITEM:
-			for id: String in run.item_ids:
-				if state.item_ranks.has(id):
-					targets.append(id)
-		EventDef.Needs.PATH:
-			for hero: RunState.Hero in state.heroes:
-				for path: PathDef in run.content.heroes[hero.id].paths:
-					if path.id != hero.path:
-						targets.append("%s:%s" % [hero.id, path.id])
-	return targets
+	return RunEvents.event_targets(self, choice)
 
 
-func _choice_problem(choice: EventDef.Choice, target: String) -> String:
-	var shards: int = state.shards
-	for result: EventDef.Result in choice.results:
-		match result.kind:
-			"pay":
-				if shards < result.shards:
-					return "it costs %d shards; there are %d" % [result.shards, shards]
-				shards -= result.shards
-			"item":
-				if _item_pool(result.kinds).is_empty():
-					return "there's no item left to find"
-			"wound":
-				var hero: RunState.Hero = state.hero(target)
-				if hero == null:
-					return "unknown hero \"%s\"" % target
-				if hero.wounds >= run.content.tuning.max_wounds:
-					return "%s can't take another wound" % target
-			"deed":
-				var hero: RunState.Hero = state.hero(target)
-				if hero == null:
-					return "unknown hero \"%s\"" % target
-				if hero.transformed:
-					return "%s has transformed" % target
-			"next_fight":
-				if not result.team and state.hero(target) == null:
-					return "unknown hero \"%s\"" % target
-			"seal":
-				if run.day_kind(state, state.day + 1) != "normal":
-					return "not before an elite or the boss"
-			"rank_up_random":
-				if _rankable().is_empty():
-					return "no item of yours can go a rank up"
-			"rank_up_chosen":
-				if not _rankable().has(target):
-					return "%s can't go a rank up" % target
-			"hunt":
-				if Offers.hunt(run, state).is_empty():
-					return "there's nothing to drive off today"
-			"mirror":
-				var hero: RunState.Hero = state.hero(target.get_slice(":", 0))
-				var path_id: String = target.get_slice(":", 1)
-				if hero == null:
-					return "unknown hero \"%s\"" % target.get_slice(":", 0)
-				if hero.transformed:
-					return "%s has transformed" % hero.id
-				if not run.content.paths.has(path_id) or run.content.paths[path_id].hero != hero.id or path_id == hero.path:
-					return "%s can't take \"%s\"" % [hero.id, path_id]
-	return ""
-
-
-## Makes the event's choice `index` (with `target`, as event_problem says):
-## its results in order. One choice an event; leaving without one is
-## walking away.
+## Makes the event's choice `index` (with `target`, as event_problem says): its
+## results in order (RunEvents).
 func choose_event(index: int, target: String = "") -> String:
-	var problem: String = event_problem(index, target)
-	if problem.is_empty() and event_scene().choices[index].needs() != EventDef.Needs.NOTHING and target.is_empty():
-		problem = "choose who or what it's for"
-	if not problem.is_empty():
-		return problem
-	var choice: EventDef.Choice = event_scene().choices[index]
-	for r: int in choice.results.size():
-		_event_result(choice.results[r], target, r)
-	state.event_done = true
-	return ""
+	return RunEvents.choose_event(self, index, target)
 
 
-func _event_result(result: EventDef.Result, target: String, what: int) -> void:
-	match result.kind:
-		"item":
-			for id: String in Offers.event_picks(state, _item_pool(result.kinds), result.count, what):
-				_gain_item(id, result.rank)
-		"wound":
-			var hero: RunState.Hero = state.hero(target)
-			hero.wounds = mini(hero.wounds + 1, run.content.tuning.max_wounds)
-		"clear_wounds":
-			for hero: RunState.Hero in state.heroes:
-				hero.wounds = 0
-		"relic":
-			var relic: String = Offers.event_relic(run, state, result.tier)
-			if not relic.is_empty():
-				_gain_relic(relic)
-		"dear_shop":
-			state.dear_shop_bp = result.bp
-		"pay":
-			state.shards -= result.shards
-		"gain":
-			state.shards += result.shards
-		"deed":
-			var hero: RunState.Hero = state.hero(target)
-			var threshold: int = run.content.paths[hero.path].deed.threshold
-			hero.deeds[hero.path] = mini(hero.deeds.get(hero.path, 0) + FixedMath.apply_bp(threshold, result.bp), maxi(threshold, hero.deeds.get(hero.path, 0)))
-		"next_fight":
-			for hero: RunState.Hero in state.heroes:
-				if result.team or hero.id == target:
-					hero.next_fight.append(result.mod)
-		"seal":
-			state.sealed = true
-		"rank_up_random":
-			for id: String in Offers.event_picks(state, _rankable(), 1, what):
-				_gain_item(id)
-		"rank_up_chosen":
-			_gain_item(target)
-		"weaken":
-			for id: String in Offers.event_picks(state, state.hero_ids(), 1, what):
-				state.hero(id).weakened += 1
-		"hunt":
-			state.hunt = Offers.hunt(run, state)
-		"mirror":
-			var hero: RunState.Hero = state.hero(target.get_slice(":", 0))
-			var old: PathDef = run.content.paths[hero.path]
-			var new: PathDef = run.content.paths[target.get_slice(":", 1)]
-			# Half its share of the old path's threshold, as a share of the new one's.
-			@warning_ignore("integer_division")
-			var carried: int = hero.deeds.get(old.id, 0) * new.deed.threshold / maxi(old.deed.threshold, 1) / 2
-			hero.deeds[new.id] = hero.deeds.get(new.id, 0) + carried
-			hero.path = new.id
-
-
-## The items an event may give of `kinds`: not held at rank III.
-func _item_pool(kinds: Array[String]) -> Array[String]:
-	var pool: Array[String] = []
-	for id: String in run.item_ids:
-		if kinds.has(ItemDef.KIND_NAMES[run.items[id].kind]) and state.item_ranks.get(id, 0) < ItemDef.RANKS:
-			pool.append(id)
-	return pool
-
-
-## The run's items below rank III.
-func _rankable() -> Array[String]:
-	var found: Array[String] = []
-	for id: String in run.item_ids:
-		if state.item_ranks.has(id) and state.item_ranks[id] < ItemDef.RANKS:
-			found.append(id)
-	return found
-
-
-## Takes the Bloodied Oath's oath `index` (phase 5c step 8c): its hero bears
-## it for its next oath_fights day fights. Passing is leaving the node.
+## Takes the Bloodied Oath's oath `index` (phase 5c step 8c): its hero bears it
+## for its next oath_fights day fights (RunEvents).
 func take_oath(index: int) -> String:
-	if state.phase != RunState.Phase.NODE or state.node != "oath":
-		return _not_now("take an oath")
-	if state.event_done:
-		return "an oath is taken"
-	if index < 0 or index >= state.oath_offer.size():
-		return "there's no oath %d" % index
-	var hero: RunState.Hero = state.hero(state.oath_offer[index].get_slice(":", 1))
-	if not hero.oath.is_empty():
-		return "%s is already sworn" % hero.id
-	hero.oath = state.oath_offer[index].get_slice(":", 0)
-	hero.oath_fights = run.events.oath_fights
-	state.event_done = true
-	return ""
+	return RunEvents.take_oath(self, index)
 
 
-## The oath `hero` bears, or null.
+## The oath `hero` bears, or null (RunEvents).
 func oath_of(hero: RunState.Hero) -> EventDef.Oath:
-	return run.events.oath(hero.oath) if not hero.oath.is_empty() else null
+	return RunEvents.oath_of(self, hero)
 
 
-## The heroes' front row (the Oath of the Vanguard's).
+## The heroes' front row (the Oath of the Vanguard's; RunEvents).
 func front_row() -> int:
-	var grid: HexGrid = run.content.tuning.make_grid()
-	var front: int = 0
-	for row: int in grid.height:
-		if grid.zone(row) == HexGrid.Zone.HEROES:
-			front = maxi(front, row)
-	return front
+	return RunEvents.front_row(self)
 
 
 ## A Rift Tear's depth `index` (phase 5c step 8b): tomorrow's enemies take
@@ -672,7 +501,7 @@ func choose_camp(index: int) -> String:
 	var option: String = state.camp[index]
 	match option:
 		"train":
-			state.pick = _pick_cards(1)
+			state.pick = RunRecord._pick_cards(self, 1)
 		"hunt":
 			state.hunt = Offers.hunt(run, state)
 			if state.hunt.is_empty():
@@ -757,7 +586,7 @@ func _node_waiting() -> String:
 	return ""
 
 
-# --- the day ---------------------------------------------------------------------
+# --- the fight (RunFightSetup, RunRecord) -----------------------------------------
 
 ## Chooses today's fight: `index` into today's options.
 func choose_fight(index: int) -> String:
@@ -782,261 +611,16 @@ func fight_encounter() -> String:
 
 
 ## The waiting fight from `formation` (hero id -> hex), with every hero as the
-## run has it, or null with the reasons in `errors`. A hero's kit is its
-## path's at its stage, then its upgrades, its loadout (slot order), the
-## relics, the day's camp modifiers (Fortify, a steadying Rest), and its duo
-## bonds. Enemies take the relics' enemy mods and a Rift Tear's; Dig In's
-## rock joins the encounter's. A Hunt takes no camp modifiers. `snares`:
-## hero id -> the hexes of the snares it places (a transformed Trapper), or
-## of its lantern (First Lantern, phase 5c step 7d).
+## run has it, or null with the reasons in `errors` (RunFightSetup).
 func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String], snares: Dictionary[String, Array] = {}) -> FightSetup:
-	var encounter_id: String = fight_encounter()
-	if encounter_id.is_empty():
-		errors.append(_not_now("fight"))
-		return null
-	var hunting: bool = encounter_id == state.hunt
-	var content: ContentDb = run.content
-	var vows: Dictionary[String, String] = {}
-	var transformed: Array[String] = []
-	var apex_vows: Dictionary[String, String] = {}
-	var apexed: Array[String] = []
-	var extras: Dictionary[String, HeroExtras] = {}
-	var tactics: Dictionary[String, String] = {}
-	var ranked_tactics: Dictionary[String, TacticDef] = {}
-	var wound_bp: int = content.tuning.wound_bp
-	# Stand Together (phase 5c step 6d): the hero sharing its holder's hex
-	# gets its gambit's mod too.
-	var shared_mods: Dictionary[String, KitMod] = {}
-	# Only the run's team fights (phase 8 part 4).
-	var outsiders: Array[String] = []
-	for hero_id: String in formation:
-		if state.hero(hero_id) == null:
-			outsiders.append(hero_id)
-	if not outsiders.is_empty():
-		for hero_id: String in outsiders:
-			errors.append("%s isn't on the team" % hero_id)
-		return null
-	for hero: RunState.Hero in state.heroes:
-		var gambit: KitMod = run.loadout_gambit(hero, state)
-		if gambit == null or gambit.place_rule != "share" or not formation.has(hero.id):
-			continue
-		for other: RunState.Hero in state.heroes:
-			if other != hero and formation.has(other.id) and formation[other.id] == formation[hero.id]:
-				shared_mods[other.id] = gambit
-	for hero: RunState.Hero in state.heroes:
-		if not formation.has(hero.id):
-			continue
-		vows[hero.id] = hero.path
-		if hero.transformed:
-			transformed.append(hero.id)
-		if not hero.apex.is_empty():
-			apex_vows[hero.id] = hero.apex
-			if hero.apex_earned:
-				apexed.append(hero.id)
-		var mods: Array[KitMod] = run.upgrade_mods(hero, state.shards)
-		mods.append_array(run.loadout_mods(state, hero))
-		mods.append_array(run.relic_mods(state, run.hero_kit(hero)))
-		if shared_mods.has(hero.id):
-			mods.append(shared_mods[hero.id])
-		if not hunting and state.fortify:
-			mods.append(run.camps.fortify_mod)
-		if not hunting:
-			for modifier: CampsDef.Modifier in _rift_modifiers():
-				if modifier.hero_mod != null:
-					mods.append(modifier.hero_mod)
-		var covenant: KitMod = _covenant_mod(hero, formation)
-		if covenant != null:
-			mods.append(covenant)
-		# Events (phase 5c step 8c), last, since dropping the signature must
-		# come after any mod that changes it.
-		var oath: EventDef.Oath = oath_of(hero) if not hunting else null
-		if not hunting:
-			for key: String in hero.next_fight:
-				mods.append(run.events.next_fight_mods[key])
-		for i: int in hero.weakened:
-			mods.append(_weaken_mod())
-		if oath != null and oath.mod != null:
-			mods.append(oath.mod)
-		if oath != null and oath.front_row and formation[hero.id].y != front_row():
-			errors.append("%s is sworn to the front row (%s)" % [hero.id, oath.name])
-		extras[hero.id] = HeroExtras.make(mods, hero.wounds, wound_bp)
-		var tallies: Array = run.growth_tallies(state, hero)
-		extras[hero.id].tally_keys.assign(tallies[0])
-		extras[hero.id].tally_counts.assign(tallies[1])
-		var tactic: TacticDef = run.loadout_tactic(hero, state)
-		if oath != null and oath.no_tactic:
-			tactic = null
-		if tactic != null:
-			tactics[hero.id] = tactic.id
-			ranked_tactics[hero.id] = tactic
-	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras, apex_vows, apexed, {} as Dictionary[int, String] if hunting else chosen_specs(),
-		{} as Dictionary[int, PackedStringArray] if hunting else chosen_upgrades())
-	if setup != null:
-		for hero: UnitSetup in setup.heroes:
-			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():
-				# First Lantern (phase 5c step 7d): its one marker.
-				hero.lantern = snares[hero.id][0]
-			elif hero.def.placed_snares > 0 and snares.has(hero.id):
-				hero.snares.assign(snares[hero.id])
-			# A tactic at its item's rank (phase 5c step 6c).
-			if ranked_tactics.has(hero.id):
-				hero.tactic = ranked_tactics[hero.id]
-			# One its kit can't follow now (a signature dropped by an event or
-			# an oath, phase 5c step 8c) does nothing, as an item can.
-			if hero.tactic != null and not Tactics.can_follow(hero.tactic, hero.def):
-				hero.tactic = null
-			# Switch Places at the moment the player chose (phase 5c step 6d).
-			var chosen: int = state.hero(hero.id).gambit_at if state.hero(hero.id) != null else 0
-			if chosen > 0 and hero.def.swap_choice:
-				hero.swap_at = chosen * FixedMath.TICKS_PER_SECOND
-		if not hunting and (not state.rift_depth.is_empty() or not state.endless_mods.is_empty()):
-			_rift_rules(setup, encounter_id)
-		if not hunting:
-			_endless_rules(setup)
-		_modify_enemies(setup, hunting, errors)
-		_relic_rules(setup)
-		# The shards held, for what reads them (phase 8 part 5, Golden Aegis).
-		setup.shards = state.shards
-		setup.tithe_shards = mini(state.tithe_held, state.shards)
-		if not hunting and state.dig_in and state.rock.size() == 2:
-			setup.rocks.append(Vector2i(state.rock[0], state.rock[1]))
-		errors.append_array(setup.validate(content))
-		for hero: RunState.Hero in state.heroes:
-			if not formation.has(hero.id):
-				errors.append("%s isn't placed" % hero.id)
-	return setup if errors.is_empty() else null
+	return RunFightSetup.fight_setup(self, formation, errors, snares)
 
 
-## The relics' effects at the fight's start and Salt Circle (phase 5c step
-## 5b), for the sim to run.
-func _relic_rules(setup: FightSetup) -> void:
-	for start: Array in run.relic_starts(state):
-		var relic: RelicDef = start[0]
-		setup.relic_effects.append(start[1])
-		setup.relic_sources.append(EffectSource.relic(relic.id, relic.name, EffectSource.Team.HEROES))
-		setup.relic_scales.append(start[2])
-	for id: String in state.relics:
-		if run.relics.has(id) and run.relics[id].salt_circle:
-			setup.salt_circles += 2 if run.counts_twice(state, run.relics[id]) else 1
-	setup.hero_rules = run.hero_rules(state)
-
-
-## The Hollow Covenant (phase 5c step 5a): what `hero` needs added to reach
-## the team's highest HP, ATK, MGK, DEF, CRIT, and attack speed (among the
-## heroes placed), worked out from each kit as it stands between fights.
-## Null without the relic, or with nothing to add.
-func _covenant_mod(hero: RunState.Hero, formation: Dictionary[String, Vector2i]) -> KitMod:
-	if not run.relic_rule(state, "covenant"):
-		return null
-	var mine: UnitStats = _kit_without_covenant(hero.id).stats
-	var mod: KitMod = KitMod.make()
-	for other: RunState.Hero in state.heroes:
-		if not formation.has(other.id) or other == hero:
-			continue
-		var theirs: UnitStats = _kit_without_covenant(other.id).stats
-		for stat: UnitStats.Stat in COVENANT_STATS:
-			mod.stats_add[stat] = maxi(mod.stats_add[stat], theirs.get_stat(stat) - mine.get_stat(stat))
-	return mod if mod.changes_anything() else null
-
-
-const COVENANT_STATS: Array[UnitStats.Stat] = [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF, UnitStats.Stat.CRIT, UnitStats.Stat.ATSP]
-
-
-func _kit_without_covenant(hero_id: String) -> UnitDef:
-	return kit_of(hero_id, false)
-
-
-## The kit `hero_id` fights with as things stand between fights: its path's
-## at its stage, then its upgrades, loadout, relics, and bonds (camp's
-## modifiers for the next fight aside). For showing, not for fights.
+## The kit `hero_id` fights with as things stand between fights: its path's at
+## its stage, then its upgrades, loadout, relics, and bonds (camp's modifiers
+## for the next fight aside; RunFightSetup).
 func kit_of(hero_id: String, with_covenant: bool = true) -> UnitDef:
-	var hero: RunState.Hero = state.hero(hero_id)
-	var kit: UnitDef = run.hero_kit(hero)
-	var mods: Array[KitMod] = run.upgrade_mods(hero, state.shards)
-	mods.append_array(run.loadout_mods(state, hero))
-	mods.append_array(run.relic_mods(state, kit))
-	if with_covenant:
-		var formation: Dictionary[String, Vector2i] = {}
-		for other: RunState.Hero in state.heroes:
-			formation[other.id] = Vector2i.ZERO
-		var covenant: KitMod = _covenant_mod(hero, formation)
-		if covenant != null:
-			mods.append(covenant)
-	for mod: KitMod in mods:
-		kit = mod.apply(kit)
-	return kit
-
-
-## Every enemy and summon kit takes the relics' enemy mods, and a Rift
-## Tear's upgrade (not on a Hunt).
-func _modify_enemies(setup: FightSetup, hunting: bool, errors: Array[String]) -> void:
-	var mods: Array[KitMod] = []
-	for id: String in state.relics:
-		if run.relics[id].enemy_mod != null:
-			mods.append(run.relics[id].enemy_mod)
-	if not hunting:
-		if not state.rift_depth.is_empty():
-			mods.append(run.camps.rift_tear_mod)
-		for modifier: CampsDef.Modifier in _rift_modifiers():
-			if modifier.mod != null:
-				mods.append(modifier.mod)
-		var growth: KitMod = _floor_growth_mod()
-		if growth != null:
-			mods.append(growth)
-	if mods.is_empty():
-		return
-	var problems: Array[String] = []
-	for enemy: UnitSetup in setup.enemies:
-		for mod: KitMod in mods:
-			enemy.def = mod.apply(enemy.def, problems)
-	for i: int in setup.summon_kits.size():
-		for mod: KitMod in mods:
-			setup.summon_kits[i] = mod.apply(setup.summon_kits[i], problems)
-	for problem: String in problems:
-		errors.append("an enemy upgrade leaves a kit unsound: %s" % problem)
-
-
-## The Old Well's cut (phase 5c step 8c): max HP times the weaken result's
-## bp, once for each drink this act.
-func _weaken_mod() -> KitMod:
-	var mod: KitMod = KitMod.make()
-	mod.stats_bp[UnitStats.Stat.HP] = run.events.weaken_bp()
-	return mod
-
-
-## The rift modifiers on the next day fight (phase 5c step 8b).
-func _rift_modifiers() -> Array[CampsDef.Modifier]:
-	var found: Array[CampsDef.Modifier] = []
-	for id: String in state.endless_mods + state.rift_mods:
-		if run.camps.modifiers.has(id) and not found.has(run.camps.modifiers[id]):
-			found.append(run.camps.modifiers[id])
-	return found
-
-
-## A Rift Tear's rules for the sim (phase 5c step 8b): Early Collapse's
-## start, and Reinforcements: that many of the encounter's first enemy that
-## isn't its elite or boss (the first listed, or the second in an elite or
-## boss fight), summoned from the edge as the rift's own effect, its kit
-## added to the summon kits (scaled like the encounter's, and modified with
-## them).
-func _rift_rules(setup: FightSetup, encounter_id: String) -> void:
-	var encounter: EncounterDef = run.content.encounters[encounter_id]
-	for modifier: CampsDef.Modifier in _rift_modifiers():
-		if modifier.collapse_from_ticks > 0:
-			setup.collapse_start_ticks = modifier.collapse_from_ticks if setup.collapse_start_ticks == 0 else mini(setup.collapse_start_ticks, modifier.collapse_from_ticks)
-		if modifier.reinforce_count <= 0:
-			continue
-		var first: int = 1 if encounter.tier == "elite" or encounter.tier == "boss" else 0
-		if first >= encounter.enemies.size():
-			continue
-		var kind: String = encounter.enemies[first].enemy
-		if setup.summon_kit(kind) == null:
-			setup.summon_kits.append(Encounters.scaled(run.content.enemies[kind].kit, encounter.scale_bp))
-		var errors: Array[String] = []
-		var effect: EffectDef = EffectDef.read(DataReader.new({"type": "summon", "kit": kind, "count": modifier.reinforce_count, "placement": "edges"}, "reinforcements", errors))
-		setup.rift_effects.append(effect)
-		setup.rift_sources.append(EffectSource.rift_effect(modifier.id, modifier.name))
-		setup.rift_ticks.append(modifier.reinforce_ticks)
+	return RunFightSetup.kit_of(self, hero_id, with_covenant)
 
 
 ## The seed of the waiting fight (this attempt's; a Hunt has its own).
@@ -1058,246 +642,14 @@ func fight(formation: Dictionary[String, Vector2i], errors: Array[String], snare
 	return result
 
 
-## Records a fought fight: the formation, deeds, wounds (a win heals one
-## on each hero first, then each hero who fell takes one), transformations
-## (and bonds found), then the outcome. A Hunt pays its shards on a win and
-## is done, won or lost (its loss isn't a loss). The day's fight: a win pays
-## by its tier (plus relics), offers the pick, and (an elite, or a Rift
-## Tear) a relic choice; a loss replays the day, or ends the run. Either way
-## the day's camp modifiers are spent. fight() calls it; tests call it with
-## a result of their own.
+## Records a fought fight: the formation, deeds, wounds (a win heals one on
+## each hero first, then each hero who fell takes one), transformations (and
+## bonds found), then the outcome (RunRecord).
 func record(formation: Dictionary[String, Vector2i], result: FightResult) -> void:
-	# The shards held as the fight started (phase 8 part 6: "won_holding").
-	var held: int = state.shards
-	var hunting: bool = fight_encounter() == state.hunt and not state.hunt.is_empty()
-	var encounter_id: String = state.hunt if hunting else state.chosen
-	var won: bool = result.outcome != FightResult.Outcome.DEFEAT
-	state.formation = formation.duplicate()
-	state.just_transformed.clear()
-	state.just_apexed.clear()
-	var fought := RunState.Fought.new()
-	fought.act = state.act
-	fought.day = state.day
-	fought.attempt = state.attempt
-	fought.encounter = encounter_id
-	fought.outcome = result.outcome
-	@warning_ignore("integer_division")
-	fought.seconds = result.end_tick / FixedMath.TICKS_PER_SECOND
-	fought.habits = RiftLearns.summary(run, state, formation, result)
-	state.fought.append(fought)
-	# Edric's run pieces (phase 8 part 5): what Collection gathered (any
-	# fight), and each Tithe after a won day fight; their deeds count it.
-	var flawless: bool = won and _fallen(result) == 0
-	var tithes: Dictionary[String, int] = {}
-	if won and not hunting:
-		tithes = _tithes(result, encounter_id)
-	fought.collected = _collected(result)
-	for paid: int in tithes.values():
-		fought.tithe += paid
-	# The Tithe's shards held (The Counting House): what spending since the
-	# last fight left of them (spent last), and today's.
-	state.tithe_held = mini(state.tithe_held, held) + fought.tithe
-	for hero: RunState.Hero in state.heroes:
-		# An oath doubles what the fight puts into its hero's deeds (step 8c).
-		var oath: EventDef.Oath = oath_of(hero) if not hunting else null
-		for path_id: String in hero.deeds:
-			var amount: int = result.deed_amount(hero.id, path_id)
-			var deed: DeedDef = _deed_of(path_id)
-			if deed != null and deed.by_the_run():
-				# Tithe's are paid here; the rest the run counts as they happen
-				# (phase 8 part 6: items transmuted).
-				amount = tithes.get(hero.id, 0) if deed.counts == DeedDef.Counts.TITHE or deed.counts == DeedDef.Counts.TITHE_FLAWLESS and flawless else 0
-			hero.deeds[path_id] += FixedMath.apply_bp(amount, oath.deed_bp) if oath != null else amount
-	_grow(result)
-	_rank_items(formation, result, won)
-	if won:
-		for hero: RunState.Hero in state.heroes:
-			hero.wounds = maxi(hero.wounds - 1, 0)
-	# A wound for each hero down at the fight's end (Decision 23: one Second
-	# Dawn raised, standing at the end, takes none).
-	for hero_id: String in result.down_at_end():
-		var fallen: RunState.Hero = state.hero(hero_id)
-		if fallen != null:
-			var oath: EventDef.Oath = oath_of(fallen) if not hunting else null
-			fallen.wounds = mini(fallen.wounds + (oath.fall_wounds if oath != null else 1), run.content.tuning.max_wounds)
-	for hero: RunState.Hero in state.heroes:
-		if not hero.transformed and hero.deeds.get(hero.path, 0) >= run.content.paths[hero.path].deed.threshold:
-			hero.transformed = true
-			state.just_transformed.append(hero.id)
-			_open_apex(hero)
-		elif not hero.apex.is_empty() and not hero.apex_earned and hero.deeds.get(hero.apex, 0) >= run.content.apexes[hero.apex].deed.threshold:
-			hero.apex_earned = true
-			state.just_apexed.append(hero.id)
-	for bond: BondDef in run.active_bonds(state):
-		if not state.bonds_found.has(bond.id):
-			state.bonds_found.append(bond.id)
-	state.shards += fought.collected
-	if fought.collected > 0:
-		_grow_by_run("shards", fought.collected)
-	if hunting:
-		state.hunt = ""
-		if won:
-			state.shards += act.pay["hunt"]
-		return
-	# An oath lasts its hero's next day fights, won or lost.
-	for hero: RunState.Hero in state.heroes:
-		if not hero.oath.is_empty():
-			hero.oath_fights -= 1
-			if hero.oath_fights <= 0:
-				hero.oath = ""
-				hero.oath_fights = 0
-	if not won:
-		# What the last node set up for this fight holds for its replay
-		# (Decision 42).
-		state.streak = 0
-		state.losses += 1
-		state.chosen = ""
-		# Endless (phase 8 part 1): the first loss ends the run; the act was won.
-		if state.endless:
-			_end(RunState.Outcome.WON)
-		elif state.losses >= act.losses_to_end:
-			_end(RunState.Outcome.LOST)
-		else:
-			state.attempt += 1
-			_start_day()
-		return
-	var depth: CampsDef.Depth = run.camps.depth(state.rift_depth)
-	state.fortify = false
-	state.dig_in = false
-	state.rock.clear()
-	state.rift_depth = ""
-	state.rift_mods.clear()
-	for hero: RunState.Hero in state.heroes:
-		hero.next_fight.clear()
-	state.rested = false
-	var tier: String = run.content.encounters[state.chosen].tier
-	state.shards += act.pay[tier] + run.relic_sum(state, "pay_add") + (run.relic_sum(state, "elite_pay_add") if tier == "elite" else 0)
-	state.shards += fought.tithe
-	_streak(result)
-	if tier == "elite":
-		_grow_by_run("elite_wins")
-	_grow_by_run("wins")
-	if flawless:
-		_grow_by_run("flawless")
-	_grow_by_run("won_holding", 1, held)
-	state.phase = RunState.Phase.AFTER
-	state.relic_choice_price = 0
-	if run.day_kind(state, state.day) == "boss":
-		# The boss relic choice (Decision 18), then the boss shop (finish_day;
-		# Decision 48), then the run's end or the endless choice (leave_shop).
-		# Once every boss relic is held, legendaries (endless.md).
-		var boss_tier: String = "boss" if _boss_relic_left() else "legendary"
-		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, act.boss_relics, boss_tier)
-		return
-	state.pick = _pick_cards(0)
-	if tier == "elite":
-		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2, "rare", act.elite_epic_pct)
-	elif depth != null:
-		state.relic_choice = Offers.relics_of_tiers(run, state, RELIC_AFTER_FIGHT, depth.relics)
+	RunRecord.record(self, formation, result)
 
 
-## Bounty Board (phase 5c step 5a): a won day fight with no hero falling adds
-## to the streak, anything else ends it; a streak relic pays once.
-func _streak(result: FightResult) -> void:
-	var fell: bool = result.combat_log.entries.any(func(entry: LogEntry) -> bool: return entry.kind == LogEntry.Kind.DEATH and state.hero(entry.target) != null)
-	state.streak = 0 if fell else state.streak + 1
-	for id: String in state.relics:
-		var relic: RelicDef = run.relics.get(id)
-		if relic != null and relic.streak_wins > 0 and state.streak >= relic.streak_wins and not state.streaks_paid.has(id):
-			state.shards += relic.streak_shards
-			state.streaks_paid.append(id)
-
-
-## Adds `amount` (one, but for "shards": phase 8 part 6) to every held relic
-## that grows with what the run counts as `what` (Tally of the Dead:
-## "elite_wins"), and (phase 8 part 5) every hero's held card and earned apex
-## that does ("wins", "flawless").
-func _grow_by_run(what: String, amount: int = 1, held: int = -1) -> void:
-	for id: String in state.relics:
-		var relic: RelicDef = run.relics.get(id)
-		if relic == null or relic.grows == null or relic.grows.run_counts != what:
-			continue
-		if held >= 0 and held < WON_HOLDING_SHARDS:
-			continue
-		var before: int = state.growth.get(id, 0)
-		state.growth[id] = before + amount
-		if relic.grows.steps(state.growth[id]) > relic.grows.steps(before) and not state.grew.has(":" + id):
-			state.grew.append(":" + id)
-	for hero: RunState.Hero in state.heroes:
-		# "won_holding" (`held` the shards as the fight started): from its own
-		# threshold (phase 8 part 6, Low Bar).
-		if held >= 0 and held < run.holding_threshold(hero):
-			continue
-		for upgrade: UpgradeDef in run.held_upgrades(hero):
-			if upgrade.grows != null and upgrade.grows.run_counts == what:
-				_step_hero(hero, upgrade.id, upgrade.grows, amount)
-		var apex: ApexDef = run.earned_apex(hero)
-		if apex != null and apex.grows != null and apex.grows.run_counts == what:
-			_step_hero(hero, RunContent.apex_growth_key(apex), apex.grows, amount)
-		# A transformed path's own snowball (phase 8 part 6, Fence: "spent").
-		var path: PathDef = run.content.paths.get(hero.path) if hero.transformed else null
-		if path != null and path.transformed_grows != null and path.transformed_grows.run_counts == what:
-			_step_hero(hero, RunContent.path_growth_key(path), path.transformed_grows, amount)
-
-
-func _step_hero(hero: RunState.Hero, key: String, grows: GrowthDef, amount: int = 1) -> void:
-	var before: int = hero.growth.get(key, 0)
-	hero.growth[key] = before + amount
-	var note: String = "%s:%s" % [hero.id, key]
-	if grows.steps(hero.growth[key]) > grows.steps(before) and not state.grew.has(note):
-		state.grew.append(note)
-
-
-## How many of the team are down at the fight's end.
-func _fallen(result: FightResult) -> int:
-	return result.down_at_end().filter(func(hero_id: String) -> bool: return state.hero(hero_id) != null).size()
-
-
-## Each hero's Tithe after this won day fight (phase 8 part 5): hero id ->
-## shards, for those with one.
-func _tithes(result: FightResult, encounter_id: String) -> Dictionary[String, int]:
-	var paid: Dictionary[String, int] = {}
-	var fallen: int = _fallen(result)
-	var tier: String = run.content.encounters[encounter_id].tier
-	for hero: RunState.Hero in state.heroes:
-		var tithe: TitheDef = run.tithe(hero)
-		if tithe == null:
-			continue
-		var apex: ApexDef = run.earned_apex(hero)
-		var flawless_count: int = hero.growth.get(RunContent.apex_growth_key(apex), 0) if apex != null and apex.grows != null else 0
-		paid[hero.id] = tithe.pays(state.heroes.size() - fallen, fallen, tier, flawless_count, run.tithe_steps(hero))
-		if tithe.once_per_act > 0 and hero.tithe_act != state.act:
-			# Lucky Find (phase 8 part 6): the first won day fight each act.
-			paid[hero.id] += tithe.once_per_act
-			hero.tithe_act = state.act
-	return paid
-
-
-## The shards the heroes' effects gathered in a fight (Collection's SHARDS
-## lines).
-func _collected(result: FightResult) -> int:
-	var total: int = 0
-	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.SHARDS):
-		if state.hero(entry.source_unit) != null and not entry.capped:
-			total += entry.amount
-	return total
-
-
-## A path's or an apex's deed by its id (null: neither).
-func _deed_of(key: String) -> DeedDef:
-	if run.content.paths.has(key):
-		return run.content.paths[key].deed
-	return run.content.apexes[key].deed if run.content.apexes.has(key) else null
-
-
-## A pick's cards at `visit` (Widened Offering adds some), and how many of
-## them to take (The Hollow Throne: 2).
-func _pick_cards(visit: int) -> Array[String]:
-	state.picks_left = 1 + run.relic_sum(state, "take_picks_add")
-	return Offers.pick(run, state, visit, run.relic_sum(state, "pick_cards_add"))
-
-
-# --- relics -----------------------------------------------------------------------
+# --- relic choices, the Shrine, the pick, and vows --------------------------------
 
 ## Takes relic `index` of the waiting choice: it's the run's for good.
 func take_relic(index: int) -> String:
@@ -1313,7 +665,7 @@ func take_relic(index: int) -> String:
 		var hero: RunState.Hero = state.hero(state.shrine.trim_prefix("wound:"))
 		hero.wounds = mini(hero.wounds + 1, run.content.tuning.max_wounds)
 	elif state.shrine.begins_with("relic:"):
-		_lose_relic(state.shrine.trim_prefix("relic:"))
+		RunShop._lose_relic(self, state.shrine.trim_prefix("relic:"))
 	_gain_relic(state.relic_choice[index])
 	state.relic_choice.clear()
 	state.relic_choice_price = 0
@@ -1378,109 +730,33 @@ func shrine_tier(relic_id: String) -> String:
 	return RelicDef.TIER_NAMES[tier + 1]
 
 
-## Buys the open shop's relic `index`.
+## Buys the open shop's relic `index` (RunShop).
 func buy_relic(index: int = 0) -> String:
-	if state.shop.is_empty() or index < 0 or index >= state.shop_relics.size() or state.shop_relics[index].is_empty():
-		return "there's no relic for sale"
-	var price: int = relic_price(index)
-	if state.shards < price:
-		return "it costs %d shards; there are %d" % [price, state.shards]
-	state.shards -= price
-	_spent(price)
-	_saved(DeedDef.Counts.RELICS_SAVED, relic_price(index, true) - price)
-	state.shop_relics_bought += 1
-	_gain_relic(state.shop_relics[index])
-	state.shop_relics[index] = ""
-	# Each relic bought (phase 8 part 6, Black Market's run snowball).
-	_grow_by_run("relics_bought")
-	return ""
+	return RunShop.buy_relic(self, index)
 
 
-## What the open shop's relic `index` costs: its tier's price (the Magpie's
-## at his discount, rounded down), with the Pedlar's price_add and (phase 8
-## part 6) the team's shop rules (`full`: without them).
+## What the open shop's relic `index` costs: its tier's price (the Magpie's at
+## his discount, rounded down), with the Pedlar's price_add and (phase 8 part
+## 6) the team's shop rules (`full`: without them; RunShop).
 func relic_price(index: int = 0, full: bool = false) -> int:
-	if index < 0 or index >= state.shop_relics.size() or state.shop_relics[index].is_empty():
-		return 0
-	var price: int = act.relic_prices[RelicDef.TIER_NAMES[run.relics[state.shop_relics[index]].tier]]
-	if state.shop == "magpie":
-		@warning_ignore("integer_division")
-		return price * act.magpie_relic_pct / 100
-	# A bond relic is free (phase 5c step 5d), whatever the prices.
-	if price == 0:
-		return 0
-	var rules: ShopRulesDef = shop_rules()
-	if full or rules == null:
-		return _marked_up(price)
-	if index == state.black_market_slot and not state.black_market_tier.is_empty():
-		# The black-market relic, at the price of the tier it was drawn at.
-		price = act.relic_prices[state.black_market_tier]
-	var marked: int = _marked_up(price)
-	if rules.first_relic_less > 0 and state.shop_relics_bought == 0:
-		# Black Market's taste: the first relic bought in each shop.
-		marked -= rules.first_relic_less
-	# Black Market's snowball: less for each relic bought since, down to half.
-	@warning_ignore("integer_division")
-	marked -= mini(_relics_bought() * rules.relic_less_per_bought, _marked_up(price) / 2)
-	return maxi(marked, 0)
+	return RunShop.relic_price(self, index, full)
 
 
-## The relics bought since an earned apex began counting them (phase 8 part
-## 6, Black Market), its apex cards' snowball added on.
-func _relics_bought() -> int:
-	var count: int = 0
-	for hero: RunState.Hero in state.heroes:
-		var apex: ApexDef = run.earned_apex(hero)
-		if apex != null and apex.grows != null and apex.grows.run_counts == "relics_bought":
-			count += run.apex_count(hero, apex)
-	return count
-
-
-## What the Magpie pays for `relic_id` (its tier's relic_sell).
+## What the Magpie pays for `relic_id` (its tier's relic_sell; RunShop).
 func relic_sell_price(relic_id: String) -> int:
-	return act.relic_sell.get(RelicDef.TIER_NAMES[run.relics[relic_id].tier], 0)
+	return RunShop.relic_sell_price(self, relic_id)
 
 
-## Sells a relic the run holds to the Magpie, the only one who buys them
-## (phase 5c step 6e, magpie.md). What it counted is lost with it.
+## Sells a relic the run holds to the Magpie, the only one who buys them (phase
+## 5c step 6e, magpie.md; RunShop).
 func sell_relic(relic_id: String) -> String:
-	if state.shop != "magpie":
-		return "only the Magpie buys relics"
-	if not state.relics.has(relic_id):
-		return "the run doesn't hold \"%s\"" % relic_id
-	_lose_relic(relic_id)
-	state.shards += relic_sell_price(relic_id)
-	return ""
+	return RunShop.sell_relic(self, relic_id)
 
 
-## The Magpie's swap, once a visit: `relic_id` for a relic of its tier the
-## run doesn't hold, free.
+## The Magpie's swap, once a visit: `relic_id` for a relic of its tier the run
+## doesn't hold, free (RunShop).
 func swap_relic(relic_id: String) -> String:
-	if state.shop != "magpie":
-		return "only the Magpie swaps relics"
-	if state.magpie_swapped:
-		return "he swaps once a visit"
-	if not state.relics.has(relic_id):
-		return "the run doesn't hold \"%s\"" % relic_id
-	var other: String = Offers.magpie_swap(run, state, relic_id)
-	if other.is_empty():
-		return "he has nothing to swap for %s" % run.relics[relic_id].name
-	_lose_relic(relic_id)
-	_gain_relic(other)
-	state.magpie_swapped = true
-	return ""
-
-
-## The run lets go of a relic: its growth goes, and a loadout slot it gave
-## goes from each hero (what was in it back to the stash).
-func _lose_relic(relic_id: String) -> void:
-	state.relics.erase(relic_id)
-	state.growth.erase(relic_id)
-	for i: int in run.relics[relic_id].slots_add:
-		for hero: RunState.Hero in state.heroes:
-			var last: String = hero.slots.pop_back()
-			if not last.is_empty():
-				state.stash.append(last)
+	return RunShop.swap_relic(self, relic_id)
 
 
 func _gain_relic(relic_id: String) -> void:
@@ -1492,95 +768,10 @@ func _gain_relic(relic_id: String) -> void:
 			hero.slots.append("")
 
 
-## Adds what a fight counted to the growing cards (phase 5c step 4; won or
-## lost, a Hunt too), and notes the ones that stepped up (`grew`).
-func _grow(result: FightResult) -> void:
-	state.grew.clear()
-	for hero: RunState.Hero in state.heroes:
-		for upgrade: UpgradeDef in run.held_upgrades(hero):
-			if upgrade.grows == null:
-				continue
-			var before: int = hero.growth.get(upgrade.id, 0)
-			hero.growth[upgrade.id] = upgrade.grows.grown(before, _faster(result.tally_amount(hero.id, "upgrade:" + upgrade.id)))
-			if upgrade.grows.steps(hero.growth[upgrade.id]) > upgrade.grows.steps(before):
-				state.grew.append("%s:%s" % [hero.id, upgrade.id])
-		# Its earned apex's snowball, if its fights count it (phase 8 part 6).
-		var apex: ApexDef = run.earned_apex(hero)
-		if apex != null and apex.grows != null and apex.grows.counted_in_fights():
-			var key: String = RunContent.apex_growth_key(apex)
-			var had: int = hero.growth.get(key, 0)
-			hero.growth[key] = apex.grows.grown(had, _faster(result.tally_amount(hero.id, key)))
-			if apex.grows.steps(hero.growth[key]) > apex.grows.steps(had):
-				state.grew.append("%s:%s" % [hero.id, key])
-	for id: String in state.relics:
-		var relic: RelicDef = run.relics.get(id)
-		if relic == null or relic.grows == null or not relic.grows.counted_in_fights():
-			continue
-		var before: int = state.growth.get(id, 0)
-		var counted: int = 0
-		for hero: RunState.Hero in state.heroes:
-			counted += result.tally_amount(hero.id, "relic:" + id)
-		state.growth[id] = relic.grows.grown(before, _faster(counted))
-		var stepped: int = relic.grows.steps(state.growth[id]) - relic.grows.steps(before)
-		if stepped > 0:
-			state.grew.append(":" + id)
-			state.shards += stepped * relic.grows.each_shards
-
-
-## The loadout's ranks (phase 5c step 6): each item equipped on a hero who
-## fought counts toward its next rank by its kind (ActDef.item_ranks):
-## charms won fights, gambits fights, tactics the ms its hero stood, sigils
-## its signature's casts (the last two from the fight's tallies). Reaching
-## the need ranks it up; the count goes on from what's left over.
-func _rank_items(formation: Dictionary[String, Vector2i], result: FightResult, won: bool) -> void:
-	state.ranked.clear()
-	for hero: RunState.Hero in state.heroes:
-		if not formation.has(hero.id):
-			continue
-		for item_id: String in hero.slots:
-			var item: ItemDef = run.items.get(item_id)
-			if item == null or state.item_ranks.get(item_id, 1) >= ItemDef.RANKS:
-				continue
-			var counted: int = 0
-			match item.kind:
-				ItemDef.Kind.CHARM:
-					counted = 1 if won else 0
-				ItemDef.Kind.GAMBIT:
-					counted = 1
-				_:
-					counted = result.tally_amount(hero.id, "item:" + item_id)
-			if counted > 0:
-				_count_item(item, counted)
-
-
-func _count_item(item: ItemDef, counted: int) -> void:
-	var needs: Array = act.item_ranks[ItemDef.KIND_NAMES[item.kind]]
-	state.item_counts[item.id] = state.item_counts.get(item.id, 0) + counted
-	while state.item_ranks.get(item.id, 1) < ItemDef.RANKS and state.item_counts[item.id] >= int(needs[state.item_ranks.get(item.id, 1) - 1]):
-		state.item_counts[item.id] -= int(needs[state.item_ranks[item.id] - 1])
-		state.item_ranks[item.id] += 1
-		if not state.ranked.has(item.id):
-			state.ranked.append(item.id)
-	if state.item_ranks[item.id] >= ItemDef.RANKS:
-		state.item_counts[item.id] = 0
-
-
-## What `item_id` has counted toward its next rank, and what that rank needs
-## (0 at rank III).
+## What `item_id` has counted toward its next rank, and what that rank needs (0
+## at rank III; RunRecord).
 func rank_progress(item_id: String) -> Vector2i:
-	var rank: int = state.item_ranks.get(item_id, 1)
-	if rank >= ItemDef.RANKS or not run.items.has(item_id):
-		return Vector2i(0, 0)
-	var needs: Array = act.item_ranks[ItemDef.KIND_NAMES[run.items[item_id].kind]]
-	return Vector2i(state.item_counts.get(item_id, 0), int(needs[rank - 1]))
-
-
-## What's counted, made faster by Rift-Bound Heart's growth_bp while held.
-func _faster(counted: int) -> int:
-	for id: String in state.relics:
-		if run.relics.has(id) and run.relics[id].growth_bp > 0:
-			counted = FixedMath.apply_bp(counted, run.relics[id].growth_bp)
-	return counted
+	return RunRecord.rank_progress(self, item_id)
 
 
 ## Takes card `index` of the waiting pick: the upgrade is its hero's for good
@@ -1743,241 +934,88 @@ func unequip(hero_id: String, slot: int) -> String:
 	return ""
 
 
-# --- shops ------------------------------------------------------------------------
+# --- shops (RunShop) --------------------------------------------------------------
 
-## Opens a shop ("pedlar" after the fight, "magpie" as his node), its wares
-## and relics drawn now (the day opens it; tests open one directly). Phase 5c step 5a:
-## every shop shows a relic (more with shop_relics_add); the boss day's
-## Pedlar, after the boss, is the boss shop (a legendary first, rerolls from
-## boss_reroll; Decision 48); the Magpie's are epic or legendary, one look. As a shop
-## opens, the relics' shop_shards and miser pay.
+## Opens a shop ("pedlar" after the fight, "magpie" as his node), its wares and
+## relics drawn now (the day opens it; tests open one directly; RunShop).
 func open_shop(kind: String) -> String:
-	if state.phase != RunState.Phase.SHOP and state.phase != RunState.Phase.NODE:
-		return _not_now("open a shop")
-	match kind:
-		"pedlar":
-			state.wares = Offers.pedlar(run, state, 0)
-		"magpie":
-			state.wares = Offers.magpie(run, state)
-		_:
-			return "there's no shop \"%s\"" % kind
-	state.shop = kind
-	_mark_rank_ii()
-	state.shop_dear_bp = state.dear_shop_bp
-	state.dear_shop_bp = 0
-	state.rerolls = 0
-	state.transmutes = 0
-	state.shop_relics_bought = 0
-	state.ledger_rerolls = 0
-	state.black_market_rerolled = 0
-	state.magpie_swapped = false
-	state.shop_relics = _draw_shop_relics()
-	state.shards += run.relic_sum(state, "shop_shards")
-	# A shop visited (phase 8 part 6, Old Contacts: "shops").
-	_grow_by_run("shops")
-	if run.relic_rule(state, "miser"):
-		@warning_ignore("integer_division")
-		state.shards += mini(state.shards / 5, 6)
-	return ""
+	return RunShop.open_shop(self, kind)
 
 
-func _draw_shop_relics() -> Array[String]:
-	var count: int = 1 + run.relic_sum(state, "shop_relics_add") + (1 if boss_shop() else 0)
-	var drawn: Array[String] = Offers.shop_relics(run, state, state.rerolls, count, state.shop == "magpie", boss_shop())
-	# Black Market (phase 8 part 6): the Pedlar's second slot, a tier up.
-	state.black_market_slot = -1
-	state.black_market_tier = ""
-	var rules: ShopRulesDef = shop_rules()
-	if state.shop == "pedlar" and rules != null and rules.black_market > 0:
-		var black: Array[String] = Offers.black_market_relic(run, state, state.rerolls * 10 + state.black_market_rerolled, drawn)
-		if not black[0].is_empty():
-			state.black_market_slot = drawn.size()
-			state.black_market_tier = black[1]
-			drawn.append(black[0])
-	return drawn
-
-
-## The black-market slot's free rerolls left in the open shop.
+## The black-market slot's free rerolls left in the open shop (RunShop).
 func black_market_rerolls_left() -> int:
-	var rules: ShopRulesDef = shop_rules()
-	if state.shop != "pedlar" or rules == null or state.black_market_slot < 0 or state.shop_relics[state.black_market_slot].is_empty():
-		return 0
-	return maxi(rules.black_market_rerolls - state.black_market_rerolled, 0)
+	return RunShop.black_market_rerolls_left(self)
 
 
-## Smuggler's Route (phase 8 part 6): the black-market slot alone drawn
-## again, free, as many times a shop as the team's shop rules allow.
+## Smuggler's Route (phase 8 part 6): the black-market slot alone drawn again,
+## free, as many times a shop as the team's shop rules allow (RunShop).
 func reroll_black_market() -> String:
-	var rules: ShopRulesDef = shop_rules()
-	if state.shop != "pedlar" or state.black_market_slot < 0 or state.shop_relics[state.black_market_slot].is_empty():
-		return "there's no black-market relic to reroll"
-	if rules == null or state.black_market_rerolled >= rules.black_market_rerolls:
-		return "the black-market relic can't be rerolled again in this shop"
-	state.black_market_rerolled += 1
-	var others: Array[String] = state.shop_relics.duplicate()
-	var black: Array[String] = Offers.black_market_relic(run, state, state.rerolls * 10 + state.black_market_rerolled, others)
-	if not black[0].is_empty():
-		state.shop_relics[state.black_market_slot] = black[0]
-		state.black_market_tier = black[1]
-	return ""
+	return RunShop.reroll_black_market(self)
 
 
-## True if the open shop is the boss shop: the Pedlar of the boss's day,
-## after the boss fight and its relic choice (Decision 48; it was the day
-## before the boss's until then).
+## True if the open shop is the boss shop: the Pedlar of the boss's day, after
+## the boss fight and its relic choice (Decision 48; it was the day before the
+## boss's until then; RunShop).
 func boss_shop() -> bool:
-	return state.shop == "pedlar" and run.day_kind(state, state.day) == "boss"
+	return RunShop.boss_shop(self)
 
 
+## close_shop (RunShop).
 func close_shop() -> void:
-	state.shop = ""
-	state.shop_dear_bp = 0
-	state.wares.clear()
-	state.rerolls = 0
-	state.transmutes = 0
-	state.shop_relics_bought = 0
-	state.shop_relics.clear()
-	state.wares_rank_ii.clear()
-	state.ledger_rerolls = 0
-	state.black_market_slot = -1
-	state.black_market_tier = ""
-	state.black_market_rerolled = 0
+	RunShop.close_shop(self)
 
 
-## What ware `item_id` costs at the open shop: its kind's price at the
-## Pedlar (with relics' price_add), the Magpie's charm price at his stall.
+## What ware `item_id` costs at the open shop: its kind's price at the Pedlar
+## (with relics' price_add), the Magpie's charm price at his stall (RunShop).
 func price_of(item_id: String) -> int:
-	if state.shop == "magpie":
-		return act.magpie_charm_price
-	var rules: ShopRulesDef = shop_rules()
-	# Wholesale (phase 8 part 6): the team's shop rules take some off.
-	return maxi(_marked_up(act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]]) - (rules.item_less if rules != null else 0), 1)
+	return RunShop.price_of(self, item_id)
 
 
 ## What the Pedlar pays for `item_id`: half its kind's price, rounded down,
 ## whatever its rank (loadout rule 9); less by the team's shop rules (phase 8
-## part 6, Fence: a quarter).
+## part 6, Fence: a quarter; RunShop).
 func sell_price(item_id: String) -> int:
-	var rules: ShopRulesDef = shop_rules()
-	var share_bp: int = 5000 - (rules.sell_less_bp if rules != null else 0)
-	@warning_ignore("integer_division")
-	return act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]] * maxi(share_bp, 0) / FixedMath.BP_ONE
+	return RunShop.sell_price(self, item_id)
 
 
-## Sells an item the run owns to the Pedlar, from the stash or a slot. Its
-## rank goes with it.
+## Sells an item the run owns to the Pedlar, from the stash or a slot
+## (RunShop).
 func sell(item_id: String) -> String:
-	if state.shop != "pedlar":
-		return "only the Pedlar buys items"
-	if not state.item_ranks.has(item_id):
-		return "the run doesn't own \"%s\"" % item_id
-	var paid: int = sell_price(item_id)
-	_drop_item(item_id)
-	state.shards += paid
-	return ""
-
-
-## Takes an item the run owns away, from the stash or a slot, rank and all.
-func _drop_item(item_id: String) -> void:
-	if state.stash.has(item_id):
-		state.stash.erase(item_id)
-	else:
-		for hero: RunState.Hero in state.heroes:
-			var slot: int = hero.slots.find(item_id)
-			if slot >= 0:
-				hero.slots[slot] = ""
-	state.item_ranks.erase(item_id)
-	state.item_counts.erase(item_id)
-
-
-## The team's transmuting (phase 8 part 6, Transmuter): its heroes'
-## TransmuteDefs added together (null: none of them transmutes).
-func _transmuting() -> TransmuteDef:
-	var sum: TransmuteDef = null
-	for hero: RunState.Hero in state.heroes:
-		var own: TransmuteDef = run.transmute(hero)
-		if own != null:
-			sum = own.merged(sum)
-	return sum
+	return RunShop.sell(self, item_id)
 
 
 ## Items the open shop may still transmute (0: none; only the Pedlar and the
-## boss shop, Decision 6).
+## boss shop, Decision 6; RunShop).
 func transmutes_left() -> int:
-	var transmuting: TransmuteDef = _transmuting()
-	if state.shop != "pedlar" or transmuting == null:
-		return 0
-	return maxi(transmuting.per_shop - state.transmutes, 0)
+	return RunShop.transmutes_left(self)
 
 
-## What transmuting `item_id` pays: its kind's full price (selling pays
-## half), and more by the team's transmuting cards.
+## What transmuting `item_id` pays: its kind's full price (selling pays half),
+## and more by the team's transmuting cards (RunShop).
 func transmute_price(item_id: String) -> int:
-	var transmuting: TransmuteDef = _transmuting()
-	var price: int = act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]]
-	return transmuting.pays(price, state.item_ranks.get(item_id, 1)) if transmuting != null else price
+	return RunShop.transmute_price(self, item_id)
 
 
 ## Turns an item the run owns into shards at its full price (phase 8 part 6,
 ## transformed Transmuter: once a shop, at the Pedlar or the boss shop), from
-## the stash or a slot. Its rank goes with it.
+## the stash or a slot (RunShop).
 func transmute(item_id: String) -> String:
-	if transmutes_left() <= 0:
-		return "nobody can transmute here" if state.shop != "pedlar" or _transmuting() == null else "no more transmuting in this shop"
-	if not state.item_ranks.has(item_id):
-		return "the run doesn't own \"%s\"" % item_id
-	var paid: int = transmute_price(item_id)
-	_drop_item(item_id)
-	state.transmutes += 1
-	state.shards += paid
-	if run.relic_rule(state, "ledger"):
-		# The Black Market Ledger (phase 8 part 6): its full price counts as
-		# spent, and the shop owes a free reroll.
-		_grow_by_run("spent", act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]])
-		state.ledger_rerolls += 1
-	return ""
+	return RunShop.transmute(self, item_id)
 
 
-## How many items the open shop may still turn into other items (phase 8
-## part 6, Grand Transmutation): its transmutes, if the team's transmuting
-## allows items into items there, else what's left of the act's allowance.
+## How many items the open shop may still turn into other items (phase 8 part
+## 6, Grand Transmutation): its transmutes, if the team's transmuting allows
+## items into items there, else what's left of the act's allowance (RunShop).
 func transmutes_into_left() -> int:
-	var transmuting: TransmuteDef = _transmuting()
-	if state.shop != "pedlar" or transmuting == null:
-		return 0
-	if transmuting.into_shop > 0 and transmutes_left() > 0:
-		return transmutes_left()
-	return maxi(transmuting.into_per_act - state.transmuted_act, 0)
+	return RunShop.transmutes_into_left(self)
 
 
-## Turns an item the run owns into a random item of the same kind it
-## doesn't own (phase 8 part 6, Grand Transmutation: its taste once an act,
-## its apex with a shop's transmutes, at rank II), and counts it toward every
-## hero's "transmuted" deed.
+## Turns an item the run owns into a random item of the same kind it doesn't
+## own (phase 8 part 6, Grand Transmutation: its taste once an act, its apex
+## with a shop's transmutes, at rank II), and counts it toward every hero's
+## "transmuted" deed (RunShop).
 func transmute_into(item_id: String) -> String:
-	if transmutes_into_left() <= 0:
-		return "nobody can transmute an item into another here"
-	if not state.item_ranks.has(item_id):
-		return "the run doesn't own \"%s\"" % item_id
-	var kind: ItemDef.Kind = run.items[item_id].kind
-	var pool: Array[String] = run.item_ids.filter(func(id: String) -> bool: return run.items[id].kind == kind and not state.item_ranks.has(id))
-	if pool.is_empty():
-		return "there's no other item of its kind to make"
-	var transmuting: TransmuteDef = _transmuting()
-	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.TRANSMUTE, state.act, state.day, state.attempt, state.transmutes + state.transmuted_act * 16])
-	var made: String = pool[rng.range_int(pool.size())]
-	if transmuting.into_shop > 0 and transmutes_left() > 0:
-		state.transmutes += 1
-	else:
-		state.transmuted_act += 1
-	_drop_item(item_id)
-	_gain_item(made, maxi(transmuting.into_rank, 1))
-	for hero: RunState.Hero in state.heroes:
-		for key: String in hero.deeds:
-			var deed: DeedDef = _deed_of(key)
-			if deed != null and deed.counts == DeedDef.Counts.TRANSMUTED:
-				hero.deeds[key] += 1
-	return ""
+	return RunShop.transmute_into(self, item_id)
 
 
 ## Gives the run `item_id` at `rank` (1 to 3): into the stash if it's new,
@@ -1992,150 +1030,49 @@ func _gain_item(item_id: String, rank: int = 1) -> void:
 	state.item_counts[item_id] = 0
 
 
-## A price at the Pedlar, with the relics' price_add (never below 1).
-func _marked_up(price: int) -> int:
-	var marked: int = maxi(price + run.relic_sum(state, "price_add"), 1)
-	# The Rift Merchant's toll on the next shop (phase 5c step 8c).
-	return FixedMath.apply_bp(marked, state.shop_dear_bp) if state.shop_dear_bp > 0 else marked
-
-
-## Buys ware `index` into the stash, or, owned, a rank up (a bought copy
-## skips a rank).
+## Buys ware `index` into the stash, or, owned, a rank up (a bought copy skips
+## a rank; RunShop).
 func buy(index: int) -> String:
-	if state.shop.is_empty():
-		return "no shop is open"
-	if index < 0 or index >= state.wares.size() or state.wares[index].is_empty():
-		return "there's no ware %d" % index
-	var price: int = price_of(state.wares[index])
-	if state.shards < price:
-		return "it costs %d shards; there are %d" % [price, state.shards]
-	state.shards -= price
-	_spent(price)
-	# The Magpie's charms come at rank II (phase 5c step 6e), and Insider's
-	# at the Pedlar (phase 8 part 6).
-	_gain_item(state.wares[index], 2 if state.shop == "magpie" or state.wares_rank_ii.has(index) else 1)
-	state.wares[index] = ""
-	return ""
+	return RunShop.buy(self, index)
 
 
 ## The rank buying ware `index` gives: an owned item's next, rank II at least
-## at the Magpie or for Insider's charms (phase 8 part 6), at most III.
+## at the Magpie or for Insider's charms (phase 8 part 6), at most III
+## (RunShop).
 func ware_rank(index: int) -> int:
-	var rank: int = state.item_ranks.get(state.wares[index], 0) + 1
-	if state.shop == "magpie" or state.wares_rank_ii.has(index):
-		rank = maxi(rank, 2)
-	return mini(rank, ItemDef.RANKS)
-
-
-## Insider (phase 8 part 6): the first of the Pedlar's charms, as many as
-## the team's shop rules say, come at rank II.
-func _mark_rank_ii() -> void:
-	state.wares_rank_ii.clear()
-	var rules: ShopRulesDef = shop_rules()
-	if state.shop != "pedlar" or rules == null:
-		return
-	for i: int in state.wares.size():
-		if state.wares_rank_ii.size() < rules.rank_ii_charms and run.items[state.wares[i]].kind == ItemDef.Kind.CHARM:
-			state.wares_rank_ii.append(i)
+	return RunShop.ware_rank(self, index)
 
 
 ## What the open shop's next reroll costs (phase 5c step 5a): the first
-## reroll_price (boss_reroll_price in the boss shop), each after it 1
-## more (flat_rerolls: never more); free_reroll makes the first free.
-## The team's shop rules (phase 8 part 6, Hob) then change it (`full`:
-## without them).
+## reroll_price (boss_reroll_price in the boss shop), each after it 1 more
+## (flat_rerolls: never more); free_reroll makes the first free (RunShop).
 func reroll_price(full: bool = false) -> int:
-	var price: int = _reroll_price(full)
-	# The Black Market Ledger's free rerolls (phase 8 part 6).
-	return 0 if not full and price > 0 and state.ledger_rerolls > 0 else price
-
-
-func _reroll_price(full: bool) -> int:
-	if state.rerolls == 0 and run.relic_rule(state, "free_reroll"):
-		return 0
-	var base: int = act.boss_reroll_price if boss_shop() else act.reroll_price
-	var price: int = base + (0 if run.relic_rule(state, "flat_rerolls") else state.rerolls)
-	var rules: ShopRulesDef = shop_rules()
-	return price if full or rules == null or state.shop != "pedlar" else rules.reroll_price(state.rerolls, price)
+	return RunShop.reroll_price(self, full)
 
 
 ## The Pedlar lays out fresh wares and relics (Decision 19), for the next
-## reroll's price. The Magpie is one look.
+## reroll's price (RunShop).
 func reroll() -> String:
-	if state.shop != "pedlar":
-		return "only the Pedlar rerolls"
-	var price: int = reroll_price()
-	if state.shards < price:
-		return "a reroll costs %d shards; there are %d" % [price, state.shards]
-	if price == 0 and _reroll_price(false) > 0:
-		state.ledger_rerolls -= 1
-	state.shards -= price
-	_spent(price)
-	_saved(DeedDef.Counts.REROLLS_SAVED, reroll_price(true) - price)
-	state.rerolls += 1
-	state.wares = Offers.pedlar(run, state, state.rerolls)
-	_mark_rank_ii()
-	state.shop_relics = _draw_shop_relics()
-	return ""
+	return RunShop.reroll(self)
 
 
-## What treating a wound costs (with wound_price_add, never below 0).
+## What treating a wound costs (with wound_price_add, never below 0; RunShop).
 func wound_price() -> int:
-	return maxi(act.wound_price + run.relic_sum(state, "wound_price_add"), 0)
+	return RunShop.wound_price(self)
 
 
-## Treats one of `hero_id`'s wounds, wherever a shop is open.
+## Treats one of `hero_id`'s wounds, wherever a shop is open (RunShop).
 func treat_wound(hero_id: String) -> String:
-	if state.shop.is_empty():
-		return "no shop is open"
-	var hero: RunState.Hero = state.hero(hero_id)
-	if hero == null:
-		return "unknown hero \"%s\"" % hero_id
-	if hero.wounds == 0:
-		return "%s has no wounds" % hero_id
-	if state.shards < wound_price():
-		return "treating a wound costs %d shards; there are %d" % [wound_price(), state.shards]
-	state.shards -= wound_price()
-	_spent(wound_price())
-	hero.wounds -= 1
-	return ""
+	return RunShop.treat_wound(self, hero_id)
 
 
 ## The team's shop rules (phase 8 part 6, ShopRulesDef): its heroes' added
-## together (null: none of them has any).
+## together (null: none of them has any; RunShop).
 func shop_rules() -> ShopRulesDef:
-	var sum: ShopRulesDef = null
-	for hero: RunState.Hero in state.heroes:
-		var own: ShopRulesDef = run.shop_rules(hero)
-		if own != null:
-			sum = own.merged(sum)
-	return sum
+	return RunShop.shop_rules(self)
 
 
-## Shards spent in a shop (phase 8 part 6, Decision 6): at the Pedlar, the
-## boss shop, or the Magpie, on items, relics, rerolls, and wounds; the run
-## counts them for what grows with "spent" (transformed Fence).
-func _spent(amount: int) -> void:
-	if amount > 0 and (state.shop == "pedlar" or state.shop == "magpie"):
-		_grow_by_run("spent", amount)
-
-
-## Shards the team's shop rules saved (phase 8 part 6, Haggle's and Black
-## Market's deeds): counted toward every hero's deed of that kind.
-func _saved(counts: DeedDef.Counts, amount: int) -> void:
-	if amount <= 0:
-		return
-	for hero: RunState.Hero in state.heroes:
-		for key: String in hero.deeds:
-			var deed: DeedDef = _deed_of(key)
-			if deed != null and deed.counts == counts:
-				hero.deeds[key] += amount
-
-
-## True while some boss relic isn't held.
-func _boss_relic_left() -> bool:
-	return run.relic_ids.any(func(id: String) -> bool: return run.relics[id].tier == RelicDef.Tier.BOSS and not state.relics.has(id))
-
+# --- shared by the modules --------------------------------------------------------
 
 func _end(outcome: RunState.Outcome) -> void:
 	state.outcome = outcome
