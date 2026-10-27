@@ -15,6 +15,7 @@ The definitions content is read into: kits (`UnitDef`), abilities, effects, aura
 | `deed_def.gd` | A path's deed: one thing its hero does in fights, counted in every fight whatever path the hero is on. |
 | `def_copy.gd` | Copies of content definitions, for changing one without touching the shared one the content loaded. |
 | `effect_def.gd` | One effect entry: WHEN it happens, WHAT it does, and WHO it affects. |
+| `effect_reader.gd` | Reads an EffectDef from its JSON entry and checks it: its trigger's fields, its type's fields, its target, its area and shape, a summon or a copy, its scaling, and its nested effects. |
 | `encounter_def.gd` | A hand-placed fight in data/acts/act<N>/encounters.json: the enemies on their hexes, the rocks, and when it can come. |
 | `enemy_def.gd` | An enemy in data/acts/act<N>/enemies.json: its archetype and the one-line threat the fight card shows, and its kit. |
 | `enemy_upgrade_def.gd` | An enemy upgrade: a small change an elite fight's enemies carry, one or two at a time, as a kit mod on the enemy's kit, with its word put before the enemy's name and the player's sentence for it. |
@@ -22,6 +23,8 @@ The definitions content is read into: kits (`UnitDef`), abilities, effects, aura
 | `hero_def.gd` | A hero in data/heroes/<hero>/hero.json: who they are, their main role, and their base kit. |
 | `item_def.gd` | A thing for a hero's loadout slots. |
 | `kit_mod.gd` | A change to a unit's kit, written against its slots rather than an ability's name: the one shape for upgrades, charms, sigils, gambits, relics, camp's modifiers, and enemy upgrades. |
+| `kit_mod_changes.gd` | What an ability change does to an ability and its effects, for KitMod.apply and KitMod.affects: a copy of the ability or effect list with the change's knobs applied, and whether a change reaches any effect at all. |
+| `kit_mod_reader.gd` | Reads a KitMod from its JSON entry and checks it: the stats, mana, passives, extra triggers, Echo, companions, gambits, and each ability change. |
 | `kit_patch.gd` | Changes to a hero's base kit: what a path's vow or its transformation does to it. |
 | `mana_def.gd` | A unit's mana bar. |
 | `part_def.gd` | A passive: always on, part of a unit's kit. |

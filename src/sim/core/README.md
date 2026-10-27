@@ -12,4 +12,5 @@ The fight's engine and its foundations: `CombatSim` (the tick loop), the log (`C
 | `fight_result.gd` | How a fight ended. |
 | `fixed_math.gd` | Integer math helpers shared by the whole sim. |
 | `log_entry.gd` | One line of the combat log. |
+| `sim_deaths.gd` | The tick's deaths step and the fight's end, for CombatSim.step: who falls this tick and what catches them, companions returning, thralls going, The Long Watch, and whether the fight is over. |
 | `sim_rng.gd` | The combat sim's only source of randomness. |

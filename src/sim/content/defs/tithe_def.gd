@@ -21,7 +21,7 @@ extends RefCounted
 ##                   Debts: +1 for every 10 fights won)
 ##   once_per_act:   more after the first won day fight in each act from
 ##                   when it's held (phase 8 part 6, Lucky Find, a hero card's;
-##                   RunState.Hero.tithe_act; paid by RunFlow._tithes)
+##                   RunState.Hero.tithe_act; paid by RunRecord._tithes)
 
 var per_standing: int = 0
 var fallen_pays: int = 0

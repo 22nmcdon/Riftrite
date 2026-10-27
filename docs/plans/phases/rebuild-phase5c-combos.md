@@ -375,7 +375,7 @@ A card gets `"grows"` beside (or instead of) its `"mod"`:
 
 - **The sim:** `DeedDef` gained `applied` (with `keywords`), `taken`, `ms_below`, `kills`, and the `from_basic` filter; `UnitSetup.tally_keys` and `tally_counts` (from `HeroExtras`) are counted by `Deeds` after the deeds (`_count_on_target` for taken and kills, `count_time` for time below an HP share), and come back as `FightResult.tallies` (`tally_amount`). Counting never changes a fight.
 - **The cards:** `GrowthDef` (`src/sim/defs/growth_def.gd`) on `UpgradeDef` and `RelicDef` (`"grows"`; an upgrade may grow with no `"mod"`). `KitMod.times(n)` and `step_problem()` (a step may only change stats, an ability's `amount_bp`, or add auras); `stats_add` now also takes HP, ATK, MGK, and DEF (Old Scars' +1 DEF, Brandmarks' +1 ATK). No item grows (none in the agreed pools does), so `item_def.gd` is unchanged.
-- **The run:** `RunState.Hero.growth`, `RunState.growth` (relics), and `RunState.grew`; `RunContent.held_upgrades`, `growth_tallies`, and growth folded into `upgrade_mods` and `relic_mods` (so `fight_setup`, `kit_of`, and the content checks all see it); `RunFlow._grow` after every fight (won or lost, a Hunt too), and a card starts at 0 when taken (Decision 15). RunContent checks a step 50 times over on every kit the card can meet, and that a growing card's `from_ability` names its hero's abilities.
+- **The run:** `RunState.Hero.growth`, `RunState.growth` (relics), and `RunState.grew`; `RunContent.held_upgrades`, `growth_tallies`, and growth folded into `upgrade_mods` and `relic_mods` (so `fight_setup`, `kit_of`, and the content checks all see it); `RunRecord._grow` after every fight (won or lost, a Hunt too), and a card starts at 0 when taken (Decision 15). RunContent checks a step 50 times over on every kit the card can meet, and that a growing card's `from_ability` names its hero's abilities.
 - **The UI:** "Grows: +1% ATK per 3 enemies Marked" on cards, "Now: +7% ATK (2 / 3 enemies Marked to the next)" in the hero panel and the relic tooltip, and "What grew" on the day screen after a fight.
 - **The twelve upgrades** (`data/upgrades.json`), each tuned with the run report to about one step a fight held: Notched Bow (3 Marks), Weathered (600 taken), Lamp Oil (200 healing), Hunter's Tally (300 damage from beyond 4 hexes), Patient Hunter (15s of Root), Arrow Glut (15 extra hits; +1% faster cooldowns, since Maren's ATSP of 10 is too small for a share of it to show), Old Scars (100 guarded), Brandmarks (15 extra hits by the mace), Borrowed Time (8s below 30% HP), Kindled Flame (300 healing beside the target), Woven Deep (200 Shield), Sunwrought (50 smite damage). Path kits count far more once transformed than while vowed, so the deeds' thresholds were no guide.
 - **Tests:** `tests/sim/test_tallies.gd` (8), `tests/run/test_growth_cards.gd` (9), a "What grew" test in `test_run_screens.gd`, and `test_growth.gd`'s pool counts and offers (each hero and path has one growing upgrade more).
@@ -693,13 +693,13 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
 ### 12.10 Built in step 5c-2 (2026-10-01)
 
 - **The rules, as 12.2 says**, in `SideRules` (every rule with its numbers from the relic) and where each lives:
-  - **Crown of Stars:** `EffectRunner._crit_chain`, as the hit lands. The extra rolls use CRIT, crit-chance auras, and per-hit crit chance (not an ability's own), and the DAMAGE line counts them ("crit x11").
+  - **Crown of Stars:** `EffectHits._crit_chain`, as the hit lands. The extra rolls use CRIT, crit-chance auras, and per-hit crit chance (not an ability's own), and the DAMAGE line counts them ("crit x11").
   - **Shared Pain:** `_echo`. Echoes are DAMAGE lines noted "Shared Pain", one chain step deeper each, and `ruled` so they start no echo of their own.
   - **The Hungering Rift:** `_carry`, reading each carry's overkill through `CombatSim.last_overkill`.
   - **Overcharge:** `UnitState.mana_store`. `mana_cap` stays the full bar, so the UI and the trigger are unchanged.
     - `Signatures._spend_bar` takes one bar; `_overcharge` fires again with `UnitState.fire_power_bp` (added in `Passives.power_bp`).
     - Each extra FIRE is noted "Overcharge N".
-  - **Second Dawn:** `CombatSim._fall` sets `rise_at`, and `_rise_due` stands the hero again at the nearest free safe spot to where it fell (RISE, sourced to the relic). It's for the heroes of the setup, not their summons.
+  - **Second Dawn:** `SimDeaths._fall` sets `rise_at`, and `_rise_due` stands the hero again at the nearest free safe spot to where it fell (RISE, sourced to the relic). It's for the heroes of the setup, not their summons.
   - **Chain of Echoes:**
     - `CombatSim.chain_limit_of` deepens the heroes' event chains, read by `Events.dispatch` and `Events.kill`.
     - A hero's event effect at depth d carries `growth_bp(d)` in the relic kind (`UnitState.relic_bonus_bp`, set in `Passives._run` for damage, heals, and Shields that land at once). An event effect's shot or area that lands later doesn't carry it.
@@ -709,7 +709,7 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
     - Everflame (`StatusState.lasting`) applies on enemies only (Decision 24). A lasting status never ends, its Burn never fades, it can't be extended further, and the enemies' heals and cleanses skip it.
   - **The Unbending:** any status an enemy applies to a hero is blocked (RESISTED, sourced to the enemy's ability and noted "The Unbending"), and gives a stack of `unbending` (+1% DEF, +1% max HP). The new aura stat `max_hp_bp` raises max HP from `UnitState.base_max_hp`, and HP by as much.
   - **Riftwalker's Soles:** `Collapse._damage` skips heroes and adds 5% of an enemy's max HP to its COLLAPSE line (noted).
-  - **The Long Watch:** `CombatSim._check_end` ties at 300s instead of 180s (Decision 25), and `_keep_watch` gives every standing hero a `long_watch` stack (+10% max HP, ATK, MGK, DEF, CRIT, and attack speed) at 60s and every 10s after.
+  - **The Long Watch:** `SimDeaths.check_end` ties at 300s instead of 180s (Decision 25), and `_keep_watch` gives every standing hero a `long_watch` stack (+10% max HP, ATK, MGK, DEF, CRIT, and attack speed) at 60s and every 10s after.
 - **Wounds** (Decision 23): `FightResult.down_at_end()` (a DEATH not followed by a RISE) decides them in `RunFlow.record`. Bounty Board's streak still breaks on any fall.
 - **Relics:** 11 more, 86 in all (25 common, 21 rare, 14 epic, 15 legendary, 11 boss): every relic but the bond relics. There are two new stacking statuses, `unbending` and `long_watch`.
 - **The UI:**

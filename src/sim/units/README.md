@@ -18,3 +18,4 @@ What units do each tick beyond moving: passives and their events (the chains), s
 | `signatures.gd` | Signatures and their triggers. |
 | `statuses.gd` | Applies, ticks, and reads statuses. |
 | `tactics.gd` | What a hero's tactic does in a fight. |
+| `unit_turn.gd` | One standing unit's turn in a tick, for CombatSim.step: mana, its signature, Stun, its attack's cooldown, its target, then attacking or walking. |

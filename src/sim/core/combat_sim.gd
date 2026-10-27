@@ -617,13 +617,13 @@ func step() -> void:
 	if any_stored and tick % FixedMath.TICKS_PER_SECOND == 0:
 		_grow_stored()
 	if hero_rules.rise_ticks > 0 or risers:
-		_rise_due()
+		SimDeaths.rise_due(self)
 	if arrivals or swaps:
 		Gambits.tick(self)
 	if not setup.rift_effects.is_empty():
 		_rift_due()
 	if hero_rules.watch_every_ticks > 0 and tick >= hero_rules.watch_from_ticks and (tick - hero_rules.watch_from_ticks) % hero_rules.watch_every_ticks == 0:
-		_keep_watch()
+		SimDeaths.keep_watch(self)
 	if not active_walls.is_empty():
 		Walls.tick(self)
 	Shots.land_due(self)
@@ -631,7 +631,7 @@ func step() -> void:
 	for unit: UnitState in units:
 		# A unit that fell into the void this tick (Islands) is gone.
 		if unit.alive and not unit.fell:
-			_act(unit)
+			UnitTurn.act(self, unit)
 	if has_water:
 		Water.mark(self)
 	if has_void:
@@ -651,180 +651,17 @@ func step() -> void:
 	if _phased:
 		Phases.check(self)
 	if thralls:
-		_thralls_go()
-	_process_deaths()
+		SimDeaths.thralls_go(self)
+	SimDeaths.process_deaths(self)
 	if not _conditional.is_empty():
 		check_conditional_auras()
-	_check_end()
+	SimDeaths.check_end(self)
 	if _counting:
 		var counted_to: int = combat_log.entries.size()
 		Deeds.count(self, _deeds_read, counted_to)
 		_deeds_read = counted_to
 		if _counting_time:
 			Deeds.count_time(self)
-
-
-## One unit's update this tick. It runs for every unit every tick, so it's
-## written for speed: the common checks are inlined.
-func _act(unit: UnitState) -> void:
-	if unit.tactic != null and (unit.tactic.regen_bp > 0 or unit.tactic.ally_def_add > 0):
-		Tactics.tick(self, unit)
-	var has_statuses: bool = not unit.statuses.is_empty()
-	# Mana regen (Mana), unless Silenced.
-	# Shackle Engine (the tuning phase): a held enemy gains none.
-	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)) \
-			and not (has_statuses and hero_rules.held_no_mana and unit.side != EffectSource.Team.HEROES and SideRules.is_held(unit)):
-		var regen_before: int = unit.mana
-		var regen: int = unit.mana_regen
-		if unit.aura_bp[AuraDef.Stat.MANA_GAIN_BP] != FixedMath.BP_ONE:
-			regen = FixedMath.apply_bp(regen, Passives.factor(unit, AuraDef.Stat.MANA_GAIN_BP))
-		unit.mana = mini(unit.mana + regen, maxi(unit.mana_cap, unit.mana_store))
-		if not overflow_counters.is_empty():
-			Mana.count_overflow(self, unit, regen_before)
-	# Landing from a leap: it can't act.
-	if tick < unit.landing_until:
-		return
-	var casting: bool = false
-	var signature: AbilityState = unit.signature
-	if signature != null and (signature.pending > 0 or signature.cast_ends_at >= 0 \
-			or (signature.mana_trigger and (unit.mana >= unit.mana_cap or unit.aura_bp[AuraDef.Stat.SIGNATURE_COST_BP] != FixedMath.BP_ONE and Mana.is_full(unit))) or (signature.once_trigger and not signature.fired) or signature.above_trigger \
-			or signature.also_waiting or signature.echo_at >= 0 or signature.again_at >= 0 or (signature.every_ticks > 0 and tick % signature.every_ticks == 0)):
-		casting = Signatures.act(self, unit)
-		has_statuses = not unit.statuses.is_empty()
-		if tick < unit.landing_until:
-			return
-	# A grip (phase 8 part 4, the Garrote) ends, or lands its effects.
-	if unit.grip_target != null:
-		Grips.tick(self, unit)
-		has_statuses = not unit.statuses.is_empty()
-	if has_statuses and Statuses.has_kind(unit, StatusDef.Kind.STUN):
-		if unit.leg_active:
-			Movement.halt(self, unit, "stunned")
-		return
-	# An inert unit (phase 5: a totem) never attacks, targets, or walks.
-	if unit.inert:
-		return
-	var attack: AbilityState = unit.attack
-	if attack.progress_bp < attack.needed:
-		var rate: int = unit.attack_rate_bp
-		if unit.holding and unit.tactic.atsp_bp > 0:
-			rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE + unit.tactic.atsp_bp)
-		elif unit.tactic != null and unit.tactic.keep_bp > 0 and unit.tactic.kind == TacticDef.Kind.HOLD_GROUND:
-			# Hold your ground's twist: part of it stays after letting go.
-			rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE + FixedMath.apply_bp(unit.tactic.atsp_bp, unit.tactic.keep_bp))
-		if has_statuses:
-			var slow: int = Statuses.slow_bp(unit)
-			if slow != 0:
-				rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE - slow)
-		attack.progress_bp = mini(attack.progress_bp + rate, attack.needed)
-	if casting:
-		if unit.leg_active:
-			Movement.halt(self, unit, "casting")
-		return
-	if unit.holding:
-		Tactics.check_release(self, unit)
-	var target: UnitState = unit.target
-	if has_statuses:
-		var taunter: UnitState = Statuses.taunter(self, unit)
-		if taunter != null and taunter != target:
-			Targeting.set_target(self, unit, taunter, "taunted")
-			target = taunter
-		elif taunter == null:
-			# Dance of Strings (phase 8 part 6): its setter's target.
-			var focus: UnitState = Statuses.focus_target(self, unit)
-			if focus != null and focus != target:
-				Targeting.set_target(self, unit, focus, "focus")
-				target = focus
-		# Confused (phase 8 part 6, Night Veil): the nearest other unit of its
-		# own side; once it ends, a target on its own side is dropped.
-		if taunter == null and Statuses.has_kind(unit, StatusDef.Kind.CONFUSED):
-			var turned_on: UnitState = Targeting.straight_nearest(unit, standing_allies_of(unit))
-			if turned_on != null and turned_on != target:
-				Targeting.set_target(self, unit, turned_on, "confused")
-				target = turned_on
-				unit.turned = true
-	if unit.turned and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.CONFUSED)):
-		# Only the target confusion chose (a healer's own may be an ally).
-		unit.turned = false
-		if target != null and target.side == unit.side:
-			Targeting.lose(self, unit, "no longer confused")
-			target = null
-	if target != null and target.alive and target.side != unit.side and Statuses.is_stealthed(target) and unit.aura_bp[AuraDef.Stat.SEES_STEALTH] <= 0:
-		var lost: LogEntry = Targeting.lose(self, unit, "%s is %s" % [target.id, "submerged" if target.submerged else "stealthed"])
-		target = null
-		# A taunted unit drawn back to a hidden taunter every tick isn't
-		# losing a target it chose (phase 8 part 6, Night Veil).
-		if not Statuses.has_kind(unit, StatusDef.Kind.TAUNT):
-			lost.lost_to_stealth = true
-			if lost_target_listeners:
-				Events.lost_target(self, unit)
-	if target == null or not target.alive:
-		Targeting.update(self, unit)
-		target = unit.target
-	var engagers: Array[UnitState] = _enemy_engagers if unit.side == EffectSource.Team.HEROES else _hero_engagers
-	if not unit.engagements.is_empty():
-		Engage.update(self, unit, engagers)
-	if target == null:
-		Movement.wait(self, unit, "no target")
-		return
-	if unit.def.hop_cooldown_ticks > 0 and tick >= unit.hop_ready_at and Displacement.hop_away(self, unit, engagers):
-		return
-	var dx: int = target.pos.x - unit.pos.x
-	var dy: int = target.pos.y - unit.pos.y
-	if dx * dx + dy * dy <= unit.reach_sq:
-		# A flier in the air lands on a free spot before it attacks.
-		if unit.airborne and not Movement.settle(self, unit, target):
-			return
-		# Keep your distance (phase 5c step 6c): between attacks, it backs off.
-		if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.KITE and attack.progress_bp < attack.needed and Tactics.kite(self, unit, target):
-			return
-		if unit.leg_active:
-			Movement.halt(self, unit, "in reach")
-		if attack.progress_bp >= attack.needed and (unit.def.plant_ticks == 0 or tick - unit.moved_at >= unit.def.plant_ticks):
-			EffectRunner.basic_attack(self, unit)
-		return
-	# About to walk: a unit that would reach its target once planted (phase 4,
-	# Steady) stops there and plants instead.
-	if unit.plant_reach_sq > 0 and dx * dx + dy * dy <= unit.plant_reach_sq:
-		Movement.wait(self, unit, "planting")
-		return
-	# About to walk: a unit gripping an enemy (Grips) doesn't.
-	if unit.grip_target != null:
-		Movement.wait(self, unit, "gripping")
-		return
-	# About to walk: a unit holding its ground (Tactics) doesn't.
-	if unit.holding:
-		Tactics.stay(self, unit)
-		Movement.wait(self, unit, "")
-		return
-	# About to walk: a unit planting its feet (Tactics) stays near an enemy.
-	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.STOP_NEAR and Tactics.planted(self, unit):
-		Movement.wait(self, unit, "planted its feet")
-		return
-	# About to walk: a unit staying with its tank (Tactics) may go to it instead.
-	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.LEASH and Tactics.leash(self, unit, target):
-		return
-	# About to walk: an engager next to it may hold it.
-	if unit.engagements.is_empty() and not engagers.is_empty():
-		Engage.update(self, unit, engagers)
-	if not unit.engagements.is_empty() and Engage.holds(unit):
-		if unit.leg_active:
-			Movement.halt(self, unit, "engaged")
-		return
-	Movement.walk(self, unit)
-	if unit.fires_moving and attack.progress_bp >= attack.needed:
-		_fire_on_the_move(unit)
-
-
-## A walking unit with fires_moving (phase 4) looses its basic attack at the
-## nearest enemy in reach, if any, without stopping (and keeps its target).
-func _fire_on_the_move(unit: UnitState) -> void:
-	var nearest: UnitState = Targeting.pick(self, unit, "nearest", unit.reach_sq)
-	if nearest == null:
-		return
-	EffectRunner.fire(self, unit, unit.attack, nearest, unit.stats.get_stat(UnitStats.Stat.RANGE))
-	unit.attack.spend()
-	Mana.on_attack(self, unit)
 
 
 ## Folds the auras in again if a conditional aura turned on or off (phase 4;
@@ -1080,177 +917,6 @@ func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -
 
 # --- the end -----------------------------------------------------------------
 
-## Settles who falls. A would_fall signature fires at once and may fell
-## others, so it goes round again until nobody new is at 0 HP.
-func _process_deaths() -> void:
-	var aura_lost: bool = false
-	var again: bool = true
-	while again:
-		again = false
-		for unit: UnitState in units:
-			if not unit.alive or (unit.hp > 0 and not unit.fell):
-				continue
-			# A fall into the void (Islands): nothing catches it, and nothing
-			# runs as it goes (Decision 1).
-			if unit.fell:
-				unit.hp = 0
-				_fall(unit)
-				if ally_fall_listeners and unit.owner == null:
-					Signatures.ally_fell(self, unit)
-				aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
-				Events.kill(self, unit)
-				if enemy_fell_listeners:
-					Events.enemy_fell(self, unit)
-				if summon_fell_listeners and unit.summoned:
-					Events.summon_fell(self, unit)
-				continue
-			# A thrall (phase 8 part 5) goes quietly: nothing catches it or
-			# runs as it goes, and it's nobody's kill or fallen ally (Decision 2).
-			# So does a summon whose time is up (phase 8 part 6).
-			if unit.raised or unit.time_up:
-				unit.hp = 0
-				_fall(unit)
-				aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
-				continue
-			var undying: StatusState = _undying(unit)
-			if undying != null:
-				unit.hp = 1
-				var held: LogEntry = new_entry(LogEntry.Kind.SAVED, undying.source)
-				held.target = unit.id
-				held.note = undying.def.name
-				combat_log.add(held)
-				continue
-			if Signatures.would_fall(self, unit) or (not unit.listeners.is_empty() and Passives.would_fall(self, unit)):
-				again = true
-				continue
-			_fall(unit)
-			# A companion returns, so it's nobody's fallen ally (phase 8 part 6).
-			if ally_fall_listeners and unit.owner == null:
-				Signatures.ally_fell(self, unit)
-			aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
-			Events.kill(self, unit)
-			if enemy_fell_listeners:
-				Events.enemy_fell(self, unit)
-			if summon_fell_listeners and unit.summoned:
-				Events.summon_fell(self, unit)
-			if unit.controlled:
-				Events.controlled_fell(self, unit)
-			if Passives.on_fall(self, unit):
-				again = true
-	if aura_lost:
-		_active_auras = Passives.rederive(self, _active_auras)
-
-
-## Second Dawn (phase 5c step 5c): each fallen hero whose rise is due stands
-## again where it fell (or the nearest free safe spot), at a share of its max
-## HP, its statuses and Shield gone, logged as RISE. A unit with a rise
-## passive (phase 8 part 2) rises the same way at its own share, sourced to
-## the passive, keeping that passive's boost and gaining a stack of it.
-func _rise_due() -> void:
-	var rose_any: bool = false
-	for unit: UnitState in units:
-		if unit.alive or unit.rise_at < 0 or tick < unit.rise_at:
-			continue
-		unit.rise_at = -1
-		if unit.companion != null:
-			rose_any = _companion_returns(unit) or rose_any
-			continue
-		var part: PartDef = unit.rise_part
-		if part != null:
-			unit.rises_done += 1
-		else:
-			unit.rose = true
-		if part != null and not part.rise_as.is_empty():
-			# A fresh one of another kit stands where it fell (phase 8 part 3).
-			Summons.rise_as(self, unit, part)
-			continue
-		var spot: Vector2i = Displacement.free_spot_near(self, unit, nearest_safe_point(unit.pos, unit.radius), null, 0)
-		if spot.x < 0:
-			continue
-		unit.alive = true
-		unit.pos = spot
-		unit.hp = maxi(FixedMath.apply_bp(unit.max_hp, part.rise_hp_bp if part != null else hero_rules.rise_hp_bp), 1)
-		unit.shield = 0
-		if part != null and not part.rise_status.is_empty():
-			unit.statuses = unit.statuses.filter(func(state: StatusState) -> bool: return state.def.id == part.rise_status)
-		else:
-			unit.statuses.clear()
-		unit.target = null
-		unit.last_attacker = ""
-		unit.moved_at = tick
-		unit.route.clear()
-		unit.leg_active = false
-		unit.replan_at = tick + 1
-		var source: EffectSource = EffectSource.make(unit.id, part.id, part.name) if part != null \
-			else EffectSource.relic("second_dawn", "Second Dawn", EffectSource.Team.HEROES)
-		var entry: LogEntry = new_entry(LogEntry.Kind.RISE, source)
-		entry.target = unit.id
-		entry.to_pos = spot
-		entry.amount = unit.hp
-		combat_log.add(entry)
-		if part != null and not part.rise_status.is_empty():
-			Statuses.apply(self, unit, part.rise_status, 1, 0, source)
-		rose_any = true
-	if rose_any:
-		refold_auras()
-
-
-## A companion that fell comes back beside its owner, if she stands (phase 8
-## part 6, Kestra): at full HP, its statuses and Shield gone, logged as a
-## SUMMON noted "returns" sourced to her. True if it came back.
-func _companion_returns(unit: UnitState) -> bool:
-	var owner: UnitState = unit.owner
-	if owner == null or not owner.alive:
-		return false
-	var spot: Vector2i = Summons.beside(self, owner, unit)
-	if spot.x < 0:
-		return false
-	unit.alive = true
-	unit.pos = spot
-	unit.hp = unit.max_hp
-	unit.shield = 0
-	unit.statuses.clear()
-	unit.target = null
-	unit.last_attacker = ""
-	unit.moved_at = tick
-	unit.route.clear()
-	unit.leg_active = false
-	unit.replan_at = tick + 1
-	var entry: LogEntry = new_entry(LogEntry.Kind.SUMMON, EffectSource.make(owner.id, unit.companion.kit.id, unit.companion.kit.name))
-	entry.target = unit.id
-	entry.to_pos = spot
-	entry.amount = unit.hp
-	entry.note = "returns"
-	combat_log.add(entry)
-	return true
-
-
-## Thralls whose time is up go (phase 8 part 5, Gravecaller): they fall in
-## the deaths step that follows, noted "its time is up". So do summons whose
-## lasts_ms is up (phase 8 part 6, Nest).
-func _thralls_go() -> void:
-	var any: bool = false
-	for unit: UnitState in units:
-		if unit.expires_at < 0 or not unit.alive:
-			continue
-		any = true
-		if tick >= unit.expires_at:
-			unit.time_up = true
-			unit.hp = 0
-			unit.last_attacker = ""
-			unit.last_hit_source = null
-			unit.last_hit_status = "its time is up"
-	thralls = any
-
-
-## The Long Watch: every standing hero gains a stack of `long_watch`.
-func _keep_watch() -> void:
-	var source: EffectSource = EffectSource.relic("the_long_watch", "The Long Watch", EffectSource.Team.HEROES)
-	for unit: UnitState in heroes:
-		if unit.alive and content.statuses.has("long_watch"):
-			Statuses.apply(self, unit, "long_watch", 1, 0, source)
-
-
 ## The chain limit for an entry from `source_unit` (or a relic of
 ## `relic_side`): Chain of Echoes takes the heroes' deeper (phase 5c step 5c).
 func chain_limit_of(source_unit: String, relic_side: int) -> int:
@@ -1261,66 +927,3 @@ func chain_limit_of(source_unit: String, relic_side: int) -> int:
 		var unit: UnitState = unit_by_id(source_unit)
 		heroes_side = unit != null and unit.side == EffectSource.Team.HEROES
 	return tuning.chain_limit + (hero_rules.deeper_steps if heroes_side else 0)
-
-
-func _undying(unit: UnitState) -> StatusState:
-	for state: StatusState in unit.statuses:
-		if state.def.kind == StatusDef.Kind.UNDYING:
-			return state
-	return null
-
-
-func _fall(unit: UnitState) -> void:
-	unit.alive = false
-	if unit.fell or unit.time_up:
-		pass
-	elif unit.companion != null:
-		# It returns beside its owner (phase 8 part 6; _companion_returns).
-		if unit.companion.return_ticks > 0:
-			unit.rise_at = tick + unit.companion.return_ticks
-	elif unit.rise_part != null:
-		# Its own rises (phase 8 part 2); Second Dawn's counts toward them.
-		# Phase 8 part 3: only if it fell meeting the rise's "if".
-		var meets: bool = unit.rise_part.rise_if == null or unit.rise_part.rise_if.holds(unit, unit)
-		if unit.rises_done < unit.rise_part.rise_times and meets:
-			unit.rise_at = tick + unit.rise_part.rise_ticks
-	elif hero_rules.rise_ticks > 0 and unit.side == EffectSource.Team.HEROES and not unit.rose and unit.index < setup.heroes.size():
-		unit.rise_at = tick + hero_rules.rise_ticks
-	unit.target = null
-	unit.route.clear()
-	unit.leg_active = false
-	var entry := LogEntry.new()
-	entry.tick = tick
-	entry.kind = LogEntry.Kind.DEATH
-	entry.target = unit.id
-	entry.to_pos = unit.pos
-	entry.note = "fell into the void" if unit.fell else "its time is up" if (unit.raised or unit.time_up) and unit.last_hit_source == null else "last hit: %s" % unit.last_hit_text()
-	combat_log.add(entry)
-
-
-func _check_end() -> void:
-	var heroes_up: bool = _any_standing(heroes)
-	var enemies_up: bool = _any_standing(enemies)
-	# The Long Watch (phase 5c step 5c): no tie until its own limit.
-	var tie_at: int = hero_rules.watch_tie_ticks if hero_rules.watch_every_ticks > 0 else tuning.tie_ticks
-	if heroes_up and enemies_up and tick < tie_at:
-		return
-	finished = true
-	var note: String
-	if not heroes_up and not enemies_up:
-		outcome = FightResult.Outcome.TIE
-		note = "Tie: both sides fell together (counts as a victory)"
-	elif not enemies_up:
-		outcome = FightResult.Outcome.VICTORY
-		note = "Victory"
-	elif not heroes_up:
-		outcome = FightResult.Outcome.DEFEAT
-		note = "Defeat"
-	else:
-		outcome = FightResult.Outcome.TIE
-		note = "Tie: both sides outlasted the rift (counts as a victory)"
-	var entry := LogEntry.new()
-	entry.tick = tick
-	entry.kind = LogEntry.Kind.FIGHT_END
-	entry.note = note
-	combat_log.add(entry)
