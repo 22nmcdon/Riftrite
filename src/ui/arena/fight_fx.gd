@@ -3,8 +3,9 @@ extends Control
 ## The momentary things on the board during a fight
 ## (docs/plans/rebuild-phase3-fight-sandbox.md, section 5), made from the log
 ## entries the FightPlayer hands out and drawn over the tokens:
-##   SHOT             a dot flying from the shooter to its target, landing at
-##                    the shot's landing tick; SHOT_FIZZLED removes it
+##   SHOT             a dot flying from the shooter's muzzle (FigureArt) to
+##                    its target's body, landing at the shot's landing tick;
+##                    SHOT_FIZZLED removes it
 ##   DAMAGE           a swipe from attacker to target when they're in melee
 ##                    reach (a shot or an area shows its own), and a number
 ##   STATUS_DAMAGE, COLLAPSE, HEAL, SHIELD   a number
@@ -64,7 +65,7 @@ const ENGAGE_LINK := UiStyle.GOLD_300
 
 enum Kind { SHOT, SWIPE, NUMBER, POPUP, AREA, LANDED, GHOST, PULSE }
 ## Where on a unit an effect is drawn (_lift).
-enum Lift { BODY, OVER_BARS }
+enum Lift { BODY, OVER_BARS, MUZZLE }
 
 
 ## One effect on the board.
@@ -377,13 +378,28 @@ func _unit_point(unit_id: String, fallback: Vector2) -> Vector2:
 	return _player.drawn_position(unit) if unit != null else fallback
 
 
-## How far above a unit's point its body, or the top of its bars, is drawn
-## (its token's figure), in pixels; nothing if it has no token.
+## Where a shot is drawn `t` of the way through its flight, in pixels: from
+## its shooter's muzzle (as the shooter stands now; the target's body height
+## once the shooter's gone) to its target's body.
+func shot_at(fx: Fx, t: float) -> Vector2:
+	var muzzle: bool = _view.token(fx.source_id) != null
+	var leaves: Vector2 = _view.to_pixel_f(fx.from) + (_lift(fx.source_id, Lift.MUZZLE) if muzzle else _lift(fx.unit_id, Lift.BODY))
+	var lands: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from)) + _lift(fx.unit_id, Lift.BODY)
+	return leaves.lerp(lands, t)
+
+
+## How far from a unit's point its body, the top of its bars, or its muzzle
+## is drawn (its token's figure), in pixels; nothing if it has no token.
 func _lift(unit_id: String, lift: Lift) -> Vector2:
 	var unit_token: UnitToken = _view.token(unit_id)
 	if unit_token == null:
 		return Vector2.ZERO
-	return unit_token.body_offset() if lift == Lift.BODY else unit_token.over_bars_offset()
+	match lift:
+		Lift.BODY:
+			return unit_token.body_offset()
+		Lift.MUZZLE:
+			return unit_token.muzzle_offset()
+	return unit_token.over_bars_offset()
 
 
 func _draw() -> void:
@@ -403,8 +419,7 @@ func _draw() -> void:
 		var t: float = clampf((now - fx.start) / float(fx.end - fx.start), 0.0, 1.0)
 		match fx.kind:
 			Kind.SHOT:
-				var at: Vector2 = fx.from.lerp(_unit_point(fx.unit_id, fx.from), t)
-				draw_circle(_view.to_pixel_f(at) + _lift(fx.unit_id, Lift.BODY), maxf(hex * 0.05, 3.0), fx.color)
+				draw_circle(shot_at(fx, t), maxf(hex * 0.05, 3.0), fx.color)
 			Kind.SWIPE:
 				var lift: Vector2 = _lift(fx.unit_id, Lift.BODY)
 				var target: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from)) + lift
@@ -457,9 +472,9 @@ func draw_ground(canvas: CanvasItem) -> void:
 		standing = standing.grow_side(SIDE_LEFT, standing.position.x - _view.drawn_rect.position.x)
 	if standing.end.x >= _view.board.end.x:
 		standing = standing.grow_side(SIDE_RIGHT, _view.drawn_rect.end.x - standing.end.x)
-	_draw_between(canvas, _view.drawn_rect, standing, CRUMBLED, "collapse_tile.svg")
+	_draw_between(canvas, _view.drawn_rect, standing, CRUMBLED, "collapse_tile")
 	if warned_safe.size != Vector2i.ZERO:
-		_draw_between(canvas, sim.safe, warned_safe, WARNED, "collapse_warn_tile.svg")
+		_draw_between(canvas, sim.safe, warned_safe, WARNED, "collapse_warn_tile")
 	_draw_placed(canvas, sim)
 	for fx: Fx in effects:
 		if fx.kind == Kind.AREA or fx.kind == Kind.LANDED:
@@ -557,4 +572,4 @@ func _draw_between(canvas: CanvasItem, outer: Rect2i, inner: Rect2i, color: Colo
 	for band: Rect2i in bands:
 		if band.size.x <= 0 or band.size.y <= 0:
 			continue
-		_view.draw_tiled(canvas, ArenaView.art(ArenaView.ART_DIR + tile), _view.rect_to_pixels(band), ArenaView.COLLAPSE_TILE_HEXES * _view.hex_px(), color)
+		_view.draw_tiled(canvas, ArtFile.texture(ArenaView.ART_DIR + tile), _view.rect_to_pixels(band), ArenaView.COLLAPSE_TILE_HEXES * _view.hex_px(), color)

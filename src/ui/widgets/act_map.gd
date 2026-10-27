@@ -1,7 +1,7 @@
 class_name ActMap
 extends Control
 ## The act map (docs/plans/rebuild-phase5b-art.md, section 4, Decision 4):
-## the route as the uploaded map (art/ui/map/act_map.svg), one island a day
+## the route as the uploaded map (art/ui/map/act_map), one island a day
 ## and the boss's last. It only reads the run.
 ##   - Each day's island holds that day's fights as nodes by tier
 ##     (art/ui/nodes/: fight, fight_harder, elite, boss), known from the
@@ -16,8 +16,8 @@ extends Control
 
 signal node_selected(index: int)
 
-const MAP: String = "res://art/ui/map/act_map.svg"
-const NODES: String = "res://art/ui/nodes/%s.svg"
+const MAP: String = "res://art/ui/map/act_map"
+const NODES: String = "res://art/ui/nodes/%s"
 const MAP_SIZE := Vector2(1920, 1080)
 ## Each island's fights' middle, in the map's pixels (from the map look
 ## test): days 1-6, then the boss's.
@@ -65,7 +65,7 @@ func _build() -> void:
 		for i: int in options.size():
 			var encounter: EncounterDef = content.encounters[options[i]]
 			var node := TextureButton.new()
-			node.texture_normal = ArenaView.art(NODES % TIER_NODES.get(encounter.tier, "fight"))
+			node.texture_normal = ArtFile.texture(NODES % TIER_NODES.get(encounter.tier, "fight"))
 			node.ignore_texture_size = true
 			node.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 			node.tooltip_text = "Day %d · %s (%s)" % [day, encounter.name, encounter.tier]
@@ -80,7 +80,7 @@ func _build() -> void:
 		fights[day] = nodes
 		if not _place_id(day).is_empty():
 			var place := TextureRect.new()
-			place.texture = ArenaView.art(RunContent.ART_UI + _place_icon(day))
+			place.texture = ArtFile.texture(RunContent.ART_UI + _place_icon(day))
 			place.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			place.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			place.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -172,7 +172,7 @@ func _layout() -> void:
 
 
 func _draw() -> void:
-	draw_texture_rect(ArenaView.art(MAP), Rect2(_origin, MAP_SIZE * _scale), false)
+	draw_texture_rect(ArtFile.texture(MAP), Rect2(_origin, MAP_SIZE * _scale), false)
 	var state: RunState = session.state()
 	var radius: float = NODE_SIDE * _scale * 0.62
 	# Today's fights glow, the selected one most.

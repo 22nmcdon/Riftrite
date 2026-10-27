@@ -68,7 +68,7 @@ const RARITY: Array[Color] = [LINE_500, GOLD_500, Color("8fc7c9"), Color("9b6fe0
 const STATUS_TAGS: Dictionary[String, String] = {"burn": "BRN", "poison": "PSN", "bleed": "BLD", "briar_torn": "BRR"}
 ## Status colors for the fight view.
 const STATUS_COLORS: Dictionary[String, Color] = {"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545"), "briar_torn": Color("d14545")}
-const ICON_DIR: String = "res://art/ui/icons/%s.svg"
+const ICON_DIR: String = "res://art/ui/icons/%s"
 const BODY_FONT: String = "res://art/fonts/Alegreya-Regular.ttf"
 ## Alegreya has no semibold: its bold stands in.
 const SEMIBOLD_FONT: String = "res://art/fonts/Alegreya-Bold.ttf"
@@ -266,7 +266,7 @@ class Meter:
 				x += 8.0
 
 
-## A UI icon (art/ui/icons/<name>.svg): stat_hp, gold, stop_forge, ...
+## A UI icon (art/ui/icons/<name>): stat_hp, gold, stop_forge, ...
 ## Stat icons in UnitStats.Stat order.
 const STAT_ICONS: Array[String] = ["stat_hp", "stat_atk", "stat_mgk", "stat_def", "stat_crit", "stat_atsp"]
 
@@ -286,7 +286,7 @@ static func stat_row(stats: UnitStats, size: int = 16) -> HBoxContainer:
 
 static func icon(name: String, size: int = 24) -> TextureRect:
 	var rect := TextureRect.new()
-	rect.texture = load(ICON_DIR % name) as Texture2D
+	rect.texture = ArtFile.texture(ICON_DIR % name)
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS

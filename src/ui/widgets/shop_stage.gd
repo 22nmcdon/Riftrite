@@ -8,8 +8,8 @@ extends MarginContainer
 ## stage's bottom, and whatever the stage is too short for is cut from the
 ## top. The wares go in `wares`, a flow of cards.
 
-const SCENES: String = "res://art/ui/shops/%s_scene.svg"
-const KEEPERS: String = "res://art/ui/shops/%s.svg"
+const SCENES: String = "res://art/ui/shops/%s_scene"
+const KEEPERS: String = "res://art/ui/shops/%s"
 ## A keeper's canvas, and his feet on it.
 const KEEPER_CANVAS := Vector2(300, 520)
 const KEEPER_FEET := Vector2(150, 500)
@@ -36,8 +36,8 @@ var wares: HFlowContainer
 static func make(shop: String) -> ShopStage:
 	var stage := ShopStage.new()
 	stage.keeper = shop
-	stage.scene = ArenaView.art(SCENES % shop)
-	stage.figure = ArenaView.art(KEEPERS % shop)
+	stage.scene = ArtFile.texture(SCENES % shop)
+	stage.figure = ArtFile.texture(KEEPERS % shop)
 	stage.clip_contents = true
 	stage.custom_minimum_size = Vector2(0, MIN_HEIGHT)
 	for side: String in ["top", "right", "bottom"]:

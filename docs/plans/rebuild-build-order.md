@@ -67,7 +67,7 @@ Three labels: **Remove** (deleted), **Rewrite** (the file or idea stays, the con
 | New | Build | A placement screen, a camp screen, vow and transformation popups, a fight sandbox |
 | `fight_tally.gd`, `widgets/fight_chart.gd`, `widgets/fight_banners.gd`, `widgets/day_bar.gd`, `widgets/toast.gd`, `widgets/hover_card.gd`, `fight_names.gd`, `encounter_info.gd` | Keep (adapt) | Still useful as they are, with new content |
 | `main.gd`, `main.tscn`, `run_session.gd`, `playtest_journal.gd`, `screens/ui_screen.gd`, `screens/title_screen.gd`, `screens/run_end_screen.gd` | Keep (adapt) | The shell, sessions, and playtest journal stay |
-| `ui_style.gd`, `widgets/frame_decor.gd`, `widgets/glyph.gd`, `character_art.gd` | Keep as placeholders | Replaced in the art rehaul |
+| `ui_style.gd`, `widgets/frame_decor.gd`, `widgets/glyph.gd`, `character_art.gd` | Keep as placeholders | Replaced in the art rehaul (`glyph.gd`, `frame_decor.gd`, and `character_art.gd` removed in phase 7a, unused) |
 
 ### Data (`data/`)
 

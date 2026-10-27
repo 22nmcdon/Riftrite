@@ -14,16 +14,16 @@ func _init() -> void:
 	quit(0)
 
 
-## Every figure's covered rect, [x, y, width, height] in canvas pixels, by
-## key ("heroes/maren_base").
+## Every figure's covered rect, [x, y, width, height] in its canvas units,
+## by key ("heroes/maren_base"): of its PNG where there is one, else its SVG.
 static func measure_all() -> Dictionary:
 	var bounds: Dictionary = {}
 	for folder: String in ["heroes", "enemies"]:
-		var files: PackedStringArray = DirAccess.get_files_at(FigureArt.DIR + folder)
-		for file_name: String in files:
-			if file_name.get_extension() == "svg":
+		for file_name: String in DirAccess.get_files_at(FigureArt.root + folder):
+			if ArtFile.KINDS.has(file_name.get_extension()):
 				var key: String = "%s/%s" % [folder, file_name.get_basename()]
-				bounds[key] = measure(FileAccess.get_file_as_string("%s%s.svg" % [FigureArt.DIR, key]))
+				if not bounds.has(key):
+					bounds[key] = measure(ArtFile.resolve(FigureArt.root + key), FigureArt.canvas(key))
 	return bounds
 
 
@@ -37,9 +37,17 @@ static func to_json(bounds: Dictionary) -> String:
 	return "{\n%s\n}\n" % ",\n".join(lines)
 
 
-## The pixels an SVG draws on, at 1x.
-static func measure(svg: String) -> Array[int]:
+## What a figure file draws on, in canvas units (`canvas` wide): an SVG at
+## its own size, a PNG at however many pixels a unit it has, the rect
+## widened to whole units.
+static func measure(path: String, canvas: Vector2) -> Array[int]:
 	var image := Image.new()
-	image.load_svg_from_string(svg, 1.0)
+	if path.get_extension() == "svg":
+		image.load_svg_from_string(FileAccess.get_file_as_string(path), 1.0)
+	else:
+		image.load(ProjectSettings.globalize_path(path))
+	var per_unit: float = image.get_width() / canvas.x
 	var used: Rect2i = image.get_used_rect()
-	return [used.position.x, used.position.y, used.size.x, used.size.y]
+	var start := Vector2i(floori(used.position.x / per_unit), floori(used.position.y / per_unit))
+	var end := Vector2i(ceili(used.end.x / per_unit), ceili(used.end.y / per_unit))
+	return [start.x, start.y, end.x - start.x, end.y - start.y]

@@ -159,7 +159,7 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 ## square.
 static func art_icon(path: String, side: float) -> TextureRect:
 	var rect := TextureRect.new()
-	rect.texture = ArenaView.art(RunContent.ART_UI + path)
+	rect.texture = ArtFile.texture(RunContent.ART_UI + path)
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	rect.custom_minimum_size = Vector2(side, side)
@@ -881,7 +881,7 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 	var encounter: EncounterDef = session.content.encounters[options[index]]
 	var card: VBoxContainer = _card(holder)
 	var node: String = ActMap.TIER_NODES.get(encounter.tier, "fight")
-	_card_head(card, RunDayScreen.art_icon("nodes/%s.svg" % node, CARD_ICON), UiStyle.caps("%s · %d shards" % [encounter.tier.to_upper(), session.flow.act.pay[encounter.tier]], 14, UiStyle.HIGHLIGHT),
+	_card_head(card, RunDayScreen.art_icon("nodes/%s" % node, CARD_ICON), UiStyle.caps("%s · %d shards" % [encounter.tier.to_upper(), session.flow.act.pay[encounter.tier]], 14, UiStyle.HIGHLIGHT),
 		UiStyle.heading(encounter.name, 26, UiStyle.TEXT))
 	card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
 	card.add_child(_enemies_line(encounter))

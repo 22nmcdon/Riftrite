@@ -80,7 +80,7 @@ const PROPS: Array[String] = ["broken_column", "fallen_capital", "headless_statu
 const FRAME_SIZE := Vector2(1400, 1700)
 const FRAME_INNER := Rect2(150, 120, 1100, 1100)
 ## How many hexes one ground tile (or collapse tile) spans.
-const PROPS_DIR: String = ART_DIR + "props/%s.svg"
+const PROPS_DIR: String = ART_DIR + "props/%s"
 const GROUND_TILE_HEXES: float = 2.5
 const COLLAPSE_TILE_HEXES: float = 1.25
 const FLASH := Color(0.84, 0.35, 0.31, 0.7)
@@ -189,7 +189,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 		rocks.append(ArenaPlane.Circle.make(grid.center(rock.x, rock.y), content.tuning.rock_radius, "rock"))
 		var prop := RockProp.new()
 		prop.prop = prop_for(rock)
-		prop.texture = art(PROPS_DIR % prop.prop)
+		prop.texture = ArtFile.texture(PROPS_DIR % prop.prop)
 		prop.plane_pos = grid.center(rock.x, rock.y)
 		prop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		rock_props.append(prop)
@@ -200,7 +200,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	fx.clear()
 	snare_markers.clear()
 	for unit: UnitSetup in setup.units():
-		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"), figure_for(unit.def, unit.side, form_of(unit)))
+		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"), figure_for(unit.def, unit.side, form_of(unit), content))
 		token.plane_pos = grid.center(unit.col, unit.row)
 		token.tactic_label = unit.tactic.name if unit.tactic != null else ""
 		token.path_label = path_tag(unit)
@@ -228,19 +228,12 @@ static func prop_for(hex: Vector2i) -> String:
 	return PROPS[posmod(hex.x * 3 + hex.y * 7, PROPS.size())]
 
 
-static var _art: Dictionary[String, Texture2D] = {}
-
-
-## A texture from the art, loaded once.
-static func art(path: String) -> Texture2D:
-	if not _art.has(path):
-		_art[path] = load(path) as Texture2D
-	return _art[path]
-
-
-## A hero's form: its path's once transformed (an apex stands as its path's
-## form until phase 7's art), else "base".
+## A hero's form: its apex's once earned, where that figure is drawn
+## (docs/plans/asset-contract.md, section 3), else its path's once
+## transformed, else "base".
 static func form_of(unit: UnitSetup) -> String:
+	if unit.apex != null and unit.stage == PathDef.Stage.APEX and FigureArt.has_figure(FigureArt.key_for(unit.def.id, true, unit.apex.id)):
+		return unit.apex.id
 	return unit.path.id if unit.path != null and unit.stage >= PathDef.Stage.TRANSFORMED else "base"
 
 
@@ -265,7 +258,7 @@ func sync_fight(player: FightPlayer) -> void:
 	for unit: UnitState in player.sim.units:
 		var unit_token: UnitToken = token(unit.id)
 		if unit_token == null:
-			var key: String = figure_for(unit.def, unit.side)
+			var key: String = figure_for(unit.def, unit.side, "base", player.content)
 			# A copy (phase 8 part 6, Lucan) stands as the figure of whoever
 			# it copies (paler: UnitToken.show_state).
 			var original: UnitToken = token(unit.mirror_of.id) if unit.mirror_of != null else null
@@ -381,12 +374,19 @@ func faces_left(unit: UnitState, was_left: bool) -> bool:
 
 
 ## A unit's figure (FigureArt): a hero's form (base, or a transformed
-## hero's path), a companion's (drawn as a hero's base form), or its
-## enemy's (a thrall raised on the heroes' side too).
-static func figure_for(kit: UnitDef, team: EffectSource.Team, form: String = "base") -> String:
+## hero's path or apex), a companion's (drawn as a hero's base form), or its
+## enemy's (a thrall raised on the heroes' side too): a specialized enemy's
+## own figure where it's drawn ("enemies/rift_hound_ashback", by the
+## specialization's word in `content`), else the enemy's.
+static func figure_for(kit: UnitDef, team: EffectSource.Team, form: String = "base", content: ContentDb = null) -> String:
 	var key: String = FigureArt.key_for(kit.id, team == EffectSource.Team.HEROES, form)
-	if team == EffectSource.Team.HEROES and not FigureArt.has_figure(key):
-		return FigureArt.key_for(kit.id, false)
+	if team == EffectSource.Team.HEROES and FigureArt.has_figure(key):
+		return key
+	key = FigureArt.key_for(kit.id, false)
+	if content != null and content.specializations.has(kit.specialization):
+		var specialized: String = "%s_%s" % [key, content.specializations[kit.specialization].name.to_snake_case()]
+		if FigureArt.has_figure(specialized):
+			return specialized
 	return key
 
 
@@ -547,8 +547,8 @@ func _draw() -> void:
 	if grid == null:
 		return
 	var board_px: Rect2 = rect_to_pixels(drawn_rect)
-	draw_texture_rect(art(ART_DIR + "island_frame.svg"), frame_rect(), false)
-	draw_tiled(self, art(ART_DIR + "ground_tile.svg"), board_px, GROUND_TILE_HEXES * hex_px())
+	draw_texture_rect(ArtFile.texture(ART_DIR + "island_frame"), frame_rect(), false)
+	draw_tiled(self, ArtFile.texture(ART_DIR + "ground_tile"), board_px, GROUND_TILE_HEXES * hex_px())
 	for hex: Vector2i in water:
 		var pool: PackedVector2Array = hex_corners(grid.center(hex.x, hex.y))
 		draw_colored_polygon(pool, WATER_FILL)

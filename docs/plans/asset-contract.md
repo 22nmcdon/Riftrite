@@ -1,6 +1,6 @@
 # The asset contract
 
-Status: **agreed in discussion (2026-09-30), not built.** What every art file must look like so the game can load it, whoever makes it. The look is in `../art-style-guide.md`; this file is the technical side. The game is **asset-driven**: the Python kits in `tools/art/` are placeholder producers, and commissioned art replaces their files one at a time.
+Status: **agreed in discussion (2026-09-30); its loading built in phase 7a (`rebuild-phase7a-asset-loading.md`, 2026-10-27).** What every art file must look like so the game can load it, whoever makes it. The look is in `../art-style-guide.md`; this file is the technical side. The game is **asset-driven**: the Python kits in `tools/art/` are placeholder producers, and commissioned art replaces their files one at a time.
 
 ## 1. The goal, and what it means for files
 
@@ -103,6 +103,8 @@ Missing fields fall back to sensible defaults (`head` at the drawn top, `muzzle`
 - **Licenses allowed:** CC0, CC BY, MIT, and paid licenses that allow commercial use. **Not allowed:** GPL code or shaders, "non-commercial" licenses, and anything without a clear license.
 
 ## 10. Code changes this needs (for the build plan)
+
+Built in phase 7a (`rebuild-phase7a-asset-loading.md`): every item below, with an empty manifest until commissioned figures bring their points.
 
 - `Figures` loads `.png` before `.svg`, and reads `figures.json` for `head`, `hand`, `muzzle`, and `scale`.
 - Bars, status icons, and shots use the manifest's points instead of the drawn box.

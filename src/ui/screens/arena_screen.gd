@@ -128,7 +128,7 @@ func build() -> void:
 	add_child(upper)
 	# The rift's sky behind everything above the hero bar (phase 5b).
 	var sky := TextureRect.new()
-	sky.texture = ArenaView.art(ArenaView.ART_DIR + "backdrop.svg")
+	sky.texture = ArtFile.texture(ArenaView.ART_DIR + "backdrop")
 	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	sky.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED

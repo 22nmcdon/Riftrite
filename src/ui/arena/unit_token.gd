@@ -54,6 +54,9 @@ const STATUS_COLORS: Dictionary = {
 	StatusDef.Kind.STEALTH: Color("9aa7b8"), StatusDef.Kind.WARDED: Color("8fd0c8"), StatusDef.Kind.BOOST: Color("ffd27f"),
 	StatusDef.Kind.GROUNDED: Color("b08a5a"), StatusDef.Kind.CONFUSED: Color("e0a0e8"), StatusDef.Kind.CONTROLLED: Color("c890ff"),
 }
+## Status art (docs/plans/asset-contract.md, section 6): a status with a
+## file here, by its id, is drawn as its icon and its stacks, not its word.
+const STATUS_ART: String = "res://art/ui/statuses/%s"
 ## How see-through a stealthed unit is drawn.
 const STEALTH_ALPHA: float = 0.4
 ## A copy (phase 8 part 6, Lucan) is drawn paler than whoever it copies.
@@ -90,6 +93,12 @@ var plane_pos: Vector2i
 var art_key: String = ""
 var figure: Texture2D = null
 var figure_bounds: Rect2 = Rect2(Vector2.ZERO, FigureArt.CANVAS)
+## Its canvas and feet (FigureArt: twice the size for a boss), and the
+## manifest's head and muzzle, in canvas units.
+var figure_canvas: Vector2 = FigureArt.CANVAS
+var figure_feet: Vector2 = FigureArt.FEET
+var figure_head: Vector2 = Vector2.ZERO
+var figure_muzzle: Vector2 = Vector2.ZERO
 var facing_left: bool = false
 ## Its radius on screen, the figure's pixels per canvas pixel, and where
 ## the unit's point is in the token's rect (set by place()).
@@ -103,7 +112,8 @@ var hp_share: float = 1.0
 var shield_share: float = 0.0
 var mana_share: float = -1.0
 var cast_share: float = -1.0
-## [text, color] per status, in the unit's status order.
+## [text, color, icon (null without art), stacks ("" for none)] per status,
+## in the unit's status order.
 var status_tags: Array[Array] = []
 ## Standing on water (phase 8 part 3): a ripple round its ring.
 var in_water: bool = false
@@ -120,6 +130,10 @@ static func make(id: String, text: String, team: EffectSource.Team, unit_radius:
 	token.art_key = figure_key
 	token.figure = FigureArt.texture(figure_key)
 	token.figure_bounds = FigureArt.bounds(figure_key)
+	token.figure_canvas = FigureArt.canvas(figure_key)
+	token.figure_feet = FigureArt.feet(figure_key)
+	token.figure_head = FigureArt.head(figure_key)
+	token.figure_muzzle = FigureArt.muzzle(figure_key)
 	token.facing_left = team != EffectSource.Team.HEROES
 	token.name = id.replace("#", "_")
 	token.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -174,16 +188,31 @@ func place_at(view: ArenaView, point: Vector2) -> void:
 
 ## What the figure covers, relative to the unit's point.
 func figure_rect() -> Rect2:
-	var left: float = FigureArt.FEET.x - figure_bounds.end.x if facing_left else figure_bounds.position.x - FigureArt.FEET.x
-	return Rect2(Vector2(left, figure_bounds.position.y - FigureArt.FEET.y) * figure_scale, figure_bounds.size * figure_scale)
+	var left: float = figure_feet.x - figure_bounds.end.x if facing_left else figure_bounds.position.x - figure_feet.x
+	return Rect2(Vector2(left, figure_bounds.position.y - figure_feet.y) * figure_scale, figure_bounds.size * figure_scale)
 
 
-## Where the top of its head is (the top of the circle without art),
-## relative to the unit's point.
+## A point on the figure's canvas, relative to the unit's point (mirrored
+## when it faces left).
+func canvas_offset(at: Vector2) -> Vector2:
+	var from_feet: Vector2 = (at - figure_feet) * figure_scale
+	return Vector2(-from_feet.x if facing_left else from_feet.x, from_feet.y)
+
+
+## Where the top of its head is (the manifest's head; the top of the circle
+## without art), relative to the unit's point.
 func head_offset() -> Vector2:
 	if has_figure():
-		return Vector2(0.0, figure_rect().position.y)
+		return Vector2(0.0, canvas_offset(figure_head).y)
 	return Vector2(0.0, -body_px() * ((1.0 + FLIGHT_LIFT) if flying else 1.0))
+
+
+## Where its shots leave from (the manifest's muzzle, else the middle of its
+## figure), relative to the unit's point.
+func muzzle_offset() -> Vector2:
+	if has_figure():
+		return canvas_offset(figure_muzzle)
+	return body_offset()
 
 
 ## The middle of its body, relative to the unit's point (where shots and
@@ -221,16 +250,22 @@ func show_state(unit: UnitState, tick: int) -> void:
 	queue_redraw()
 
 
-## A status's short tag and color: "STUN", or "BRN 4" with its stacks.
+## A status's short tag, color, art, and stacks: "STUN", or "BRN 4" with its
+## stacks.
 static func status_tag(state: StatusState) -> Array:
 	var tag: String = STATUS_TAGS.get(state.def.kind, state.def.name.left(4).to_upper())
+	var color: Color = STATUS_COLORS.get(state.def.kind, UiStyle.TEXT)
+	var stacks: String = ""
 	if state.def.kind == StatusDef.Kind.DAMAGE_OVER_TIME:
-		tag = "%s %d" % [UiStyle.STATUS_TAGS.get(state.def.id, state.def.name.left(3).to_upper()), state.total_stacks()]
-		return [tag, UiStyle.STATUS_COLORS.get(state.def.id, UiStyle.EMBER)]
-	if state.timed_stacks() > 1:
+		tag = UiStyle.STATUS_TAGS.get(state.def.id, state.def.name.left(3).to_upper())
+		color = UiStyle.STATUS_COLORS.get(state.def.id, UiStyle.EMBER)
+		stacks = "%d" % state.total_stacks()
+	elif state.timed_stacks() > 1:
 		# A stacking boost, or stacked Marks (phase 5c step 5c): "UP 3".
-		tag = "%s %d" % [tag, state.timed_stacks()]
-	return [tag, STATUS_COLORS.get(state.def.kind, UiStyle.TEXT)]
+		stacks = "%d" % state.timed_stacks()
+	if not stacks.is_empty():
+		tag = "%s %s" % [tag, stacks]
+	return [tag, color, ArtFile.texture(STATUS_ART % state.def.id), stacks]
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
@@ -278,7 +313,7 @@ func _draw() -> void:
 			draw_arc(Vector2.ZERO, ring_radius * 1.35, 0.0, TAU, 32, RIPPLE, 1.5 / RING_FLAT, true)
 		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 32, HERO_RING if is_hero() else ENEMY_RING, 2.5 / RING_FLAT, true)
 		draw_set_transform(feet, 0.0, Vector2(-figure_scale if facing_left else figure_scale, figure_scale))
-		draw_texture_rect(figure, Rect2(-FigureArt.FEET, FigureArt.CANVAS), false)
+		draw_texture_rect(figure, Rect2(-figure_feet, figure_canvas), false)
 		draw_set_transform_matrix(Transform2D.IDENTITY)
 		below = feet.y + ring_radius * RING_FLAT + 2.0
 	else:
@@ -343,11 +378,15 @@ func _draw_bars(below: float, font: Font) -> void:
 		draw_rect(Rect2(left, mana_y, BAR_WIDTH * clampf(mana_share, 0.0, 1.0), BAR_HEIGHT), MANA)
 	var x: float = left
 	for tag: Array in status_tags:
-		var text: String = tag[0]
-		var tag_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE).x + 4.0
+		var icon: Texture2D = tag[2]
+		var text: String = tag[0] if icon == null else tag[3]
+		var icon_side: float = TAG_SIZE + 2.0 if icon != null else 0.0
+		var tag_width: float = icon_side + (font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE).x + 4.0 if not text.is_empty() else 0.0)
 		if x + tag_width > left + BAR_WIDTH * 1.5:
 			x = left
 			below += TAG_SIZE + 3.0
 		draw_rect(Rect2(x, below, tag_width, TAG_SIZE + 2.0), BAR_BACK)
-		draw_string(font, Vector2(x + 2.0, below + TAG_SIZE), text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE, tag[1])
+		if icon != null:
+			draw_texture_rect(icon, Rect2(x, below, icon_side, icon_side), false)
+		draw_string(font, Vector2(x + icon_side + 2.0, below + TAG_SIZE), text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE, tag[1])
 		x += tag_width + 2.0

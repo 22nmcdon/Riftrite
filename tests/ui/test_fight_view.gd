@@ -110,6 +110,11 @@ func test_a_shot_flies_until_it_lands_or_fizzles() -> void:
 	view.fx.add_entries([shot] as Array[LogEntry], player)
 	assert_eq(_kinds(view.fx), [FightFx.Kind.SHOT])
 	assert_eq([view.fx.effects[0].start, view.fx.effects[0].end, view.fx.effects[0].unit_id], [0, 6, "rift_hound"])
+	var hound: UnitState = player.sim.unit_by_id("rift_hound")
+	assert_eq(view.fx.shot_at(view.fx.effects[0], 0.0), view.to_pixel_f(Vector2(3000, 500)) + view.token("maren").muzzle_offset(),
+		"a shot leaves its shooter's muzzle (asset-contract.md, section 3)")
+	assert_eq(view.fx.shot_at(view.fx.effects[0], 1.0), view.to_pixel_f(player.drawn_position(hound)) + view.token("rift_hound").body_offset(),
+		"and lands on its target's body")
 	player.advance(0.2)
 	view.sync_fight(player)
 	assert_eq(view.fx.effects.size(), 1, "still in flight")

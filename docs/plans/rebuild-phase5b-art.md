@@ -155,6 +155,8 @@ Upgrades take the upgrade frame (a vow pick the vow frame) with the cross.
 
 Each is checked with a search before it's deleted. Anything still loaded stays.
 
+**Phase 7a** (`rebuild-phase7a-asset-loading.md`) removed `glyph.gd`, `character_art.gd`, `figure.gd`, `frame_decor.gd`, `characters/`, and the old relics; `UiStyle.stat_row` and the old stop icons are left for the clean-up pass after it.
+
 ## 8. Files
 
 - New:

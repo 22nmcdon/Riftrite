@@ -12,7 +12,7 @@ extends Control
 ## the title loads it.
 
 ## The title backdrop (tools/art/backdrops.py).
-const BACKDROP: String = "res://art/ui/backgrounds/title.svg"
+const BACKDROP: String = "res://art/ui/backgrounds/title"
 ## Where the old game kept its run. Saves from before the rebuild can't be
 ## loaded, so the title drops one quietly (decided in the build order).
 const OLD_SAVE_PATH: String = "user://run.json"
@@ -45,7 +45,7 @@ func _ready() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 	backdrop = TextureRect.new()
-	backdrop.texture = load(BACKDROP) as Texture2D
+	backdrop.texture = ArtFile.texture(BACKDROP)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED

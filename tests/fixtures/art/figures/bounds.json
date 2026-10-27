@@ -1,0 +1,6 @@
+{
+	"enemies/fix_boss": [200,400,200,600],
+	"enemies/rift_hound_ashback": [120,200,60,300],
+	"heroes/fix_base": [100,100,100,400],
+	"heroes/maren_hailstorm": [120,200,60,300]
+}

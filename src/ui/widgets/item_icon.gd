@@ -8,7 +8,7 @@ extends Control
 ## Upgrades take the upgrade frame (a vow pick the vow frame) with a plus.
 ## An empty glyph draws the bare frame (an empty slot's kind).
 
-const FRAMES: String = "res://art/ui/items/frames/%s.svg"
+const FRAMES: String = "res://art/ui/items/frames/%s"
 const KINDS: Array[String] = ["charm", "tactic", "sigil", "gambit", "relic", "upgrade", "vow", "path", "bond"]
 ## A kind drawn in another kind's frame: gambits (phase 5c step 6) take the
 ## rose frame grafts had, until theirs is drawn.
@@ -34,9 +34,9 @@ static func make(icon_kind: String, glyph_name: String, side: float = 48.0) -> I
 	var icon := ItemIcon.new()
 	icon.kind = icon_kind
 	icon.glyph = glyph_name
-	icon.frame_texture = ArenaView.art(FRAMES % FRAME_OF.get(icon_kind, icon_kind))
+	icon.frame_texture = ArtFile.texture(FRAMES % FRAME_OF.get(icon_kind, icon_kind))
 	if not glyph_name.is_empty():
-		icon.glyph_texture = ArenaView.art(RunContent.GLYPHS % glyph_name)
+		icon.glyph_texture = ArtFile.texture(RunContent.GLYPHS % glyph_name)
 	icon.custom_minimum_size = Vector2(side, side)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return icon

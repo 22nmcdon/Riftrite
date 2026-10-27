@@ -20,7 +20,7 @@ func test_the_fonts_load() -> void:
 ## glyph loads.
 func test_every_icon_loads() -> void:
 	for kind: String in ItemIcon.KINDS:
-		assert_true(ArenaView.art(ItemIcon.FRAMES % ItemIcon.FRAME_OF.get(kind, kind)) is Texture2D, kind)
+		assert_true(ArtFile.texture(ItemIcon.FRAMES % ItemIcon.FRAME_OF.get(kind, kind)) is Texture2D, kind)
 		assert_true(ItemIcon.TINTS.has(kind), kind)
 	for kind: String in ItemDef.KIND_NAMES:
 		assert_has(ItemIcon.KINDS, kind)
@@ -72,9 +72,9 @@ func test_the_run_shows_the_icons() -> void:
 ## scene and keeper.
 func test_camp_and_the_shops() -> void:
 	for option: CampsDef.Option in _run.camps.options.values() + _run.camps.nodes.values():
-		assert_true(ArenaView.art(RunContent.ART_UI + option.icon) is Texture2D, option.id)
+		assert_true(ArtFile.texture(RunContent.ART_UI + option.icon) is Texture2D, option.id)
 	for place: CampsDef.Place in _run.camps.places:
-		assert_true(ArenaView.art(RunContent.ART_UI + place.icon) is Texture2D, place.id)
+		assert_true(ArtFile.texture(RunContent.ART_UI + place.icon) is Texture2D, place.id)
 	for shop: String in ["pedlar", "magpie"]:
 		var stage: ShopStage = ShopStage.make(shop)
 		assert_not_null(stage.scene, shop)

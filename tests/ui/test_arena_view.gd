@@ -128,7 +128,7 @@ func test_the_board_stands_on_the_island() -> void:
 	assert_almost_eq(inner.position, board_px.position, Vector2(0.01, 0.01))
 	assert_almost_eq(inner.size, board_px.size, Vector2(0.01, 0.01))
 	for name: String in ["island_frame", "ground_tile", "collapse_tile", "collapse_warn_tile", "backdrop"]:
-		assert_not_null(ArenaView.art(ArenaView.ART_DIR + name + ".svg"), name)
+		assert_not_null(ArtFile.texture(ArenaView.ART_DIR + name), name)
 	assert_eq(view.rock_props.size(), view.rocks.size())
 	for i: int in view.rocks.size():
 		var prop: ArenaView.RockProp = view.rock_props[i]
