@@ -1,4 +1,4 @@
-"""The luminous enemy kit (docs/art-style-guide.md, section 5): code-generated
+"""The luminous enemy kit (docs/plans/art/art-style-guide.md, section 5): code-generated
 placeholder figures for the Act 1, 2, and 3 enemies (Act 2's and Act 3's are
 recolors of Act 1's shapes until phase 7's art), in the hero kit's style and on its
 canvas (300 x 520, feet at y = 500, centered on x = 150, facing right).

@@ -168,4 +168,4 @@ Gold, shops and the Caravan, items, the stash, rewards picks of items, the Forge
 ## Open questions
 
 - **Camp menus:** which places offer which options, and 2 or 3 options per camp?
-- **Art direction:** the rehaul starts with a new style guide (replacing the old look, now `docs/archive/ui-asset-design.md`); its direction is still to be set.
+- **Art direction:** *(Set: `../art/art-style-guide.md`, 2026-10-28: painted but ink-led, bright but wrong.)* The rehaul starts with a new style guide, replacing the old look (now `docs/archive/ui-asset-design.md`).

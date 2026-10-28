@@ -1,7 +1,7 @@
 """Silhouette-style look test for Maren (base and Deadeye): black ink figures,
 with only rift light, glowing accents, and status colors breaking the black.
 Reuses the shapes from maren_look_test.py. Writes
-art/look-tests/maren_silhouette_test.svg (docs/art-style-guide.md)."""
+art/look-tests/maren_silhouette_test.svg (docs/plans/art/art-style-guide.md)."""
 import math, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))

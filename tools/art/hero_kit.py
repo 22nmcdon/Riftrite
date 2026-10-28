@@ -1,4 +1,4 @@
-"""The luminous hero kit (docs/art-style-guide.md): code-generated placeholder
+"""The luminous hero kit (docs/plans/art/art-style-guide.md): code-generated placeholder
 figures for the heroes in every form (base and each path).
 
 Every figure uses the same canvas: 300 x 520, feet at y = 500, facing right,

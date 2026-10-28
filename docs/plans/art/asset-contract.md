@@ -1,6 +1,6 @@
 # The asset contract
 
-Status: **agreed in discussion (2026-09-30); its loading built in phase 7a (`rebuild-phase7a-asset-loading.md`, 2026-10-27); hero figures and portraits moved into a folder per hero by the clean-up (`cleanup-and-layout.md`, Decision 2).** What every art file must look like so the game can load it, whoever makes it. The look is in `../art-style-guide.md`; this file is the technical side. The game is **asset-driven**: the Python kits in `tools/art/` are placeholder producers, and commissioned art replaces their files one at a time.
+Status: **agreed in discussion (2026-09-30); its loading built in phase 7a (`rebuild-phase7a-asset-loading.md`, 2026-10-27); hero figures and portraits moved into a folder per hero by the clean-up (`cleanup-and-layout.md`, Decision 2).** What every art file must look like so the game can load it, whoever makes it. The look is in `art-style-guide.md`; this file is the technical side. The game is **asset-driven**: the Python kits in `tools/art/` are placeholder producers, and commissioned art replaces their files one at a time.
 
 ## 1. The goal, and what it means for files
 
@@ -17,7 +17,7 @@ Status: **agreed in discussion (2026-09-30); its loading built in phase 7a (`reb
 | **Placeholder format** | SVG (what the kits make now) |
 | **Source format** | Layered PSD or KRA, named layers, kept in `art-src/` (Git LFS) or outside the repo |
 | **Background** | Transparent. No baked backdrop, shadow, ground ring, glow, status, or bar: the game draws those |
-| **Lighting** | Gold light from the top left, flat painted shadow on the lower right (`../art-style-guide.md`, section 2) |
+| **Lighting** | Gold light from the top left, flat painted shadow on the lower right (`art-style-guide.md`, section 2) |
 | **Colors** | The style guide's palette; **reserved status colors are never used as decoration** |
 | **Loading** | The game loads `<name>.png` if it exists, otherwise `<name>.svg`. Swapping art is dropping in a PNG with the same name |
 
@@ -95,7 +95,7 @@ Missing fields fall back to sensible defaults (`head` at the drawn top, `muzzle`
 
 **Every delivery includes:** the PNG master at the sizes above, the layered source with named parts (section 5), and the manifest points (or a marked-up image showing them).
 
-**The brief** for an artist is this file plus `../art-style-guide.md` and the current placeholder for the same unit.
+**The brief** for an artist is this file plus `art-style-guide.md` and the current placeholder for the same unit.
 
 ## 9. Credits
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Writes the title backdrop (art/ui/backgrounds/title.svg, 1920x1080).
 
-The luminous direction (docs/art-style-guide.md): a bright, eerie
+The luminous direction (docs/plans/art/art-style-guide.md): a bright, eerie
 otherworld. A warm gold-to-aquamarine sky, marble ruins in the haze, a
 golden meadow, drifting motes, and a seam of aquamarine rift light down the
 sky: beautiful, with something wrong about it.

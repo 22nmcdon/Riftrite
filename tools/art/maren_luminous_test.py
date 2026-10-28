@@ -1,7 +1,7 @@
 """Luminous look test for Maren (base and Deadeye): a bright, eerie otherworld
 with bold ink outlines, saturated jewel colors, flat painted shadows, and gold
 and aquamarine glows. Reuses the shapes from maren_look_test.py. Writes
-art/look-tests/maren_luminous_test.svg (docs/art-style-guide.md)."""
+art/look-tests/maren_luminous_test.svg (docs/plans/art/art-style-guide.md)."""
 import math, os, random
 
 HERE = os.path.dirname(os.path.abspath(__file__))

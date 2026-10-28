@@ -1,6 +1,6 @@
 # Phase 7a: loading commissioned art
 
-Status: **built (2026-10-27).** The first part of phase 7 (the art rehaul): the code changes `asset-contract.md` asks for in its section 10, so commissioned art drops into `art/` under the contract's names and replaces its placeholder with no code change. It changes no fight: the sim, results, and the bench's fingerprints stay as they are. The style guide (`../art-style-guide.md`) and the commissioning come after.
+Status: **built (2026-10-27).** The first part of phase 7 (the art rehaul): the code changes `asset-contract.md` asks for in its section 10, so commissioned art drops into `art/` under the contract's names and replaces its placeholder with no code change. It changes no fight: the sim, results, and the bench's fingerprints stay as they are. The style guide (`../art/art-style-guide.md`, drafted 2026-10-28) and the commissioning come after.
 
 ## 1. What's there
 

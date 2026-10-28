@@ -145,7 +145,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Enemy growth:** can the rift learns add a rift modifier (Blight, Thornskin) or only swap specializations and upgrades? Upgrades on normal enemies in Acts 2–3? (enemy growth)
 - **Bond relics:** how much likelier than an epic; both relics at once when two bonds switch on; all three Act 1 bonds include Brannoc. (duo bonds)
 - **Camp menus:** which places offer which options, and 2 or 3 options per camp. (run plan)
-- **Art direction** for the rehaul. (run plan)
+- **Art direction** for the rehaul. (run plan) *(Set: `plans/art/art-style-guide.md`, a first draft; its own open questions SA–SE remain.)*
 - **Grow enemies or shrink heroes?** Phase 2's tuning grew enemies (a Rift Pup has 210 HP, most of Maren's 270) and kept heroes as designed. Lowering heroes' damage instead would keep enemies nearer the roster's first numbers. (phase 2 plan, section 7)
 - **Hollow Line's answer:** it's won by standing back out of the Archers' reach, not by closing distance as intended. (phase 2 plan, section 7)
 - **Brannoc falls in almost every fight,** wins included. Is the tank dying last fine, or should he usually live? (phase 2 plan, section 7)

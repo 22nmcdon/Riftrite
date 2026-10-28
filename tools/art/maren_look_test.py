@@ -1,5 +1,5 @@
 """Code-generated look test for Maren (base and Deadeye), dark rift style with
-woodcut-style hatching. Writes art/look-tests/maren_look_test.svg (docs/art-style-guide.md)."""
+woodcut-style hatching. Writes art/look-tests/maren_look_test.svg (docs/plans/art/art-style-guide.md)."""
 import math, os
 
 INK = "#0b0a0e"

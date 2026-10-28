@@ -28,7 +28,7 @@ A run of three acts: Act 1 as built, then Act 2 and Act 3, each with its own day
 | **Enemy growth** | None | Specializations from day 3 | Most enemies specialized; upgrades on elites |
 | **Its question** | Can you protect your back line and handle a swarm? | Can you handle the terrain? | Can you handle an enemy that answers you? |
 
-Each act moves the difficulty up one step (Decision 9 of `rebuild-phase8-apexes.md`'s tier shift), and the apexes are what let a team climb the last one. Region names are placeholders; each act gets its own palette once the art style guide exists.
+Each act moves the difficulty up one step (Decision 9 of `rebuild-phase8-apexes.md`'s tier shift), and the apexes are what let a team climb the last one. Region names are placeholders; each act's palette is drafted in the art style guide (`../art/art-style-guide.md`, section 7).
 
 **Act 2, the Glassmere** (the rift's drowned middle: flooded ruins, glassy water, cold light):
 

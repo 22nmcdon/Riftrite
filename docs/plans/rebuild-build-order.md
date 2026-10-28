@@ -7,7 +7,7 @@ Status: **agreed (2026-09-27). Phase 0 is done; phase 1 is next.** This turns pa
 - **Find out early whether arena fights are fun.** The first playable goal is a single fight with the three base heroes, before paths, camps, or a run exist.
 - **Gut first, on its own.** Removing the old systems is one clean step, so later phases never work around dead code.
 - **Keep the foundation.** Determinism, integer math, the combat log, data loading, the effect system, tests, CI, and playtest builds are all worth keeping.
-- **Placeholder art until the run works.** The art rehaul starts with a style guide in parallel, but real art goes in late, once the game is known to be fun.
+- **Placeholder art until the run works.** The art rehaul starts with a style guide in parallel (`art/art-style-guide.md`, a first draft on 2026-10-28), but real art goes in late, once the game is known to be fun.
 - **A playtest gate after each playable phase.** If a gate fails, fix it before moving on.
 
 ---
