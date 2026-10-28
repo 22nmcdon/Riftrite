@@ -28,6 +28,9 @@ extends RefCounted
 ## the heroes' rule marks_stack (Hunter's Engine) a hero's Mark adds a
 ## stack as it refreshes.
 
+## kinds' bit for a focus boost (past every StatusDef.Kind's bit).
+const FOCUS_BIT: int = 1 << 30
+
 
 ## `marks_stack`: a Mark that stacks as it refreshes, as under Hunter's
 ## Engine (the effect's own, phase 5c step 6b: Hunter's Chalk).
@@ -267,27 +270,57 @@ static func tick_all(sim: CombatSim) -> void:
 	for unit: UnitState in sim.units:
 		if not unit.alive or unit.statuses.is_empty():
 			continue
-		for state: StatusState in unit.statuses.duplicate():
+		# Every status on it as the tick starts, in order: the list is copied
+		# only once something is about to change it (most ticks nothing does).
+		var states: Array[StatusState] = unit.statuses
+		var copied: bool = false
+		var i: int = 0
+		while i < states.size():
+			var state: StatusState = states[i]
+			i += 1
 			if state.def.kind == StatusDef.Kind.ENGAGED:
 				continue
 			if state.def.stacking:
+				if not copied and _stacks_due(sim, state):
+					states = states.duplicate()
+					copied = true
 				_drop_stacks(sim, unit, state)
 				continue
 			if state.def.is_timed():
 				if sim.tick >= state.ends_at:
+					if not copied:
+						states = states.duplicate()
+						copied = true
 					end_now(sim, unit, state)
 				elif state.until_near > 0 and _enemy_within(sim, unit, state.until_near):
+					if not copied:
+						states = states.duplicate()
+						copied = true
 					end_now(sim, unit, state, "an enemy came near")
 				continue
 			state.interval_left -= 1
 			if state.interval_left <= 0:
 				state.interval_left = state.def.interval_ticks
+				if not copied:
+					states = states.duplicate()
+					copied = true
 				_deal_damage_over_time(sim, unit, state)
 
 
 static func _enemy_within(sim: CombatSim, unit: UnitState, reach: int) -> bool:
 	for enemy: UnitState in sim.standing_enemies_of(unit):
 		if ArenaPlane.length_sq(enemy.pos - unit.pos) <= reach * reach:
+			return true
+	return false
+
+
+## True if _drop_stacks would change `state` this tick: a stack's time is
+## up, or it has none.
+static func _stacks_due(sim: CombatSim, state: StatusState) -> bool:
+	if state.stack_ends.is_empty():
+		return true
+	for end: int in state.stack_ends:
+		if sim.tick >= end:
 			return true
 	return false
 
@@ -374,6 +407,18 @@ static func _taken_duration(target: UnitState, def: StatusDef, ticks: int) -> in
 ## True if no enemy may pick `unit` as a target now (Stealth).
 static func is_stealthed(unit: UnitState) -> bool:
 	return unit.submerged or (not unit.statuses.is_empty() and has_kind(unit, StatusDef.Kind.STEALTH))
+
+
+## Which kinds of status are on the unit, a bit each (1 << StatusDef.Kind),
+## and FOCUS_BIT if one is a focus boost: one pass, so a unit's turn asks
+## has_kind, slow_bp, taunter, and focus_target only when they'd find one.
+static func kinds(unit: UnitState) -> int:
+	var found: int = 0
+	for state: StatusState in unit.statuses:
+		found |= 1 << state.def.kind
+		if state.def.focus:
+			found |= FOCUS_BIT
+	return found
 
 
 static func has_kind(unit: UnitState, kind: StatusDef.Kind) -> bool:

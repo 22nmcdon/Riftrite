@@ -1,6 +1,6 @@
 # tests/sim/core/
 
-The engine's foundations: determinism (the chaos fight repeats exactly), the damage rule, fixed math, the RNG, and the log's values.
+The engine's foundations: determinism (the chaos fight repeats exactly), the damage rule, fixed math, the RNG, the log's values, and the speed pass's shortcuts.
 
 ## Files
 
@@ -11,3 +11,4 @@ The engine's foundations: determinism (the chaos fight repeats exactly), the dam
 | `test_fixed_math.gd` | FixedMath: basis points applied with explicit integer rounding, the one helper the sim rounds with. |
 | `test_log_and_values.gd` | The log lines, effect sources, and value breakdowns kept through the rebuild's gut. |
 | `test_sim_rng.gd` | Pins SimRng's output so fights replay identically across Godot versions. |
+| `test_speed_pass.gd` | The speed pass's shortcuts (after the clean-up): the tables and caches that stand in for work the sim used to repeat each tick give what that work gives. |

@@ -66,14 +66,31 @@ class Delayed:
 const TIMED_TRIGGERS: Array[int] = [EffectDef.Trigger.ON_INTERVAL, EffectDef.Trigger.ON_ALLY_BELOW_HP, EffectDef.Trigger.ON_BELOW_HP, EffectDef.Trigger.ON_ENEMY_NEAR]
 ## Shared by units with no listener on a trigger (never written to).
 const _NONE: Array = []
+## UnitState.aura_flags' bits: the aura is checked each tick, or worked out
+## per hit.
+const AURA_CONDITIONAL: int = 1
+const AURA_PER_HIT: int = 2
+## ...its window is the whole fight, or its change never varies (aura_change
+## would give UnitState.aura_fixed's).
+const AURA_ALWAYS: int = 4
+const AURA_FIXED: int = 8
+## The aura stats that change a unit stat (AuraDef.UNIT_STAT_FOR's keys), in
+## the stats' order, so rederive needn't look at every stat.
+const _UNIT_STAT_AURAS: Array[int] = [AuraDef.Stat.ATK_BP, AuraDef.Stat.MGK_BP, AuraDef.Stat.DEF_BP, AuraDef.Stat.ATSP_BP, AuraDef.Stat.CRIT_BP]
+## Per aura stat: 1 if it's additive (AuraDef.ADDITIVE, looked up for speed).
+static var _additive: PackedByteArray = PackedByteArray()
+## Every aura stat at no change (no_auras copies it).
+static var _no_auras: Array[int] = []
+## The one-unit list rederive aims a self aura at (reused, never kept).
+static var _holder_only: Array[UnitState] = [null]
 
 
 ## AuraDef stats with no aura: x1 multipliers, +0 additions.
 static func no_auras() -> Array[int]:
-	var values: Array[int] = []
-	for stat: int in AuraDef.Stat.size():
-		values.append(0 if _is_additive(stat) else FixedMath.BP_ONE)
-	return values
+	if _no_auras.is_empty():
+		for stat: int in AuraDef.Stat.size():
+			_no_auras.append(0 if _is_additive(stat) else FixedMath.BP_ONE)
+	return _no_auras.duplicate()
 
 
 ## Readies the unit's listeners and status swaps.
@@ -92,11 +109,18 @@ static func set_up(unit: UnitState) -> void:
 				unit.status_swaps[part.from_status] = part.to_status
 	unit.aura_parts.clear()
 	unit.aura_keys.clear()
+	unit.aura_flags.clear()
+	unit.aura_fixed.clear()
 	unit.conditional_auras.clear()
 	for part: PartDef in unit.def.passives:
 		if part.kind == PartDef.Kind.AURA:
+			var aura: AuraDef = part.aura
 			unit.aura_parts.append(part)
 			unit.aura_keys.append("%s:%s" % [unit.id, part.id])
+			var fixed: bool = _fixed_change(aura)
+			unit.aura_flags.append((AURA_CONDITIONAL if aura.is_conditional() else 0) | (AURA_PER_HIT if aura.is_per_hit() else 0)
+				| (AURA_ALWAYS if aura.window_from_ticks <= 0 and aura.window_until_ticks < 0 else 0) | (AURA_FIXED if fixed else 0))
+			unit.aura_fixed.append((aura.value if _is_additive(aura.stat) else aura.value - FixedMath.BP_ONE) if fixed else 0)
 			if part.aura.is_conditional():
 				unit.conditional_auras.append(part)
 	unit.timed_listeners.clear()
@@ -150,35 +174,54 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.vs_defs.clear()
 		unit.vs_parts.clear()
 	var now_active: Array[String] = []
+	# Who stands on each side doesn't change while the auras are folded.
+	var standing_heroes: Array[UnitState] = []
+	var standing_enemies: Array[UnitState] = []
+	for unit: UnitState in sim.heroes:
+		if unit.alive:
+			standing_heroes.append(unit)
+	for unit: UnitState in sim.enemies:
+		if unit.alive:
+			standing_enemies.append(unit)
 	for holder: UnitState in sim.units:
 		if not holder.alive:
 			continue
 		for a: int in holder.aura_parts.size():
 			var part: PartDef = holder.aura_parts[a]
-			if not part.aura.active_at(sim.tick):
+			var flags: int = holder.aura_flags[a]
+			if flags & AURA_ALWAYS == 0 and not part.aura.active_at(sim.tick):
 				continue
 			if part.aura.while_taunting and not taunting(sim, holder):
 				continue
-			if part.aura.is_conditional() and not condition_holds(sim, holder, part.aura):
+			if flags & AURA_CONDITIONAL != 0 and not condition_holds(sim, holder, part.aura):
 				continue
 			now_active.append(holder.aura_keys[a])
 			# A factor's change adds to the others' of its stat (the damage
 			# rule, phase 5c): x1.1 and x1.1 make x1.2.
-			var change: int = aura_change(sim, holder, part.aura)
-			var targets: Array[UnitState] = [holder]
+			var change: int = holder.aura_fixed[a] if flags & AURA_FIXED != 0 else aura_change(sim, holder, part.aura)
+			_holder_only[0] = holder
+			var targets: Array[UnitState] = _holder_only
 			if part.aura.target == AuraDef.Target.ALL_ALLIES:
-				targets = sim.standing_allies_of(holder)
+				targets = standing_heroes if holder.side == EffectSource.Team.HEROES else standing_enemies
 			elif part.aura.target == AuraDef.Target.ALLIES_NEAR:
 				# The other allies near it now (phase 5c step 7c, Sanctuary).
 				var reach_sq: int = part.aura.target_range * part.aura.target_range
-				targets = sim.standing_allies_of(holder).filter(func(ally: UnitState) -> bool:
-					return ally != holder and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq)
+				var near: Array[UnitState] = []
+				for ally: UnitState in (standing_heroes if holder.side == EffectSource.Team.HEROES else standing_enemies):
+					if ally != holder and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq:
+						near.append(ally)
+				targets = near
 			if part.aura.only != null:
 				# Only those that meet it now (phase 8 part 3, the Spire Chanter).
 				var only: UnitCondition = part.aura.only
-				targets = targets.filter(func(ally: UnitState) -> bool: return only.holds(ally, holder))
+				var meeting: Array[UnitState] = []
+				for ally: UnitState in targets:
+					if only.holds(ally, holder):
+						meeting.append(ally)
+				targets = meeting
+			var per_hit: bool = flags & AURA_PER_HIT != 0
 			for target: UnitState in targets:
-				if part.aura.is_per_hit():
+				if per_hit:
 					# Only on some hits (phase 5c steps 3, 5b, 5c: against
 					# targets that meet it, its basic attack's, per stack on the
 					# unit hit); worked out per hit (EffectRunner).
@@ -209,9 +252,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 					unit.aura_bp[stat] += change
 	for unit: UnitState in sim.units:
 		unit.stats = unit.base_stats.copy()
-		for aura_stat: int in AuraDef.Stat.size():
-			if not AuraDef.UNIT_STAT_FOR.has(aura_stat):
-				continue
+		for aura_stat: int in _UNIT_STAT_AURAS:
 			var stat: int = AuraDef.UNIT_STAT_FOR[aura_stat]
 			unit.stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], factor(unit, aura_stat))
 		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
@@ -241,6 +282,8 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 
 ## Logs, in the fight's order, each aura that ended and each that started.
 static func _log_changes(sim: CombatSim, was_active: Array[String], now_active: Array[String]) -> void:
+	if was_active == now_active:
+		return
 	# Looked up, never iterated (the log's order is the units' and their kits').
 	var was_set: Dictionary[String, bool] = {}
 	for key: String in was_active:
@@ -291,6 +334,13 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 	return change
 
 
+## True if aura_change gives `aura` its value's change, whatever the fight's
+## state: nothing scales it.
+static func _fixed_change(aura: AuraDef) -> bool:
+	return aura.per_shield_bp <= 0 and not aura.per_fallen_ally and not aura.per_allied_summon and not aura.per_allied_unit \
+		and not aura.per_summon_joined and aura.per_shards <= 0 and aura.per_enemy_range <= 0 and aura.step_ticks <= 0 and aura.per_engorged_bp <= 0
+
+
 ## How many whole `step_bp` shares of its max HP before Engorge Engorge has
 ## added to `holder` (phase 8 part 5, Leviathan).
 static func engorged_steps(holder: UnitState, step_bp: int) -> int:
@@ -324,8 +374,12 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 				return false
 		AuraDef.While.ALLY_NEAR:
 			var reach_sq: int = aura.near_range * aura.near_range
-			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(func(ally: UnitState) -> bool:
-					return ally != holder and ally.alive and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq):
+			var near: bool = false
+			for ally: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
+				if ally != holder and ally.alive and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq:
+					near = true
+					break
+			if not near:
 				return false
 		AuraDef.While.BEHIND_WALL:
 			if sim.walls.is_empty() or not Walls.behind(sim, holder, aura.near_range):
@@ -340,12 +394,19 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 		AuraDef.While.CROWDED:
 			# That many enemies that close (phase 5c step 7c, Crowd Sense).
 			var crowd_sq: int = aura.near_range * aura.near_range
-			if sim.standing_enemies_of(holder).filter(func(enemy: UnitState) -> bool:
-					return ArenaPlane.length_sq(enemy.pos - holder.pos) <= crowd_sq).size() < aura.crowd:
+			var crowd: int = 0
+			for enemy: UnitState in sim.standing_enemies_of(holder):
+				if ArenaPlane.length_sq(enemy.pos - holder.pos) <= crowd_sq:
+					crowd += 1
+			if crowd < aura.crowd:
 				return false
 		AuraDef.While.ALLY_STANDING:
-			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
-					func(unit: UnitState) -> bool: return unit != holder and unit.alive and (aura.ally_kit.is_empty() or unit.def.id == aura.ally_kit)):
+			var standing: bool = false
+			for unit: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
+				if unit != holder and unit.alive and (aura.ally_kit.is_empty() or unit.def.id == aura.ally_kit):
+					standing = true
+					break
+			if not standing:
 				return false
 	if aura.per_shield_bp > 0 and holder.shield <= 0:
 		return false
@@ -421,12 +482,14 @@ static func condition_key(sim: CombatSim, unit: UnitState) -> int:
 			if part.aura.target == AuraDef.Target.ALLIES_NEAR:
 				# Who's near changes it too (phase 5c step 7c, Sanctuary).
 				var reach_sq: int = part.aura.target_range * part.aura.target_range
-				for ally: UnitState in sim.standing_allies_of(unit):
-					key = key * 31 + int(ally != unit and ArenaPlane.length_sq(ally.pos - unit.pos) <= reach_sq)
+				for ally: UnitState in (sim.heroes if unit.side == EffectSource.Team.HEROES else sim.enemies):
+					if ally.alive:
+						key = key * 31 + int(ally != unit and ArenaPlane.length_sq(ally.pos - unit.pos) <= reach_sq)
 			if part.aura.only != null:
 				# Who meets it changes it too (phase 8 part 3).
-				for ally: UnitState in sim.standing_allies_of(unit):
-					key = key * 31 + int(part.aura.only.holds(ally, unit))
+				for ally: UnitState in (sim.heroes if unit.side == EffectSource.Team.HEROES else sim.enemies):
+					if ally.alive:
+						key = key * 31 + int(part.aura.only.holds(ally, unit))
 	return key
 
 
@@ -515,7 +578,11 @@ static func has_timed(unit: UnitState) -> bool:
 
 
 static func _is_additive(stat: int) -> bool:
-	return AuraDef.ADDITIVE.has(stat)
+	if _additive.is_empty():
+		_additive.resize(AuraDef.Stat.size())
+		for additive: int in AuraDef.ADDITIVE:
+			_additive[additive] = 1
+	return _additive[stat] == 1
 
 
 ## A factor stat's multiplier on the unit (its auras' changes added, floored

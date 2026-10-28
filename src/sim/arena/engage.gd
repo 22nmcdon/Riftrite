@@ -36,17 +36,36 @@ class Engagement:
 ## engager fell) end, new contacts begin, and held ones run toward breaking
 ## free. `engagers` are the standing engagers on the unit's other side.
 static func update(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]) -> void:
+	# It runs for every unit near an engager every tick, so the reach and
+	# distance checks are inlined (_reach_sq, ArenaPlane.length_sq, _find).
+	var engage_reach: int = sim.tuning.engage_reach
 	var i: int = unit.engagements.size() - 1
 	while i >= 0:
 		var engagement: Engagement = unit.engagements[i]
 		var engager: UnitState = engagement.engager
 		if engager == null or not engager.alive:
 			_end(sim, unit, engagement, "%s fell" % (engager.id if engager != null else "its engager"))
-		elif ArenaPlane.length_sq(engager.pos - unit.pos) > _reach_sq(sim, engager):
-			_end(sim, unit, engagement, "out of reach of %s" % engager.id)
+		else:
+			var dx: int = engager.pos.x - unit.pos.x
+			var dy: int = engager.pos.y - unit.pos.y
+			var reach: int = engage_reach + engager.def.engage_reach_add
+			if dx * dx + dy * dy > reach * reach:
+				_end(sim, unit, engagement, "out of reach of %s" % engager.id)
 		i -= 1
 	for engager: UnitState in engagers:
-		if not engager.alive or ArenaPlane.length_sq(engager.pos - unit.pos) > _reach_sq(sim, engager) or _find(unit, engager) != null:
+		if not engager.alive:
+			continue
+		var dx: int = engager.pos.x - unit.pos.x
+		var dy: int = engager.pos.y - unit.pos.y
+		var reach: int = engage_reach + engager.def.engage_reach_add
+		if dx * dx + dy * dy > reach * reach:
+			continue
+		var found: bool = false
+		for engagement: Engagement in unit.engagements:
+			if engagement.engager == engager:
+				found = true
+				break
+		if found:
 			continue
 		var engagement := Engagement.new()
 		engagement.engager = engager

@@ -149,13 +149,31 @@ static func sweep(from: Vector2i, to: Vector2i, radius: int, circles: Array[Circ
 		return result
 	@warning_ignore("integer_division")
 	var steps: int = (size + SWEEP_STEP - 1) / SWEEP_STEP
+	# It runs on every route planned, so FixedMath.mul_div's rounding, inside,
+	# and overlaps are inlined.
+	var twice_steps: int = 2 * steps
+	var min_x: int = bounds.position.x + radius
+	var min_y: int = bounds.position.y + radius
+	var max_x: int = bounds.end.x - radius
+	var max_y: int = bounds.end.y - radius
+	var count: int = circles.size()
 	for i: int in range(1, steps + 1):
-		var point: Vector2i = from + Vector2i(FixedMath.mul_div(d.x, i, steps), FixedMath.mul_div(d.y, i, steps))
-		if not inside(bounds, point, radius):
+		var x: int = d.x * i
+		var y: int = d.y * i
+		@warning_ignore("integer_division")
+		x = (2 * x + steps) / twice_steps if x >= 0 else -((2 * -x + steps) / twice_steps)
+		@warning_ignore("integer_division")
+		y = (2 * y + steps) / twice_steps if y >= 0 else -((2 * -y + steps) / twice_steps)
+		var point: Vector2i = from + Vector2i(x, y)
+		if point.x < min_x or point.y < min_y or point.x > max_x or point.y > max_y:
 			result.hit = Hit.EDGE
 			return result
-		for c: int in circles.size():
-			if overlaps(point, radius, circles[c].center, circles[c].radius):
+		for c: int in count:
+			var circle: Circle = circles[c]
+			var dx: int = circle.center.x - point.x
+			var dy: int = circle.center.y - point.y
+			var reach: int = radius + circle.radius
+			if dx * dx + dy * dy < reach * reach:
 				result.hit = Hit.CIRCLE
 				result.circle = c
 				return result

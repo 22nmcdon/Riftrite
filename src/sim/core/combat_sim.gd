@@ -773,15 +773,24 @@ func nearest_safe_point(point: Vector2i, radius: int) -> Vector2i:
 ## True if `unit` at `point` overlaps no other standing unit (fliers in the
 ## air aside) and no rock.
 func _clear(unit: UnitState, point: Vector2i) -> bool:
+	# It runs on every step walked, so ArenaPlane.overlaps is inlined.
+	var radius: int = unit.radius
 	for other: UnitState in units:
-		if other != unit and other.alive and not other.airborne and ArenaPlane.overlaps(point, unit.radius, other.pos, other.radius):
-			return false
+		if other != unit and other.alive and not other.airborne:
+			var dx: int = other.pos.x - point.x
+			var dy: int = other.pos.y - point.y
+			var reach: int = radius + other.radius
+			if dx * dx + dy * dy < reach * reach:
+				return false
 	for rock: ArenaPlane.Circle in rocks:
-		if ArenaPlane.overlaps(point, unit.radius, rock.center, rock.radius):
+		var dx: int = rock.center.x - point.x
+		var dy: int = rock.center.y - point.y
+		var reach: int = radius + rock.radius
+		if dx * dx + dy * dy < reach * reach:
 			return false
 	if has_barriers:
 		for circle: ArenaPlane.Circle in barriers[unit.side]:
-			if ArenaPlane.overlaps(point, unit.radius, circle.center, circle.radius):
+			if ArenaPlane.overlaps(point, radius, circle.center, circle.radius):
 				return false
 	return true
 

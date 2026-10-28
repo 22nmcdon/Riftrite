@@ -72,6 +72,10 @@ var swims: bool = false
 ## Its island (phase 8 part 3; Islands.mark), -1 over the void or on a
 ## bridge; 0 in a fight without void (all one island).
 var island: int = 0
+## Where its island was last worked out, and on which working-out of the
+## islands (Islands.mark: it's worked out again once either changes).
+var island_from: Vector2i = Vector2i.ZERO
+var island_version: int = -1
 ## True once it has fallen into the void (Islands.check_fall): it acts no
 ## more, and goes in the deaths step as a fall nothing catches.
 var fell: bool = false
@@ -268,6 +272,10 @@ var condition_key: int = 0
 ## listeners on timed triggers, and its listeners by trigger.
 var aura_parts: Array[PartDef] = []
 var aura_keys: Array[String] = []
+## Per aura part: Passives.AURA_CONDITIONAL, AURA_PER_HIT, AURA_ALWAYS, and
+## AURA_FIXED, worked out once, and a fixed aura's change.
+var aura_flags: PackedByteArray = PackedByteArray()
+var aura_fixed: PackedInt32Array = PackedInt32Array()
 var conditional_auras: Array[PartDef] = []
 var timed_listeners: Array[Passives.Listener] = []
 var listeners_by: Dictionary[int, Array] = {}

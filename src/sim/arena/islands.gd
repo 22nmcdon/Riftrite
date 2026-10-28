@@ -42,6 +42,10 @@ extends RefCounted
 
 ## Per board hex: its island (0 up), or -1 for the void.
 var island_of_hex: PackedInt32Array = PackedInt32Array()
+## Which working-out of the islands this is (set_void), so a unit's island is
+## worked out again only once it moves or the islands change (mark).
+var version: int = 0
+static var _versions: int = 0
 ## How many islands there are.
 var count: int = 0
 ## Per nav cell: 1 if its center is on a void hex.
@@ -92,6 +96,8 @@ func set_void(grid: HexGrid, nav: NavGrid, void_hexes: Array[Vector2i]) -> void:
 			if not cut.has(hex):
 				cut.append(hex)
 	island_of_hex = groups(grid, cut, rocks)
+	_versions += 1
+	version = _versions
 	count = 0
 	for island: int in island_of_hex:
 		count = maxi(count, island + 1)
@@ -314,9 +320,12 @@ static func _log(sim: CombatSim, source: EffectSource, note: String, at: Vector2
 
 ## Marks each standing unit's island (see the top).
 static func mark(sim: CombatSim) -> void:
+	var islands: Islands = sim.islands
 	for unit: UnitState in sim.units:
-		if unit.alive:
-			unit.island = sim.islands.island_at(sim.grid, unit.pos)
+		if unit.alive and (unit.pos != unit.island_from or unit.island_version != islands.version):
+			unit.island = islands.island_at(sim.grid, unit.pos)
+			unit.island_from = unit.pos
+			unit.island_version = islands.version
 
 
 ## A unit moved by `source` (a push, pull, or carry) and now over the void

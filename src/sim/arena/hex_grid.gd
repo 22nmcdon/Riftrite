@@ -141,17 +141,28 @@ func nearest_hex(point: Vector2i) -> int:
 ## (and one more, for a point off the board's ends) and the two nearest rows
 ## in each: the nearest center is always among them (phase 8 part 3, water).
 func hex_at(point: Vector2i) -> int:
+	# Written for speed (it runs for every unit every tick over water or void):
+	# the centers worked out inline, the second row skipped when it's the
+	# first again.
 	var left: int = _floor_div(point.x - HALF_HEX, COL_STEP)
 	var best: int = -1
 	var best_distance: int = -1
+	var last_row: int = height - 1
 	for col: int in range(maxi(left - 1, 0), mini(left + 2, width - 1) + 1):
 		var shift: int = HALF_HEX if col % 2 == 1 else 0
-		var top: int = clampi(_floor_div(point.y - HALF_HEX - shift, HEX), 0, height - 1)
-		for row: int in [top, mini(top + 1, height - 1)]:
-			var d: Vector2i = center(col, row) - point
-			var distance: int = d.x * d.x + d.y * d.y
-			var hex: int = index(col, row)
-			if best_distance < 0 or distance < best_distance or (distance == best_distance and hex < best):
+		var top: int = clampi(_floor_div(point.y - HALF_HEX - shift, HEX), 0, last_row)
+		var dx: int = col * COL_STEP + HALF_HEX - point.x
+		var dy: int = top * HEX + HALF_HEX + shift - point.y
+		var distance: int = dx * dx + dy * dy
+		var hex: int = top * width + col
+		if best_distance < 0 or distance < best_distance or (distance == best_distance and hex < best):
+			best = hex
+			best_distance = distance
+		if top < last_row:
+			dy += HEX
+			distance = dx * dx + dy * dy
+			hex += width
+			if distance < best_distance or (distance == best_distance and hex < best):
 				best = hex
 				best_distance = distance
 	return best

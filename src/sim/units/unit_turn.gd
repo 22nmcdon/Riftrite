@@ -7,16 +7,28 @@ extends RefCounted
 ## (the clean-up, docs/plans/phases/cleanup-and-layout.md).
 
 
+## Statuses.kinds' bits for the kinds a turn asks about.
+const SILENCED: int = 1 << StatusDef.Kind.SILENCE
+const HELD: int = (1 << StatusDef.Kind.ROOT) | (1 << StatusDef.Kind.STUN)
+const STUNNED: int = 1 << StatusDef.Kind.STUN
+const SLOWED: int = 1 << StatusDef.Kind.SLOW
+const TAUNTED: int = 1 << StatusDef.Kind.TAUNT
+const CONFUSED: int = 1 << StatusDef.Kind.CONFUSED
+
+
 ## One unit's update this tick. It runs for every unit every tick, so it's
 ## written for speed: the common checks are inlined.
 static func act(sim: CombatSim, unit: UnitState) -> void:
 	if unit.tactic != null and (unit.tactic.regen_bp > 0 or unit.tactic.ally_def_add > 0):
 		Tactics.tick(sim, unit)
 	var has_statuses: bool = not unit.statuses.is_empty()
+	# Which kinds of status it carries (Statuses.kinds), worked out again
+	# wherever its statuses may have changed.
+	var kinds: int = Statuses.kinds(unit) if has_statuses else 0
 	# Mana regen (Mana), unless Silenced.
 	# Shackle Engine (the tuning phase): a held enemy gains none.
-	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)) \
-			and not (has_statuses and sim.hero_rules.held_no_mana and unit.side != EffectSource.Team.HEROES and SideRules.is_held(unit)):
+	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and kinds & SILENCED == 0 \
+			and not (kinds & HELD != 0 and sim.hero_rules.held_no_mana and unit.side != EffectSource.Team.HEROES):
 		var regen_before: int = unit.mana
 		var regen: int = unit.mana_regen
 		if unit.aura_bp[AuraDef.Stat.MANA_GAIN_BP] != FixedMath.BP_ONE:
@@ -34,13 +46,15 @@ static func act(sim: CombatSim, unit: UnitState) -> void:
 			or signature.also_waiting or signature.echo_at >= 0 or signature.again_at >= 0 or (signature.every_ticks > 0 and sim.tick % signature.every_ticks == 0)):
 		casting = Signatures.act(sim, unit)
 		has_statuses = not unit.statuses.is_empty()
+		kinds = Statuses.kinds(unit) if has_statuses else 0
 		if sim.tick < unit.landing_until:
 			return
 	# A grip (phase 8 part 4, the Garrote) ends, or lands its effects.
 	if unit.grip_target != null:
 		Grips.tick(sim, unit)
 		has_statuses = not unit.statuses.is_empty()
-	if has_statuses and Statuses.has_kind(unit, StatusDef.Kind.STUN):
+		kinds = Statuses.kinds(unit) if has_statuses else 0
+	if kinds & STUNNED != 0:
 		if unit.leg_active:
 			Movement.halt(sim, unit, "stunned")
 		return
@@ -55,7 +69,7 @@ static func act(sim: CombatSim, unit: UnitState) -> void:
 		elif unit.tactic != null and unit.tactic.keep_bp > 0 and unit.tactic.kind == TacticDef.Kind.HOLD_GROUND:
 			# Hold your ground's twist: part of it stays after letting go.
 			rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE + FixedMath.apply_bp(unit.tactic.atsp_bp, unit.tactic.keep_bp))
-		if has_statuses:
+		if kinds & SLOWED != 0:
 			var slow: int = Statuses.slow_bp(unit)
 			if slow != 0:
 				rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE - slow)
@@ -67,12 +81,14 @@ static func act(sim: CombatSim, unit: UnitState) -> void:
 	if unit.holding:
 		Tactics.check_release(sim, unit)
 	var target: UnitState = unit.target
+	# Its statuses haven't changed since kinds was worked out: nothing since
+	# changes them (setting a target doesn't either).
 	if has_statuses:
-		var taunter: UnitState = Statuses.taunter(sim, unit)
+		var taunter: UnitState = Statuses.taunter(sim, unit) if kinds & TAUNTED != 0 else null
 		if taunter != null and taunter != target:
 			Targeting.set_target(sim, unit, taunter, "taunted")
 			target = taunter
-		elif taunter == null:
+		elif taunter == null and kinds & Statuses.FOCUS_BIT != 0:
 			# Dance of Strings (phase 8 part 6): its setter's target.
 			var focus: UnitState = Statuses.focus_target(sim, unit)
 			if focus != null and focus != target:
@@ -80,24 +96,25 @@ static func act(sim: CombatSim, unit: UnitState) -> void:
 				target = focus
 		# Confused (phase 8 part 6, Night Veil): the nearest other unit of its
 		# own side; once it ends, a target on its own side is dropped.
-		if taunter == null and Statuses.has_kind(unit, StatusDef.Kind.CONFUSED):
+		if taunter == null and kinds & CONFUSED != 0:
 			var turned_on: UnitState = Targeting.straight_nearest(unit, sim.standing_allies_of(unit))
 			if turned_on != null and turned_on != target:
 				Targeting.set_target(sim, unit, turned_on, "confused")
 				target = turned_on
 				unit.turned = true
-	if unit.turned and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.CONFUSED)):
+	if unit.turned and kinds & CONFUSED == 0:
 		# Only the target confusion chose (a healer's own may be an ally).
 		unit.turned = false
 		if target != null and target.side == unit.side:
 			Targeting.lose(sim, unit, "no longer confused")
 			target = null
-	if target != null and target.alive and target.side != unit.side and Statuses.is_stealthed(target) and unit.aura_bp[AuraDef.Stat.SEES_STEALTH] <= 0:
+	if target != null and target.alive and target.side != unit.side and (target.submerged or (not target.statuses.is_empty() and Statuses.has_kind(target, StatusDef.Kind.STEALTH))) \
+			and unit.aura_bp[AuraDef.Stat.SEES_STEALTH] <= 0:
 		var lost: LogEntry = Targeting.lose(sim, unit, "%s is %s" % [target.id, "submerged" if target.submerged else "stealthed"])
 		target = null
 		# A taunted unit drawn back to a hidden taunter every tick isn't
 		# losing a target it chose (phase 8 part 6, Night Veil).
-		if not Statuses.has_kind(unit, StatusDef.Kind.TAUNT):
+		if kinds & TAUNTED == 0:
 			lost.lost_to_stealth = true
 			if sim.lost_target_listeners:
 				Events.lost_target(sim, unit)

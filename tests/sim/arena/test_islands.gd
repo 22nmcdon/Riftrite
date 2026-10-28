@@ -227,6 +227,24 @@ func test_islands_are_marked_for_the_condition() -> void:
 	assert_true(condition.holds(plain.unit_by_id("ally"), plain.unit_by_id("hero")))
 
 
+func test_an_island_is_worked_out_again_when_the_void_changes() -> void:
+	# Islands.mark keeps a standing unit's island until it moves or the
+	# islands are worked out afresh (the speed pass): the void moving under a
+	# unit that stands still changes its island too.
+	var setup: FightSetup = K.fight([K.at(still("hero"), 3, 1)] as Array[UnitSetup], [K.foe(still("foe"), 3, 5)] as Array[UnitSetup])
+	setup.void_hexes = row_but(3, [0] as Array[int])
+	var fight: CombatSim = K.sim(setup)
+	fight.step()
+	var hero: UnitState = fight.unit_by_id("hero")
+	var foe: UnitState = fight.unit_by_id("foe")
+	assert_eq(hero.island, foe.island, "joined by the bridge at (0, 3)")
+	var at: Vector2i = hero.pos
+	fight.islands.set_void(fight.grid, fight.nav(), row_but(3, [] as Array[int]))
+	fight.step()
+	assert_eq(hero.pos, at, "it stood still")
+	assert_ne(hero.island, foe.island, "the bridge is gone")
+
+
 func test_a_fight_without_void_makes_none() -> void:
 	var fight: CombatSim = K.sim(K.fight([K.at(still("hero"), 3, 1)] as Array[UnitSetup], [K.foe(still("foe"), 3, 5)] as Array[UnitSetup]))
 	assert_null(fight.islands)
