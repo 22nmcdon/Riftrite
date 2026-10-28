@@ -195,6 +195,6 @@ Endless keeps the act it follows. Each act's bosses push its colors furthest (Ol
 
 - **SA. Act 1's name.** The other acts have names (the Glassmere, the Shattered Crown); Act 1 is "the rift's edge" here as a stand-in. A name of your own?
 - **SB. Specializations:** a badge on the base figure for all, or their own figures for some (`asset-contract.md`'s open question)? Proposed: badges, with figures only for a boss's or an elite's if any.
-- **SC. Acts 2 and 3's palettes** (section 7) are drafted from the acts' descriptions. Right direction, or a look test of each first? Proposed: a look test of each, from the placeholder kit, before any commission.
+- **SC. Acts 2 and 3's palettes** (section 7) are drafted from the acts' descriptions. Right direction? *(Look tests made, 2026-10-28: `art/look-tests/act2_look_test.png`, `act3_look_test.png`, and `acts_side_by_side.png`, from `tools/art/act_look_tests.py`; waiting on the playtester's read.)*
 - **SD. Skin tones and the roster:** the kit gives most heroes the same skin. Proposed: the style key settles a range (light to deep, all lit gold), and the roster is spread across it.
 - **SE. Arena figure size** (`asset-contract.md`'s open question): about 100 px tall now. The style holds at that size; painted detail would show more with bigger figures or a closer camera, for the UI redesign to weigh.

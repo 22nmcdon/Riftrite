@@ -6,6 +6,7 @@ The placeholder art's makers (Python, writing SVGs) and their Godot helpers: the
 
 | File | What it is |
 | --- | --- |
+| `act_look_tests.py` | Look tests for the acts' palettes: each act's arena on its floating island, beside its palette, and Acts 1 to 3 side by side (the style guide's Question SC). |
 | `art_kit.py` | The shared look for the placeholder art scripts: the palette and SVG drawing helpers. |
 | `backdrops.py` | Writes the title backdrop. |
 | `enemy_kit.py` | The luminous enemy kit: code-generated placeholder figures for the Act 1, 2, and 3 enemies, in the hero kit's style and on its canvas. |
@@ -15,3 +16,4 @@ The placeholder art's makers (Python, writing SVGs) and their Godot helpers: the
 | `maren_look_test.py` | Code-generated look test for Maren, dark rift style with woodcut-style hatching. |
 | `maren_luminous_test.py` | Luminous look test for Maren: a bright, eerie otherworld with bold ink outlines, saturated jewel colors, flat painted shadows, and gold and aquamarine glows. |
 | `maren_silhouette_test.py` | Silhouette-style look test for Maren: black ink figures, with only rift light, glowing accents, and status colors breaking the black. |
+| `render_svg.js` | Renders SVG look tests to PNGs beside them, in the preinstalled Chromium. |
