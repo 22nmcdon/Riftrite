@@ -180,8 +180,11 @@ def hex_island(cells, act, depth):
     return "".join(s)
 
 
-def scene(n, uid):
-    """Act `n`'s arena scene, SCENE_W x SCENE_H, ids prefixed by `uid`."""
+def scene(n, uid, units=True, lines=True, motes=True):
+    """Act `n`'s arena scene, SCENE_W x SCENE_H, ids prefixed by `uid`.
+    Without `units`, `lines`, or `motes`, it leaves out the figures, rocks,
+    and rings, the hex lines, or the motes (pixel_look_tests.py draws them
+    at its own size)."""
     act = ACTS[n]
     rng = random.Random(n * 101)
     s = [f'<defs>{gradient(uid + "sky", act["sky"])}'
@@ -220,7 +223,8 @@ def scene(n, uid):
             s.append(f'<path d="M{x - 6},{y - 4} L{x},{y - w * 0.5} L{x + 8},{y - 4} Z" fill="#7A6A5A" stroke="{INK}" stroke-width="1.5"/>')
     for _ in range(70):
         x, y = rng.uniform(0, SCENE_W), rng.uniform(0, SCENE_H)
-        s.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{rng.uniform(1.2, 3):.1f}" fill="{rng.choice(act["motes"])}" opacity="{rng.uniform(0.5, 0.95):.2f}"/>')
+        if motes:
+            s.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{rng.uniform(1.2, 3):.1f}" fill="{rng.choice(act["motes"])}" opacity="{rng.uniform(0.5, 0.95):.2f}"/>')
 
     void = set(act["void"])
     bridges = set(act["bridges"])
@@ -253,12 +257,14 @@ def scene(n, uid):
                 tuft = rng.uniform(-14, 14)
                 s.append(f'<path d="M{cx + tuft:.1f},{cy + 10:.1f} l-3,-9 M{cx + tuft:.1f},{cy + 10:.1f} l2,-10 M{cx + tuft:.1f},{cy + 10:.1f} l6,-7" '
                          f'stroke="{act["side_dk"]}" stroke-width="1.4" opacity="0.5"/>')
-    for r in range(ROWS):
+    for r in range(ROWS if lines else 0):
         for c in range(COLS):
             if (c, r) in void or (c, r) in bridges:
                 continue
             cx, cy = hex_center(c, r)
             s.append(f'<polygon points="{hex_points(cx, cy)}" fill="none" stroke="{act["line"]}" stroke-width="1.4" opacity="0.4"/>')
+    if not units:
+        return "".join(s)
 
     things = []
     for name, (c, r) in act["rocks"]:

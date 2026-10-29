@@ -14,9 +14,10 @@ const path = require('path');
     const width = parseInt(svg.match(/width="(\d+)"/)[1], 10);
     const height = parseInt(svg.match(/height="(\d+)"/)[1], 10);
     await page.setViewportSize({ width, height });
-    await page.setContent(`<html><body style="margin:0">${svg}</body></html>`);
+    await page.setContent(`<html><body style="margin:0;background:transparent">${svg}</body></html>`);
     const out = file.replace(/\.svg$/, '.png');
-    await page.screenshot({ path: out, clip: { x: 0, y: 0, width, height } });
+    // Transparent where the SVG draws nothing (sprites keep their alpha).
+    await page.screenshot({ path: out, clip: { x: 0, y: 0, width, height }, omitBackground: true });
     console.log(path.basename(out));
   }
   await browser.close();

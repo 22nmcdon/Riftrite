@@ -16,4 +16,5 @@ The placeholder art's makers (Python, writing SVGs) and their Godot helpers: the
 | `maren_look_test.py` | Code-generated look test for Maren, dark rift style with woodcut-style hatching. |
 | `maren_luminous_test.py` | Luminous look test for Maren: a bright, eerie otherworld with bold ink outlines, saturated jewel colors, flat painted shadows, and gold and aquamarine glows. |
 | `maren_silhouette_test.py` | Silhouette-style look test for Maren: black ink figures, with only rift light, glowing accents, and status colors breaking the black. |
-| `render_svg.js` | Renders SVG look tests to PNGs beside them, in the preinstalled Chromium. |
+| `pixel_look_tests.py` | Pixel art look tests: the luminous style as pixel art at the medium size (figures about 40 px tall, scaled 3x), Act 1 against its vector look, the three acts, and a lineup; needs Pillow. |
+| `render_svg.js` | Renders SVG look tests to PNGs beside them (transparent where nothing is drawn), in the preinstalled Chromium. |
