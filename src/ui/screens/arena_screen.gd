@@ -85,6 +85,12 @@ var _result_shown: bool = false
 var pause_button: Button
 var speed_buttons: Array[Button] = []
 var target_lines: CheckButton
+## Pixel art (for testing, docs/plans/art/art-style-guide.md, Question SF):
+## its toggle, under the side column in every mode, and the filter laid over
+## the board and the sky beside it.
+var pixel_toggle: CheckButton
+var pixel_filter: PixelFilter
+var _body: MarginContainer
 ## The combo readout (for testing only, phase 5c step 9a; part 7, section
 ## 7): its toggle, what it shows under the chart, and its counts.
 var combo_toggle: CheckButton
@@ -143,6 +149,9 @@ func build() -> void:
 	for side: String in ["left", "right", "top", "bottom"]:
 		body.add_theme_constant_override("margin_" + side, 16)
 	upper_column.add_child(body)
+	_body = body
+	pixel_filter = PixelFilter.make()
+	upper.add_child(pixel_filter)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -190,16 +199,22 @@ func build() -> void:
 	_fight_box = _build_fight_box()
 	_fight_box.visible = false
 	side.add_child(_fight_box)
+	pixel_toggle = CheckButton.new()
+	pixel_toggle.text = "Pixel art (for testing)"
+	pixel_toggle.toggled.connect(set_pixel_art)
+	side.add_child(pixel_toggle)
 	_back_button = UiStyle.button("Back to the day" if run_session != null else "Back", func() -> void: back_requested.emit())
 	side.add_child(_back_button)
 	log_popup = _build_log_popup()
 	gutter.add_child(log_popup)
 	view.resized.connect(_fit_log_popup)
+	view.resized.connect(_fit_pixels)
+	body.resized.connect(_fit_pixels)
 	banners = FightBanners.make()
 	banners.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	banners.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	banners.position.y = 24
-	banners.z_index = 2
+	banners.z_index = 3
 	view.add_child(banners)
 	hero_popup = HeroPopup.make()
 	hero_popup.z_index = 3
@@ -227,6 +242,7 @@ func build() -> void:
 	hero_panel.path_chosen.connect(choose_path, CONNECT_DEFERRED)
 	hero_panel.apex_chosen.connect(choose_apex, CONNECT_DEFERRED)
 	hero_panel.tactic_chosen.connect(choose_tactic, CONNECT_DEFERRED)
+	set_pixel_art(session.pixel_art)
 	_show()
 
 
@@ -639,6 +655,25 @@ func _on_entries(entries: Array[LogEntry]) -> void:
 		chart.refresh()
 	if combo_readout.visible:
 		_refresh_combo()
+
+
+## Draws the arena as pixel art or not (for testing): the filter over the
+## board, remembered for the session's next fights. It changes no fight.
+func set_pixel_art(on: bool) -> void:
+	session.pixel_art = on
+	pixel_toggle.set_pressed_no_signal(on)
+	pixel_filter.visible = on
+	_fit_pixels()
+
+
+## Lays the pixel filter over the board and the sky to its left, from under
+## the top bar to over the hero bar; the side column stays sharp.
+func _fit_pixels() -> void:
+	if pixel_filter == null or not pixel_filter.visible:
+		return
+	var left: float = _body.global_position.x
+	var right: float = view.global_position.x + view.size.x + 8.0
+	pixel_filter.cover(Rect2(left, _body.global_position.y, right - left, _body.size.y))
 
 
 ## Shows or hides the combo readout (for testing): the engines under the

@@ -17,6 +17,7 @@ The screens, run headless with time driven by hand (`ArenaScreen._process(delta)
 | `test_figures.gd` | The units' figures on the board: every hero and enemy has one, each stands on its unit's point with its bars over its head, faces its target, and the nearer figures are drawn in front. |
 | `test_mod_info.gd` | Every card's stat change says its amount: ModInfo's numbers line for kit mods, items, upgrades, relics, and duo bonds. |
 | `test_paths_ui.gd` | Paths in Practice: the session keeping each hero's path and stage, the hero panel, choosing a path and stage, the board's figures and tags, placing a transformed Trapper's snares, the fight on screen being the sim's own, and the result's deeds. |
+| `test_pixel_filter.gd` | Pixel art, for testing: off by default and remembered, the filter covers the board but not the side column, sits between the board and what stays sharp, takes no input, and leaves the fight the same. |
 | `test_placement.gd` | Placement: PracticeSession's remembered formation, moving heroes on ArenaScreen by dragging, legality from the sim, the enemy panel, and the Fight button. |
 | `test_practice_flow.gd` | Practice from the title, driven headless through a real Main: title -> encounter list -> placement -> fight -> result -> place again, rematch, watch again, and back. |
 | `test_run_screens.gd` | The run on screen, driven headless through a real Main: the title's New run and Continue, vowing, a day, the fight on the arena, the pick after it, a Hunt, the hero bar and panel in a run, and the run's end. |

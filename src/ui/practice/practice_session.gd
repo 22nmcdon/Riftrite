@@ -40,6 +40,8 @@ var speed: float = 1.0
 ## Whether the combat log's popup is open (closed at first: the board
 ## comes first).
 var log_open: bool = false
+## Whether the arena is drawn as pixel art (for testing; PixelFilter).
+var pixel_art: bool = false
 ## The seed fights are set up with.
 var seed_value: int = 1
 ## Hero id -> tactic id, for the heroes who have one.

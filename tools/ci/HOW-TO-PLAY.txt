@@ -374,6 +374,10 @@ PLAYING
      hero's engines (how often each fired, how much it added) and adds how
      each number was made to the log's lines. It's for testing, off by
      default; working combos out is meant to be part of the game.
+     "Pixel art (for testing)", under the side column, draws the arena as
+     pixel art (about 640 x 360, scaled up crisp), while placing and in the
+     fight; it stays on for your next fights until you turn it off. It
+     changes nothing in the fight. See PIXEL ART below.
      The damage chart is on the right. Click a unit to see only its lines in
      the log. Pause and click a hero for their details.
   5. At the end: the result names each hero's path and what the fight put
@@ -647,6 +651,15 @@ WHAT WE WANT TO KNOW ABOUT ENDLESS
       each boss floor.
     - Camp offers no Hunt on a floor; Map the Rift swaps within the
       floor's fights.
+
+PIXEL ART (an idea to try)
+  Turn on "Pixel art (for testing)" in any fight to see the arena as pixel
+  art. It's a filter over today's art (no new sprites, no palette or
+  outlines), so it's the floor of how it would look: a pixel artist would
+  draw each figure for its size. The look tests of the real thing are in
+  art/look-tests/ (pixel_act1_vs_vector, pixel_acts, pixel_lineup). Does
+  pixel art suit the game better than the painted look the style guide
+  aims for? Does the fight read as well, or better?
 
 WHAT WE WANT TO KNOW ABOUT THE ART
   Does the arena read well with heroes at the bottom, on the island? Are

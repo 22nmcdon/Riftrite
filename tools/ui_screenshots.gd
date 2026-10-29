@@ -5,7 +5,8 @@ extends SceneTree
 ## The title, then Practice (phase 3): the encounter list, placement (and
 ## the hero panel's tabs, paths and snares on the board), the fight with its chart, a hero's popup, the result, an area warning, and
 ## (phase 8) the new heroes' team row, a panel, and fights of each, and
-## Rift Collapse with the combat log's popup open. Then the run (phase 5):
+## Rift Collapse with the combat log's popup open, and pixel art (for
+## testing) in placement and a fight. Then the run (phase 5):
 ## vowing, camp, the Pedlar, the route (the act map), the loadout, a run's
 ## fight and its result, the pick after it, a relic choice, a hero's panel,
 ## the Magpie, an event and an oath, Act 2's route and a fight on its water,
@@ -100,11 +101,25 @@ func _run() -> void:
 	while not witches.player.finished() and witches.player.sim.tick < 91 * 10:
 		witches._process(1.0 / 30.0)
 	await _snap("fight_witch_circle_collapse")
+	await _pixel_art(content)
 	await _new_heroes(content)
 	await _last_heroes(content)
 	await _run_screens()
 	RunSave.erase(_main.run_save_path)
 	quit(0)
+
+
+## Pixel art (for testing; docs/plans/art/art-style-guide.md, Question SF):
+## placement and a fight with the arena drawn as pixels.
+func _pixel_art(content: ContentDb) -> void:
+	var pixels: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "pup_warren")
+	_main.show_screen(pixels)
+	pixels.set_pixel_art(true)
+	await _snap("pixel_art_placement")
+	pixels._fight()
+	while not pixels.player.finished() and pixels.player.sim.tick < 5 * 20:
+		pixels._process(1.0 / 30.0)
+	await _snap("pixel_art_fight_5s")
 
 
 ## The new three (phase 8 part 4, 8d-5): Practice's team row with Garrow,
